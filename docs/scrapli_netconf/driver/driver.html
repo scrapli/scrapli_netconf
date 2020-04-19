@@ -150,7 +150,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            base_elem: lxml base element to use for netconf operation
+            Element: lxml base element to use for netconf operation
 
         Raises:
             N/A
@@ -158,7 +158,6 @@ class NetconfScrape(Scrape):
         &#34;&#34;&#34;
         base_xml_str = BASE_RPC_1_0.format(message_id=self.message_id)
         self.message_id += 1
-        print(&#34;bumped message id -&gt; &#34;, self.message_id)
         base_elem = etree.fromstring(base_xml_str)
         return base_elem
 
@@ -171,7 +170,7 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -226,7 +225,7 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -287,7 +286,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration target value
@@ -332,7 +331,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -362,7 +361,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -392,7 +391,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -424,7 +423,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -449,7 +448,19 @@ class NetconfScrape(Scrape):
         return response
 
     def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;bare rpc thing for juniper or other weird shit i guess&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
+
+        Args:
+            filter_: filter/rpc to execute
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         # build base request
         xml_request = self._build_base_elem()
 
@@ -676,7 +687,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         Returns:
-            base_elem: lxml base element to use for netconf operation
+            Element: lxml base element to use for netconf operation
 
         Raises:
             N/A
@@ -684,7 +695,6 @@ has more features built in (though scrapli does not expose/support them all).</d
         &#34;&#34;&#34;
         base_xml_str = BASE_RPC_1_0.format(message_id=self.message_id)
         self.message_id += 1
-        print(&#34;bumped message id -&gt; &#34;, self.message_id)
         base_elem = etree.fromstring(base_xml_str)
         return base_elem
 
@@ -697,7 +707,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -752,7 +762,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -813,7 +823,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration target value
@@ -858,7 +868,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -888,7 +898,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -918,7 +928,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -950,7 +960,7 @@ has more features built in (though scrapli does not expose/support them all).</d
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -975,7 +985,19 @@ has more features built in (though scrapli does not expose/support them all).</d
         return response
 
     def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;bare rpc thing for juniper or other weird shit i guess&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
+
+        Args:
+            filter_: filter/rpc to execute
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
         # build base request
         xml_request = self._build_base_elem()
 
@@ -1008,13 +1030,40 @@ has more features built in (though scrapli does not expose/support them all).</d
 <span>def <span class="ident">bare_rpc</span></span>(<span>self, filter_)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>bare rpc thing for juniper or other weird shit i guess</p></section>
+<section class="desc"><p>Netconf "bare_rpc" operation; typically only used with juniper devices</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filter_</code></strong></dt>
+<dd>filter/rpc to execute</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>NetconfResponse</code></strong></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>N</code>/<code>A</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;bare rpc thing for juniper or other weird shit i guess&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
+
+    Args:
+        filter_: filter/rpc to execute
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
     # build base request
     xml_request = self._build_base_elem()
 
@@ -1047,7 +1096,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1067,7 +1116,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         N/A
@@ -1099,7 +1148,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1119,7 +1168,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         N/A
@@ -1156,7 +1205,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1179,7 +1228,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         target: configuration source to target; running|startup|candidate
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         ValueError: if invalid configuration target value
@@ -1231,7 +1280,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1252,7 +1301,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         filter_type: type of filter; subtree|xpath
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         ValueError: if invalid filter value
@@ -1309,7 +1358,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1338,7 +1387,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         filter_type: type of filter; subtree|xpath
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         ValueError: if invalid filter value
@@ -1401,7 +1450,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1421,7 +1470,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         target: configuration source to target; running|startup|candidate
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         ValueError: if invalid configuration source
@@ -1514,7 +1563,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>response</code></strong></dt>
+<dt><strong><code>NetconfResponse</code></strong></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -1534,7 +1583,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         target: configuration source to target; running|startup|candidate
 
     Returns:
-        response: scrapli_netconf NetconfResponse object
+        NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
         ValueError: if invalid configuration source

@@ -91,13 +91,13 @@ class NetconfResponse(Response):
         """
         self.failed = False
 
-        self.result = self.raw_result.replace("]]>]]>", "").rstrip()
-        self.xml_result = etree.fromstring(self.result)
+        self.xml_result = etree.fromstring(self.raw_result.replace("]]>]]>", "").rstrip())
+        self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
             xml_result = etree.fromstring(self.result)
             self.xml_result = remove_namespaces(xml_result)
-            self.result = etree.tostring(self.xml_result)
+            self.result = etree.tostring(self.xml_result).decode()
 
     def _record_response_netconf_1_1(self) -> None:
         """
@@ -129,13 +129,15 @@ class NetconfResponse(Response):
                 )
                 self.failed = True
 
-        self.result = "\n".join([result[1].rstrip() for result in result_sections])
-        self.xml_result = etree.fromstring(self.result)
+        self.xml_result = etree.fromstring(
+            "\n".join([result[1].rstrip() for result in result_sections])
+        )
+        self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
             xml_result = etree.fromstring(self.result)
             self.xml_result = remove_namespaces(xml_result)
-            self.result = etree.tostring(self.xml_result)
+            self.result = etree.tostring(self.xml_result).decode()
 
     def get_xml_elements(self) -> Dict[str, Element]:
         """
@@ -169,7 +171,7 @@ class NetconfResponse(Response):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always
 
         """
         raise NotImplementedError("No textfsm parsing for netconf output!")
@@ -185,7 +187,7 @@ class NetconfResponse(Response):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always
 
         """
         raise NotImplementedError("No genie parsing for netconf output!")

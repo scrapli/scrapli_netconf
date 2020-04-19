@@ -16,7 +16,7 @@ def remove_namespaces(tree: Element) -> Element:
         tree: lxml Element
 
     Returns:
-        tree: lxml Element with namespaces stripped out
+        Element: lxml Element with namespaces stripped out
 
     Raises:
         N/A

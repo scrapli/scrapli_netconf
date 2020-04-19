@@ -63,7 +63,7 @@ class NetconfTransport(SystemSSHTransport):
             N/A
 
         Returns:
-            login_bytes: bytes output from server captured while opening the connection
+            bytes: bytes output from server captured while opening the connection
 
         Raises:
             N/A
@@ -86,7 +86,8 @@ class NetconfTransport(SystemSSHTransport):
             N/A
 
         Returns:
-            bool: True/False session was opened and authenticated
+            bytes: any output captured during login/authentication; needed to build server
+                capabilities
 
         Raises:
             N/A
@@ -325,7 +326,7 @@ is completed.</dd>
             N/A
 
         Returns:
-            login_bytes: bytes output from server captured while opening the connection
+            bytes: bytes output from server captured while opening the connection
 
         Raises:
             N/A
@@ -348,7 +349,8 @@ is completed.</dd>
             N/A
 
         Returns:
-            bool: True/False session was opened and authenticated
+            bytes: any output captured during login/authentication; needed to build server
+                capabilities
 
         Raises:
             N/A
@@ -464,7 +466,7 @@ output of server capabilities that must be parsed.</p>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>login_bytes</code></strong></dt>
+<dt><strong><code>bytes</code></strong></dt>
 <dd>bytes output from server captured while opening the connection</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -490,7 +492,7 @@ output of server capabilities that must be parsed.</p>
         N/A
 
     Returns:
-        login_bytes: bytes output from server captured while opening the connection
+        bytes: bytes output from server captured while opening the connection
 
     Raises:
         N/A

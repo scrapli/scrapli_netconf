@@ -1,6 +1,6 @@
 import logging
 
-from scrapli_netconf.driver.driver import NetconfScrape
+from scrapli_netconf.driver import NetconfScrape
 
 logging.basicConfig(filename="scrapli.log", level=logging.INFO)
 logger = logging.getLogger("scrapli")

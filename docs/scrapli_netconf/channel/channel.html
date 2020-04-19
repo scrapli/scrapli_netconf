@@ -73,7 +73,7 @@ class NetconfChannel(Channel):
             login_bytes: bytes captured during authentication
 
         Returns:
-           output: raw bytes containing server capabilities
+            bytes: raw bytes containing server capabilities
 
         Raises:
             N/A
@@ -118,8 +118,6 @@ class NetconfChannel(Channel):
         if capabilities_version == &#34;1.1&#34;:
             self.netconf_version = &#34;1.1&#34;
             self.comms_prompt_pattern = r&#34;^##$&#34;
-        # else:
-        #     raise NotImplementedError(&#34;Only netconf 1.1 is currently supported&#34;)
 
         self.transport.session_lock.release()
 
@@ -131,7 +129,7 @@ class NetconfChannel(Channel):
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            final_channel_input: string of formatted message to send to netconf server
+            str: string of formatted message to send to netconf server
 
         Raises:
             N/A
@@ -152,7 +150,7 @@ class NetconfChannel(Channel):
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            raw_result: string result of message sent to netconf server
+            str: string result of message sent to netconf server
 
         Raises:
             N/A
@@ -253,7 +251,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             login_bytes: bytes captured during authentication
 
         Returns:
-           output: raw bytes containing server capabilities
+            bytes: raw bytes containing server capabilities
 
         Raises:
             N/A
@@ -298,8 +296,6 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         if capabilities_version == &#34;1.1&#34;:
             self.netconf_version = &#34;1.1&#34;
             self.comms_prompt_pattern = r&#34;^##$&#34;
-        # else:
-        #     raise NotImplementedError(&#34;Only netconf 1.1 is currently supported&#34;)
 
         self.transport.session_lock.release()
 
@@ -311,7 +307,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            final_channel_input: string of formatted message to send to netconf server
+            str: string of formatted message to send to netconf server
 
         Raises:
             N/A
@@ -332,7 +328,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            raw_result: string result of message sent to netconf server
+            str: string result of message sent to netconf server
 
         Raises:
             N/A
@@ -366,7 +362,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>raw_result</code></strong></dt>
+<dt><strong><code>str</code></strong></dt>
 <dd>string result of message sent to netconf server</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -386,7 +382,7 @@ method&hellip; obviously its probably always going to be scrapli transport thoug
         channel_input: string of the base xml message to send to netconf server
 
     Returns:
-        raw_result: string result of message sent to netconf server
+        str: string result of message sent to netconf server
 
     Raises:
         N/A

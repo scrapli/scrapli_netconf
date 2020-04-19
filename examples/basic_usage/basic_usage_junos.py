@@ -1,6 +1,6 @@
 import logging
 
-from scrapli_netconf.driver.driver import NetconfScrape
+from scrapli_netconf.driver import NetconfScrape
 
 logging.basicConfig(filename="scrapli.log", level=logging.INFO)
 logger = logging.getLogger("scrapli")
@@ -13,7 +13,7 @@ JUNOS_DEVICE = {
     "transport": "system",
     "timeout_ops": 10,
     "timeout_transport": 10,
-    "port": 22
+    "port": 22,
 }
 
 
@@ -127,4 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

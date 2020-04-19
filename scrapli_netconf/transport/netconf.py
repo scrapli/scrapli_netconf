@@ -36,7 +36,7 @@ class NetconfTransport(SystemSSHTransport):
             N/A
 
         Returns:
-            login_bytes: bytes output from server captured while opening the connection
+            bytes: bytes output from server captured while opening the connection
 
         Raises:
             N/A
@@ -59,7 +59,8 @@ class NetconfTransport(SystemSSHTransport):
             N/A
 
         Returns:
-            bool: True/False session was opened and authenticated
+            bytes: any output captured during login/authentication; needed to build server
+                capabilities
 
         Raises:
             N/A

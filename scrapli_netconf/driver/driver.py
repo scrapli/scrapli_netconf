@@ -123,7 +123,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            base_elem: lxml base element to use for netconf operation
+            Element: lxml base element to use for netconf operation
 
         Raises:
             N/A
@@ -143,7 +143,7 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -198,7 +198,7 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid filter value
@@ -259,7 +259,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration target value
@@ -304,7 +304,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -334,7 +334,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -364,7 +364,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -396,7 +396,7 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: scrapli_netconf NetconfResponse object
+            NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
@@ -421,7 +421,19 @@ class NetconfScrape(Scrape):
         return response
 
     def bare_rpc(self, filter_: str) -> NetconfResponse:
-        """bare rpc thing for juniper or other weird shit i guess"""
+        """
+        Netconf "bare_rpc" operation; typically only used with juniper devices
+
+        Args:
+            filter_: filter/rpc to execute
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
         # build base request
         xml_request = self._build_base_elem()
 

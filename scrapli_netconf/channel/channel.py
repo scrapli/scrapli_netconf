@@ -46,7 +46,7 @@ class NetconfChannel(Channel):
             login_bytes: bytes captured during authentication
 
         Returns:
-           output: raw bytes containing server capabilities
+            bytes: raw bytes containing server capabilities
 
         Raises:
             N/A
@@ -102,7 +102,7 @@ class NetconfChannel(Channel):
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            final_channel_input: string of formatted message to send to netconf server
+            str: string of formatted message to send to netconf server
 
         Raises:
             N/A
@@ -123,7 +123,7 @@ class NetconfChannel(Channel):
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            raw_result: string result of message sent to netconf server
+            str: string result of message sent to netconf server
 
         Raises:
             N/A

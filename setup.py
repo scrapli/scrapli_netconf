@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""scrapli_netconf - netconf plugin for scrapli"""
+"""scrapli_netconf - netconf driver built on scrapli"""
 import setuptools
 
 __author__ = "Carl Montanari"
@@ -9,13 +9,13 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="scrapli_netconf",
-    version="2020.03.22",
+    version="2020.04.19",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="Netconf plugin for scrapli",
+    description="Netconf driver built on scrapli",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/carlmontanari/scrapli_netconf",
+    url="https://github.com/scrapli/scrapli_netconf",
     packages=setuptools.find_packages(),
     install_requires=["scrapli>=2020.03.21", "lxml>=4.5.0"],
     extras_require={},

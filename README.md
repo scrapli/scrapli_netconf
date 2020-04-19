@@ -116,8 +116,8 @@ Documentation is auto-generated [using pdoc3](https://github.com/pdoc3/pdoc). Do
  [darglint](https://github.com/terrencepreilly/darglint).
 
 Documentation is hosted via GitHub Pages and can be found
-[here](https://scrapli.github.io/scrapli/docs/scrapli/index.html). You can also view this readme as a web page
- [here](https://scrapli.github.io/scrapli/).
+[here](https://scrapli.github.io/scrapli_netconf/docs/scrapli/index.html). You can also view this readme as a web page
+ [here](https://scrapli.github.io/scrapli_netconf/).
 
 To regenerate documentation locally, use the following make command:
 

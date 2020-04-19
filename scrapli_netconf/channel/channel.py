@@ -91,8 +91,6 @@ class NetconfChannel(Channel):
         if capabilities_version == "1.1":
             self.netconf_version = "1.1"
             self.comms_prompt_pattern = r"^##$"
-        else:
-            raise NotImplementedError("Only netconf 1.1 is currently supported")
 
         self.transport.session_lock.release()
 
@@ -115,7 +113,7 @@ class NetconfChannel(Channel):
             # format message for chunk message types
             final_channel_input = msg_template.format(len(channel_input), channel_input.decode())
             return final_channel_input
-        raise NotImplementedError("Only netconf 1.1 is currently supported")
+        return channel_input.decode()
 
     def send_input_netconf(self, channel_input: bytes) -> str:
         """

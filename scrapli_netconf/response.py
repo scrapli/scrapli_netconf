@@ -71,8 +71,33 @@ class NetconfResponse(Response):
         self.raw_result = result
 
         if self.netconf_version == "1.0":
-            raise NotImplementedError("Only netconf 1.1 is currently supported")
-        self._record_response_netconf_1_1()
+            self._record_response_netconf_1_0()
+        else:
+            self._record_response_netconf_1_1()
+
+    def _record_response_netconf_1_0(self) -> None:
+        """
+        Record response for netconf version 1.0
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.failed = False
+
+        self.result = self.raw_result.replace("]]>]]>", "").rstrip()
+        self.xml_result = etree.fromstring(self.result)
+
+        if self.strip_namespaces:
+            xml_result = etree.fromstring(self.result)
+            self.xml_result = remove_namespaces(xml_result)
+            self.result = etree.tostring(self.xml_result)
 
     def _record_response_netconf_1_1(self) -> None:
         """

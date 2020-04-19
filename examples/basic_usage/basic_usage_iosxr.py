@@ -86,6 +86,7 @@ def main():
 
     # commit config changes
     conn.commit()
+    print(result.result)
 
     # edit multiple elements of the config -- note you can do this in one big xml, or pass a list
     # of things to edit

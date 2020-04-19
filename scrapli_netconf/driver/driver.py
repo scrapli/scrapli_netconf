@@ -14,7 +14,13 @@ from scrapli_netconf.transport.netconf import NetconfTransport
 
 LOG = logging.getLogger("driver")
 
-CLIENT_CAPABILITIES_1_0 = ""
+CLIENT_CAPABILITIES_1_0 = """
+<?xml version="1.0" encoding="utf-8"?>
+    <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+        <capabilities>
+            <capability>urn:ietf:params:netconf:base:1.0</capability>
+        </capabilities>
+</hello>]]>]]>"""
 CLIENT_CAPABILITIES_1_1 = """
 <?xml version="1.0" encoding="utf-8"?>
     <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
@@ -222,7 +228,7 @@ class NetconfScrape(Scrape):
 
             # insert parent filter element
             get_config_element = xml_request.find("get-config")
-            get_config_element.insert(0, xml_filter_element)
+            get_config_element.insert(1, xml_filter_element)
 
             # insert filter element(s)
             get_config_filter_element = xml_request.find("get-config/filter")
@@ -401,6 +407,30 @@ class NetconfScrape(Scrape):
         xml_request = self._build_base_elem()
         xml_unlock_element = etree.fromstring(BASE_UNLOCK.format(target=target))
         xml_request.insert(0, xml_unlock_element)
+        channel_input = etree.tostring(xml_request)
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
+    def bare_rpc(self, filter_: str) -> NetconfResponse:
+        """bare rpc thing for juniper or other weird shit i guess"""
+        # build base request
+        xml_request = self._build_base_elem()
+
+        # build filter element
+        xml_filter_elem = etree.fromstring(filter_)
+
+        # insert filter element
+        xml_request.insert(0, xml_filter_elem)
+
         channel_input = etree.tostring(xml_request)
 
         response = NetconfResponse(

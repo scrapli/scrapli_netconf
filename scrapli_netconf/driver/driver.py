@@ -9,10 +9,12 @@ from scrapli import Scrape
 
 from scrapli_netconf.channel.channel import NetconfChannel
 from scrapli_netconf.exceptions import CouldNotExchangeCapabilities
+from scrapli_netconf.response import NetconfResponse
 from scrapli_netconf.transport.netconf import NetconfTransport
 
 LOG = logging.getLogger("driver")
 
+CLIENT_CAPABILITIES_1_0 = ""
 CLIENT_CAPABILITIES_1_1 = """
 <?xml version="1.0" encoding="utf-8"?>
     <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
@@ -35,12 +37,16 @@ BASE_UNLOCK = "<unlock><target><{target}/></target></unlock>"
 
 
 class NetconfScrape(Scrape):
-    def __init__(self, port: int = 830, **kwargs: Any) -> None:
+    def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -> None:
         super().__init__(port=port, **kwargs)
+
         self.transport_class = NetconfTransport
         self.transport = NetconfTransport(**self.transport_args)
         self.channel = NetconfChannel(self.transport, **self.channel_args)
+
+        self.strip_namespaces = strip_namespaces
         self.server_capabilities: List[str] = []
+        self.netconf_version = "1.0"
         self.message_id = 101
 
     def _parse_server_capabilities(self, raw_server_capabilities: bytes) -> None:
@@ -93,13 +99,13 @@ class NetconfScrape(Scrape):
             raw_server_capabilities=raw_server_capabilities
         )
 
+        client_capabilities = CLIENT_CAPABILITIES_1_0
         if "urn:ietf:params:netconf:base:1.1" in self.server_capabilities:
             client_capabilities = CLIENT_CAPABILITIES_1_1
-        else:
-            raise NotImplementedError("Only netconf 1.1 is currently supported")
+            self.netconf_version = "1.1"
 
         self.channel._send_client_capabilities(  # pylint: disable=W0212
-            client_capabilities=client_capabilities
+            client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
         LOG.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
@@ -122,7 +128,7 @@ class NetconfScrape(Scrape):
         base_elem = etree.fromstring(base_xml_str)
         return base_elem
 
-    def get(self, filter_: str, filter_type: str = "subtree") -> str:
+    def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
         Netconf get operation
 
@@ -131,16 +137,14 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter type
+            ValueError: if invalid filter value
 
         """
         if filter_type not in ("subtree", "xpath"):
-            raise ValueError(
-                f"`filter_type` should be one of subtree|xpath, got `{type(filter_type)}`"
-            )
+            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         # build filter(s) first to ensure valid xml
         xml_filter_element = etree.fromstring(filter_)
 
@@ -160,7 +164,17 @@ class NetconfScrape(Scrape):
         get_filter = xml_request.find("get/filter")
         get_filter.insert(1, xml_filter_element)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        channel_input = etree.tostring(xml_request)
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
     def get_config(
@@ -168,7 +182,7 @@ class NetconfScrape(Scrape):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
-    ) -> str:
+    ) -> NetconfResponse:
         """
         Netconf get-config operation
 
@@ -178,21 +192,17 @@ class NetconfScrape(Scrape):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter type
-            ValueError: if invalid configuration source
+            ValueError: if invalid filter value
+            ValueError: if invalid configuration source value
 
         """
         if filter_type not in ("subtree", "xpath"):
-            raise ValueError(
-                f"`filter_type` should be one of subtree|xpath, got `{type(filter_type)}`"
-            )
+            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         if source not in ("running", "startup", "candidate"):
-            raise ValueError(
-                f"`source` should be one of running|startup|candidate, got `{type(source)}`"
-            )
+            raise ValueError(f"`source` should be one of running|startup|candidate, got `{source}`")
         if isinstance(filters, str):
             filters = [filters]
 
@@ -219,10 +229,22 @@ class NetconfScrape(Scrape):
             for xml_filter_ in xml_filters:
                 get_config_filter_element.insert(0, xml_filter_)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        channel_input = etree.tostring(xml_request)
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def edit_config(self, configs: Union[str, List[str]], target: str = "running") -> str:
+    def edit_config(
+        self, configs: Union[str, List[str]], target: str = "running"
+    ) -> NetconfResponse:
         """
         Netconf get-config operation
 
@@ -231,16 +253,14 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration source
+            ValueError: if invalid configuration target value
 
         """
         if target not in ("running", "startup", "candidate"):
-            raise ValueError(
-                f"`target` should be one of running|startup|candidate, got `{type(target)}`"
-            )
+            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
         if isinstance(configs, str):
             configs = [configs]
 
@@ -257,10 +277,20 @@ class NetconfScrape(Scrape):
         for xml_config in xml_configs:
             edit_config_element.insert(0, xml_config)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        channel_input = etree.tostring(xml_request)
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def commit(self) -> str:
+    def commit(self) -> NetconfResponse:
         """
         Netconf commit config operation
 
@@ -268,7 +298,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -277,11 +307,20 @@ class NetconfScrape(Scrape):
         xml_request = self._build_base_elem()
         xml_commit_element = etree.fromstring(BASE_COMMIT)
         xml_request.insert(0, xml_commit_element)
+        channel_input = etree.tostring(xml_request)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def discard(self) -> str:
+    def discard(self) -> NetconfResponse:
         """
         Netconf discard config operation
 
@@ -289,7 +328,7 @@ class NetconfScrape(Scrape):
             N/A
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
             N/A
@@ -298,11 +337,20 @@ class NetconfScrape(Scrape):
         xml_request = self._build_base_elem()
         xml_discard_element = etree.fromstring(BASE_DISCARD)
         xml_request.insert(0, xml_discard_element)
+        channel_input = etree.tostring(xml_request)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def lock(self, target: str) -> str:
+    def lock(self, target: str) -> NetconfResponse:
         """
         Netconf lock operation
 
@@ -310,24 +358,31 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
 
         """
         if target not in ("running", "startup", "candidate"):
-            raise ValueError(
-                f"`target` should be one of running|startup|candidate, got `{type(target)}`"
-            )
+            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(BASE_LOCK.format(target=target))
         xml_request.insert(0, xml_lock_element)
+        channel_input = etree.tostring(xml_request)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def unlock(self, target: str) -> str:
+    def unlock(self, target: str) -> NetconfResponse:
         """
         Netconf unlock operation
 
@@ -335,19 +390,26 @@ class NetconfScrape(Scrape):
             target: configuration source to target; running|startup|candidate
 
         Returns:
-            response: string response from the netconf server
+            response: scrapli_netconf NetconfResponse object
 
         Raises:
             ValueError: if invalid configuration source
 
         """
         if target not in ("running", "startup", "candidate"):
-            raise ValueError(
-                f"`target` should be one of running|startup|candidate, got `{type(target)}`"
-            )
+            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
         xml_request = self._build_base_elem()
         xml_unlock_element = etree.fromstring(BASE_UNLOCK.format(target=target))
         xml_request.insert(0, xml_unlock_element)
+        channel_input = etree.tostring(xml_request)
 
-        response = self.channel.send_input_netconf(etree.tostring(xml_request))
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        raw_response = self.channel.send_input_netconf(channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response

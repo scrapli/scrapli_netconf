@@ -68,7 +68,7 @@ class NetconfTransport(SystemSSHTransport):
         self.session = PtyProcess.spawn(self.open_cmd)
         LOG.debug(f"Session to host {self.host} spawned")
         self.session_lock.release()
-        login_bytes = self._pty_authenticate(self.session)
+        login_bytes: bytes = self._pty_authenticate(self.session)
         LOG.debug(f"Authenticated to host {self.host} successfully")
         return login_bytes
 

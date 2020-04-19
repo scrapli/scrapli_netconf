@@ -15,7 +15,7 @@ class NetconfChannel(Channel):
         kwargs.pop("comms_prompt_pattern")
         super().__init__(transport, comms_prompt_pattern="]]>]]>", **kwargs)
 
-        self.netconf_version = "1.1"
+        self.netconf_version = "1.0"
 
     def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
         """

@@ -1,4 +1,4 @@
-"""scrapli_netconf.transport.netconf"""
+"""scrapli_netconf.transport.systemssh"""
 from logging import getLogger
 from subprocess import Popen
 from typing import TYPE_CHECKING, Any
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 LOG = getLogger("transport")
 
 
-class NetconfTransport(SystemSSHTransport):
+class NetconfSystemSSHTransport(SystemSSHTransport):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
@@ -85,8 +85,8 @@ class NetconfTransport(SystemSSHTransport):
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
-                host key checking is enabled and failed.
+            ScrapliAuthenticationFailed: if we see a password prompt more than once, or we got an
+                unhandled EOF message
 
         """
         self.session_lock.acquire()
@@ -98,12 +98,15 @@ class NetconfTransport(SystemSSHTransport):
                 output += new_output
                 LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
-                msg = f"Failed to open connection to host {self.host}"
-                if b"Host key verification failed" in output:
-                    msg = f"Host key verification failed for host {self.host}"
-                elif b"Operation timed out" in output:
-                    msg = f"Timed out connecting to host {self.host}"
-                LOG.critical(msg)
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn't raise any exception, we can raise the standard --
+                # did you disable strict key message/exception
+                msg = (
+                    f"Failed to open connection to host {self.host}. Do you need to disable "
+                    "`auth_strict_key`?"
+                )
+                self.logger.critical(msg)
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b"password:" in output.lower():
                 # if password is seen in the output, reset output and enter the password

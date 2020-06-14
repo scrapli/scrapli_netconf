@@ -1,34 +1,34 @@
 """scrapli_netconf.driver.driver"""
 from typing import Any, List, Optional, Union
 
-from scrapli import Scrape
+from scrapli import AsyncScrape
 from scrapli.exceptions import TransportPluginError
-from scrapli_netconf.channel.channel import NetconfChannel
+from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
 from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.driver.base_driver import NetconfScrapeBase
 from scrapli_netconf.response import NetconfResponse
-from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
+from scrapli_netconf.transport.asyncssh_ import NetconfAsyncSSHTransport
 
 
-class NetconfScrape(Scrape, NetconfScrapeBase):
+class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
     def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -> None:
         super().__init__(port=port, **kwargs)
 
-        if self._transport != "system":
-            msg = "`NetconfScrape` is only supported using the `system` transport plugin"
+        if self._transport != "asyncssh":
+            msg = "`AsyncNetconfScrape` is only supported using the `asyncssh` transport plugin"
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfSystemSSHTransport
-        self.transport = NetconfSystemSSHTransport(**self.transport_args)  # type: ignore
-        self.channel = NetconfChannel(self.transport, **self.channel_args)
+        self.transport_class = NetconfAsyncSSHTransport
+        self.transport = NetconfAsyncSSHTransport(**self.transport_args)  # type: ignore
+        self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
         self.server_capabilities: List[str] = []
         self.netconf_version = NetconfVersion.VERSION_1_0
         self.message_id = 101
 
-    def open(self) -> None:
+    async def open(self) -> None:
         """
         Open netconf connection to server
 
@@ -43,19 +43,19 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         self.logger.info(f"Opening connection to {self._initialization_args['host']}")
-        login_bytes = self.transport.open_netconf()
-        raw_server_capabilities = self.channel._get_server_capabilities(  # pylint: disable=W0212
-            login_bytes
+        login_bytes = await self.transport.open_netconf()
+        raw_server_capabilities = await (
+            self.channel._get_server_capabilities(login_bytes=login_bytes)  # pylint: disable=W0212
         )
 
         client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
-        self.channel._send_client_capabilities(  # pylint: disable=W0212
+        await self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
         self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
-    def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
+    async def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
         Netconf get operation
 
@@ -71,11 +71,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_get(filter_=filter_, filter_type=filter_type)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def get_config(
+    async def get_config(
         self,
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
@@ -97,12 +97,12 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
 
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def edit_config(
+    async def edit_config(
         self, configs: Union[str, List[str]], target: str = "running"
     ) -> NetconfResponse:
         """
@@ -120,11 +120,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_edit_config(configs=configs, target=target)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def commit(self) -> NetconfResponse:
+    async def commit(self) -> NetconfResponse:
         """
         Netconf commit config operation
 
@@ -139,11 +139,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_commit()
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def discard(self) -> NetconfResponse:
+    async def discard(self) -> NetconfResponse:
         """
         Netconf discard config operation
 
@@ -158,11 +158,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_discard()
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def lock(self, target: str) -> NetconfResponse:
+    async def lock(self, target: str) -> NetconfResponse:
         """
         Netconf lock operation
 
@@ -177,11 +177,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_lock(target=target)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def unlock(self, target: str) -> NetconfResponse:
+    async def unlock(self, target: str) -> NetconfResponse:
         """
         Netconf unlock operation
 
@@ -196,11 +196,11 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_unlock(target=target)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    async def rpc(self, filter_: str) -> NetconfResponse:
         """
         Netconf "rpc" operation; typically only used with juniper devices?
 
@@ -215,6 +215,6 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_rpc(filter_=filter_)
-        raw_response = self.channel.send_input_netconf(response.channel_input)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response

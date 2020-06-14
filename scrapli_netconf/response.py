@@ -6,8 +6,9 @@ from typing import Any, Dict, List, Union
 
 from lxml import etree
 from lxml.etree import Element
-from scrapli.response import Response
 
+from scrapli.response import Response
+from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.helper import remove_namespaces
 
 LOG = logging.getLogger("response")
@@ -20,7 +21,11 @@ CHUNK_MATCH_1_1 = re.compile(pattern=r"^#(\d+)(?:\n*)(((?!#).)*)", flags=re.M | 
 
 class NetconfResponse(Response):
     def __init__(
-        self, netconf_version: str, xml_input: Element, strip_namespaces: bool = True, **kwargs: Any
+        self,
+        netconf_version: NetconfVersion,
+        xml_input: Element,
+        strip_namespaces: bool = True,
+        **kwargs: Any,
     ):
         """
         Scrapli Netconf NetconfResponse
@@ -41,7 +46,7 @@ class NetconfResponse(Response):
             ValueError: if invalid netconf_version string
 
         """
-        if netconf_version not in ("1.0", "1.1"):
+        if netconf_version not in (NetconfVersion.VERSION_1_0, NetconfVersion.VERSION_1_1):
             raise ValueError(f"`netconf_version` should be one of 1.0|1.1, got `{netconf_version}`")
 
         self.netconf_version = netconf_version
@@ -70,7 +75,7 @@ class NetconfResponse(Response):
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.raw_result = result
 
-        if self.netconf_version == "1.0":
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
             self._record_response_netconf_1_0()
         else:
             self._record_response_netconf_1_1()
@@ -91,7 +96,13 @@ class NetconfResponse(Response):
         """
         self.failed = False
 
-        self.xml_result = etree.fromstring(self.raw_result.replace("]]>]]>", "").rstrip())
+        # remove the message end characters and xml document header; this document header
+        # seems to only crop up in 1.0 messages thus far...
+        self.xml_result = etree.fromstring(
+            self.raw_result.replace("]]>]]>", "").replace(
+                '<?xml version="1.0" encoding="UTF-8"?>', ""
+            )
+        )
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:

@@ -11,8 +11,9 @@ scrapli_netconf
 
 scrapli_netconf is a netconf driver built on top of [scrapli](https://github.com/carlmontanari/scrapli). The purpose
  of scrapli_netconf is to provide a fast, flexible, thoroughly tested (*coming soon TM), well typed, well documented
- , simple API. Working together scrapli and scrapli_netconf aim to provide a consistent (as is practical) look and
-  feel when automating devices over telnet, SSH, or netconf (over SSH). 
+ , simple API that supports both synchronous and asynchronous usage. Working together scrapli and scrapli_netconf aim
+  to provide a consistent (as is practical) look and feel when automating devices over telnet, SSH, or netconf (over
+   SSH). 
 
 *NOTE* This is still very much in beta, use with caution!
 
@@ -96,17 +97,18 @@ Netconf is an IETF network management protocol that uses XML for message encodin
   "screen scraping" library that adds proper message creation, framing, and validation to allow for scrapli to be
    used as a netconf client.
 
-scrapli_netconf adds a new driver (`NetconfScrape`), a new transport (`NetconfTransport`), and a new channel
- (`NetconfChannel`) all of which inherit from, and build on, the core scrapli components. scrapli_netconf also
-  includes an extension of the `Response` object -- aptly named `NetconfResponse` that adds netconf-specific data to
-   the existing object.
+scrapli_netconf adds new drivers (`NetconfScrape` and `AsyncNetconfScrape`), new transports (`NetconfTransport
+` and `AsyncNetconfTransport`), and new channels (`NetconfChannel` and `AsyncNetconfChannel`) all of which inherit from
+, and build on, the core scrapli components. scrapli_netconf also includes an extension of the `Response` object
+ -- aptly named `NetconfResponse` that adds netconf-specific data to the existing object.
 
 A great question to ask right now is: "why"! The primary driver is to get `ncclient` like functionality without
  needing `paramiko` for the transport so that we can take full advantage of "normal" OpenSSH options, as well as have
   fewer dependencies. Additionally, as scrapli_netconf is just an extension of scrapli, this means that automation of
    devices over telnet, SSH, and netconf (over SSH) can be done all with an extremely consistent look and feel
    . Realistically this should cover most modes of present day network automation other than HTTP based APIs (which
-    would likely have a pretty different look and feel anyway).
+    would likely have a pretty different look and feel anyway). Finally, but still quite important -- with the
+     `asyncssh` transport plugin, scrapli_netconf provides asyncio support for netconf operations.
 
 
 # Documentation
@@ -130,9 +132,12 @@ make docs
 
 At this time scrapli_netconf is a base implementation of very basic netconf 1.0 and netconf 1.1. It *should* work on
  anything that runs those versions of netconf, but has only been tested against the following platforms/versions:
- 
+
+- Cisco IOS-XE (tested on: 16.04.01)
 - Cisco IOS-XR (tested on: 6.5.3)
 - Juniper JunOS (tested on: 17.3R2.10)
+
+Note that testing right now is still very limited so there may be some broken things!
 
 
 # Advanced Installation
@@ -140,7 +145,7 @@ At this time scrapli_netconf is a base implementation of very basic netconf 1.0 
 As outlined in the quick start, you should be able to pip install scrapli_netconf "normally":
 
 ```
-pip install scrapli
+pip install scrapli-netconf
 ```
 
 To install from this repositories master branch:
@@ -164,12 +169,14 @@ python setup.py install
 ```
 
 scrapli_netconf has made an effort to have as few dependencies as possible -- at this time only requiring scrapli (of
- course) and lxml.
+ course) and lxml. That is a bit of a lie, as right now scrapli_asyncssh (and of course asyncssh) are also required
+  -- in future releases this will likely change to allow you to use scrapli_netconf with only scrapli and lxml
+   installed.
 
 As for platforms to *run* scrapli_netconf on -- it has and will be tested on MacOS and Ubuntu regularly and should
  work on any POSIX system. At this time scrapli_netconf will not run on Windows as it requires the `system` transport
-  flavor of scrapli which is not supported on Windows. If you are on Windows and wish to try out scrapli_netconf you can
-   fire up WSL, or this likely works in Cygwin as well.
+  or `asyncssh` transport flavors of scrapli which are not supported on Windows. If you are on Windows and wish to try
+   out scrapli_netconf you can fire up WSL, or this likely works in Cygwin as well.
    
    
 # Basic Usage
@@ -242,7 +249,55 @@ TODO - add context manager!
 
 # FAQ
 
-TODO
+- When given a list of filters/configs need to combine them if they are of the same top level class, ex:
+
+```python
+EDIT_INTERFACE_G_0_0_0_0 = """
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+  <interface-configuration>
+    <active>act</active>
+    <interface-name>GigabitEthernet0/0/0/0</interface-name>
+    <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+      <addresses>
+        <primary>
+          <address>10.10.0.1</address>
+          <netmask>255.255.255.0</netmask>
+        </primary>
+      </addresses>
+    </ipv4-network>
+  </interface-configuration>
+</interface-configurations>
+"""
+
+EDIT_INTERFACE_G_0_0_0_1 = """
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+  <interface-configuration>
+    <active>act</active>
+    <interface-name>GigabitEthernet0/0/0/1</interface-name>
+    <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+      <addresses>
+        <primary>
+          <address>10.10.1.1</address>
+          <netmask>255.255.255.0</netmask>
+        </primary>
+      </addresses>
+    </ipv4-network>
+  </interface-configuration>
+</interface-configurations>
+"""
+```
+
+the above should all be in a single parent "interface-configurations" block.
+
+- Validate that a device supports a given operation (capabilities) before attempting to run xyz method
+- Add `<default-operation>merge</default-operation>` to edit config (and maybe other methods?) (good doc: https://www
+.juniper.net/documentation/en_US/junos/topics/task/configuration/netconf-configuration-setting-edit-config-mode.html)
+- Need to add dry run mode(s) -- looks like `test-option`
+- Need to add error-options: `error-option`
+- Add copy-config && delete-config methods
+- Looks like there is maybe a validate method too?
+- Add options to commit -- confirmed/confirm-timeout/etc.(?)
+- Add cancel-commit method
 
 
 # Linting and Testing
@@ -257,4 +312,3 @@ Please see [scrapli Linting and Testing](https://github.com/carlmontanari/scrapl
 
 - TESTS!!!
 - Context manager
-- Drivers? Junos/XR need their own driver maybe?

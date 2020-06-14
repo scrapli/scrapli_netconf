@@ -94,9 +94,9 @@ def main():
     result = conn.get_config(filters=CONFIG_FILTER)
     print(result.result)
 
-    # get some operational data via "bare_rpc" for juniper style rpc calls; note the `filter_` to
+    # get some operational data via "rpc" for juniper style rpc calls; note the `filter_` to
     # not reuse builtins
-    result = conn.bare_rpc(filter_=COMMIT_FILTER)
+    result = conn.rpc(filter_=COMMIT_FILTER)
     print(result.result)
 
     # edit the candidate configuration

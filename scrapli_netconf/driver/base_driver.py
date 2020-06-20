@@ -8,7 +8,7 @@ from lxml.etree import Element
 
 from scrapli.driver.base_driver import ScrapeBase
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.exceptions import CouldNotExchangeCapabilities
+from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 from scrapli_netconf.response import NetconfResponse
 
 
@@ -98,6 +98,52 @@ class NetconfScrapeBase(ScrapeBase):
             self.server_capabilities.append(elem.text)
         self.logger.info(f"Server capabilities received and parsed: {self.server_capabilities}")
 
+    def _validate_get_config_target(self, source: str) -> None:
+        """
+        Validate get-config source is acceptable
+
+        Args:
+            source: configuration source to get; typically one of running|startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid source was selected
+
+        """
+        valid_sources = ["running"]
+        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
+            valid_sources.append("candidate")
+        if "" in self.server_capabilities:
+            valid_sources.append("startup")
+        if source not in valid_sources:
+            raise ValueError(f"`source` should be one of {valid_sources}, got `{source}`")
+
+    def _validate_edit_config_target(self, target: str) -> None:
+        """
+        Validate edit-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to edit/lock; typically one of running|startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid source was selected
+
+        """
+        valid_targets = []
+        if "urn:ietf:params:netconf:capability:writeable-running:1.0" in self.server_capabilities:
+            valid_targets.append("running")
+        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
+            valid_targets.append("candidate")
+        if "" in self.server_capabilities:
+            valid_targets.append("startup")
+        if target not in valid_targets:
+            raise ValueError(f"`target` should be one of {valid_targets}, got `{target}`")
+
     def _build_base_elem(self) -> Element:
         """
         Create base element for netconf operations
@@ -117,8 +163,7 @@ class NetconfScrapeBase(ScrapeBase):
         base_elem = etree.fromstring(text=base_xml_str)
         return base_elem
 
-    @staticmethod
-    def _build_filters(filters: List[str], filter_type: str = "subtree") -> Element:
+    def _build_filters(self, filters: List[str], filter_type: str = "subtree") -> Element:
         """
         Create filter element for a given rpc
 
@@ -130,7 +175,8 @@ class NetconfScrapeBase(ScrapeBase):
             Element: lxml filter element to use for netconf operation
 
         Raises:
-            N/A
+            CapabilityNotSupported: if xpath selected and not supported on server
+            ValueError: if filter_type is not one of subtree|xpath
 
         """
         if filter_type == "subtree":
@@ -142,7 +188,11 @@ class NetconfScrapeBase(ScrapeBase):
                 xml_filter_element = etree.fromstring(filter_)
                 # insert the subtree filter into the parent filter element
                 xml_filter_elem.insert(1, xml_filter_element)
-        else:
+        elif filter_type == "xpath":
+            if "urn:ietf:params:netconf:capability:xpath:1.0" not in self.server_capabilities:
+                msg = "xpath filter requested, but is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
             # assuming for now that there will only ever be a single xpath string/filter... this may
             # end up being a shitty assumption!
             filter_ = filters[0]
@@ -151,6 +201,8 @@ class NetconfScrapeBase(ScrapeBase):
                     filter_type=filter_type, xpath=filter_
                 )
             )
+        else:
+            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         return xml_filter_elem
 
     def _pre_get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
@@ -166,12 +218,9 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            ValueError: if invalid filter value
+            N/A
 
         """
-        if filter_type not in ("subtree", "xpath"):
-            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
-
         # build base request and insert the get element
         xml_request = self._build_base_elem()
         xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
@@ -210,7 +259,7 @@ class NetconfScrapeBase(ScrapeBase):
         Handle pre "get_config" tasks for consistency between sync/async versions
 
         Args:
-            source: configuration source to get; running|startup|candidate
+            source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
 
@@ -219,16 +268,10 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            ValueError: if invalid filter value
-            ValueError: if invalid configuration source value
+            N/A
 
         """
-        if filter_type not in ("subtree", "xpath"):
-            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
-        if source not in ("running", "startup", "candidate"):
-            raise ValueError(f"`source` should be one of running|startup|candidate, got `{source}`")
-        if isinstance(filters, str):
-            filters = [filters]
+        self._validate_get_config_target(source=source)
 
         # build base request and insert the get-config element
         xml_request = self._build_base_elem()
@@ -238,6 +281,8 @@ class NetconfScrapeBase(ScrapeBase):
         xml_request.insert(0, xml_get_config_element)
 
         if filters is not None:
+            if isinstance(filters, str):
+                filters = [filters]
             xml_filter_elem = self._build_filters(filters=filters, filter_type=filter_type)
             # insert filter element into parent get element
             get_element = xml_request.find("get-config")
@@ -275,11 +320,11 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            ValueError: if invalid filter value
+            N/A
 
         """
-        if target not in ("running", "startup", "candidate"):
-            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
+        self._validate_edit_config_target(target=target)
+
         if isinstance(configs, str):
             configs = [configs]
 
@@ -392,11 +437,11 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         """
-        if target not in ("running", "startup", "candidate"):
-            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
+        self._validate_edit_config_target(target=target)
+
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(NetconfBaseOperations.LOCK.value.format(target=target))
         xml_request.insert(0, xml_lock_element)
@@ -428,11 +473,11 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         """
-        if target not in ("running", "startup", "candidate"):
-            raise ValueError(f"`target` should be one of running|startup|candidate, got `{target}`")
+        self._validate_edit_config_target(target=target)
+
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(
             NetconfBaseOperations.UNLOCK.value.format(target=target)

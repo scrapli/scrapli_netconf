@@ -85,7 +85,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
         Netconf get-config operation
 
         Args:
-            source: configuration source to get; running|startup|candidate
+            source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
 

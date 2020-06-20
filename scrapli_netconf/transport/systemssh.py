@@ -1,17 +1,10 @@
 """scrapli_netconf.transport.systemssh"""
-from logging import getLogger
-from subprocess import Popen
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 from scrapli.transport.ptyprocess import PtyProcess
-
-if TYPE_CHECKING:
-    PopenBytes = Popen[bytes]  # pylint: disable=E1136
-
-LOG = getLogger("transport")
 
 
 class NetconfSystemSSHTransport(SystemSSHTransport):
@@ -26,11 +19,8 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         """
         Netconf open method
 
-        Netconf seems to always force a pty which means that scrapli cannot use its preferred
-        `open_pipes` method of connecting to the server. This means that we always force the open
-        method to open via pty, and due to this several of the base SystemSSHTransport methods must
-        be overridden in order to properly authenticate via password or key, as well as to capture
-        output of server capabilities that must be parsed.
+        Several of the base SystemSSHTransport methods must be overridden in order to capture output
+        of server capabilities that must be parsed.
 
         Args:
             N/A
@@ -42,8 +32,6 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
             N/A
 
         """
-        self.session_lock.acquire()
-
         login_bytes = self._open_netconf_pty()
 
         if self.keepalive:
@@ -67,19 +55,18 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
 
         """
         self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f"Session to host {self.host} spawned")
-        self.session_lock.release()
-        login_bytes: bytes = self._pty_authenticate(self.session)
-        LOG.debug(f"Authenticated to host {self.host} successfully")
+        self.logger.debug(f"Session to host {self.host} spawned")
+        login_bytes: bytes = self._authenticate()
+        self.logger.debug(f"Authenticated to host {self.host} successfully")
         return login_bytes
 
     @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
-    def _pty_authenticate(self, pty_session: PtyProcess) -> bytes:
+    def _authenticate(self) -> bytes:
         """
         Private method to check initial authentication when using pty_session
 
         Args:
-            pty_session: PtyProcess session object
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
@@ -94,9 +81,9 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         password_count = 0
         while True:
             try:
-                new_output = pty_session.read()
+                new_output = self.session.read()
                 output += new_output
-                LOG.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
             except EOFError:
                 self._ssh_message_handler(output=output)
                 # if _ssh_message_handler didn't raise any exception, we can raise the standard --
@@ -113,17 +100,19 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
                 # count the times password occurs to have a decent idea if auth failed
                 password_count += 1
                 output = b""
-                LOG.info("Found password prompt, sending password")
-                pty_session.write(self.auth_password.encode())
-                pty_session.write(self._comms_return_char.encode())
+                self.logger.info("Found password prompt, sending password")
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
             if password_count > 1:
                 msg = (
                     "`password` seen multiple times during session establishment, "
                     "likely failed authentication"
                 )
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b"<hello" in output.lower():
-                LOG.info("Found start of server capabilities, authentication successful")
+                self.logger.info("Found start of server capabilities, authentication successful")
+                self._isauthenticated = True
                 self.session_lock.release()
                 return output
 
@@ -138,9 +127,10 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         """
+        raise NotImplementedError("`network` style keepalives not supported with netconf")
 
     def _keepalive_standard(self) -> None:
         """
@@ -153,6 +143,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         """
+        raise NotImplementedError("keepalives not yet implemented")

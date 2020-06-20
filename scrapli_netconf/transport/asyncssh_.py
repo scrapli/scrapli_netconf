@@ -57,9 +57,10 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         """
+        raise NotImplementedError("`network` style keepalives not supported with netconf")
 
     def _keepalive_standard(self) -> None:
         """
@@ -72,6 +73,7 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         """
+        raise NotImplementedError("keepalives not yet implemented")

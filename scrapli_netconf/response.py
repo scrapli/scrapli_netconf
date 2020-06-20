@@ -96,8 +96,7 @@ class NetconfResponse(Response):
         """
         self.failed = False
 
-        # remove the message end characters and xml document header; this document header
-        # seems to only crop up in 1.0 messages thus far...
+        # remove the message end characters and xml document header
         self.xml_result = etree.fromstring(
             self.raw_result.replace("]]>]]>", "").replace(
                 '<?xml version="1.0" encoding="UTF-8"?>', ""
@@ -141,7 +140,13 @@ class NetconfResponse(Response):
                 self.failed = True
 
         self.xml_result = etree.fromstring(
-            "\n".join([result[1].rstrip() for result in result_sections])
+            "\n".join(
+                [
+                    # remove the message end characters and xml document header
+                    result[1].replace('<?xml version="1.0" encoding="UTF-8"?>', "").rstrip()
+                    for result in result_sections
+                ]
+            )
         )
         self.result = etree.tostring(self.xml_result).decode()
 

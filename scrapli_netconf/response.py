@@ -96,7 +96,8 @@ class NetconfResponse(Response):
         """
         self.failed = False
 
-        # remove the message end characters and xml document header
+        # remove the message end characters and xml document header see:
+        # https://github.com/scrapli/scrapli_netconf/issues/1
         self.xml_result = etree.fromstring(
             self.raw_result.replace("]]>]]>", "").replace(
                 '<?xml version="1.0" encoding="UTF-8"?>', ""
@@ -142,7 +143,8 @@ class NetconfResponse(Response):
         self.xml_result = etree.fromstring(
             "\n".join(
                 [
-                    # remove the message end characters and xml document header
+                    # remove the message end characters and xml document header see:
+                    # https://github.com/scrapli/scrapli_netconf/issues/1
                     result[1].replace('<?xml version="1.0" encoding="UTF-8"?>', "").rstrip()
                     for result in result_sections
                 ]

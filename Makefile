@@ -15,3 +15,17 @@ docs:
 	--output-dir docs \
 	scrapli_netconf \
 	--force
+
+cov:
+	python -m pytest \
+	--cov=scrapli_netconf \
+	--cov-report html \
+	--cov-report term \
+	tests/
+
+cov_unit:
+	python -m pytest \
+	--cov=scrapli_netconf \
+	--cov-report html \
+	--cov-report term \
+	tests/unit/

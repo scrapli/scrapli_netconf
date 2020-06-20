@@ -115,7 +115,7 @@ class NetconfScrapeBase(ScrapeBase):
         valid_sources = ["running"]
         if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
             valid_sources.append("candidate")
-        if "" in self.server_capabilities:
+        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
             valid_sources.append("startup")
         if source not in valid_sources:
             raise ValueError(f"`source` should be one of {valid_sources}, got `{source}`")
@@ -139,7 +139,7 @@ class NetconfScrapeBase(ScrapeBase):
             valid_targets.append("running")
         if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
             valid_targets.append("candidate")
-        if "" in self.server_capabilities:
+        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
             valid_targets.append("startup")
         if target not in valid_targets:
             raise ValueError(f"`target` should be one of {valid_targets}, got `{target}`")

@@ -43,7 +43,9 @@ class NetconfBaseOperations(Enum):
 
 
 class NetconfScrapeBase(ScrapeBase):
-    server_capabilities: List[str] = []
+    server_capabilities: List[str]
+    readable_datastores: List[str]
+    writeable_datastores: List[str]
     netconf_version: NetconfVersion
     strip_namespaces: bool
     message_id: int
@@ -96,7 +98,52 @@ class NetconfScrapeBase(ScrapeBase):
             if "capability" not in elem.tag:
                 continue
             self.server_capabilities.append(elem.text)
+        self._build_readable_datastores()
+        self._build_writeable_datastores()
         self.logger.info(f"Server capabilities received and parsed: {self.server_capabilities}")
+
+    def _build_readable_datastores(self) -> None:
+        """
+        Build a list of readable datastores based on server's advertised capabilities
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.readable_datastores = []
+        self.readable_datastores.append("running")
+        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
+            self.readable_datastores.append("candidate")
+        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
+            self.readable_datastores.append("startup")
+
+    def _build_writeable_datastores(self) -> None:
+        """
+        Build a list of writeable/editable datastores based on server's advertised capabilities
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        self.writeable_datastores = []
+        if "urn:ietf:params:netconf:capability:writeable-running:1.0" in self.server_capabilities:
+            self.writeable_datastores.append("running")
+        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
+            self.writeable_datastores.append("candidate")
+        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
+            self.writeable_datastores.append("startup")
 
     def _validate_get_config_target(self, source: str) -> None:
         """
@@ -112,13 +159,10 @@ class NetconfScrapeBase(ScrapeBase):
             ValueError: if an invalid source was selected
 
         """
-        valid_sources = ["running"]
-        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
-            valid_sources.append("candidate")
-        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
-            valid_sources.append("startup")
-        if source not in valid_sources:
-            raise ValueError(f"`source` should be one of {valid_sources}, got `{source}`")
+        if source not in self.readable_datastores:
+            raise ValueError(
+                f"`source` should be one of {self.readable_datastores}, got `{source}`"
+            )
 
     def _validate_edit_config_target(self, target: str) -> None:
         """
@@ -134,15 +178,10 @@ class NetconfScrapeBase(ScrapeBase):
             ValueError: if an invalid source was selected
 
         """
-        valid_targets = []
-        if "urn:ietf:params:netconf:capability:writeable-running:1.0" in self.server_capabilities:
-            valid_targets.append("running")
-        if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
-            valid_targets.append("candidate")
-        if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:
-            valid_targets.append("startup")
-        if target not in valid_targets:
-            raise ValueError(f"`target` should be one of {valid_targets}, got `{target}`")
+        if target not in self.writeable_datastores:
+            raise ValueError(
+                f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            )
 
     def _build_base_elem(self) -> Element:
         """
@@ -158,6 +197,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug(f"Building base element for message id {self.message_id}")
         base_xml_str = NetconfBaseOperations.RPC.value.format(message_id=self.message_id)
         self.message_id += 1
         base_elem = etree.fromstring(text=base_xml_str)
@@ -221,6 +261,10 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug(
+            f"Building payload for `get` operation. filter_type: {filter_type}, filter_: {filter_}"
+        )
+
         # build base request and insert the get element
         xml_request = self._build_base_elem()
         xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
@@ -246,7 +290,7 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
-
+        self.logger.debug(f"Built payload for `get` operation. Payload: {channel_input.decode()}")
         return response
 
     def _pre_get_config(
@@ -271,6 +315,10 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug(
+            f"Building payload for `get-config` operation. source: {source}, filter_type: "
+            f"{filter_type}, filters: {filters}"
+        )
         self._validate_get_config_target(source=source)
 
         # build base request and insert the get-config element
@@ -303,6 +351,9 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
+        self.logger.debug(
+            f"Built payload for `get-config` operation. Payload: {channel_input.decode()}"
+        )
         return response
 
     def _pre_edit_config(
@@ -323,6 +374,9 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug(
+            f"Building payload for `get-config` operation. target: {target}, configs: {configs}"
+        )
         self._validate_edit_config_target(target=target)
 
         if isinstance(configs, str):
@@ -357,6 +411,9 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
+        self.logger.debug(
+            f"Built payload for `edit-config` operation. Payload: {channel_input.decode()}"
+        )
         return response
 
     def _pre_commit(self) -> NetconfResponse:
@@ -374,6 +431,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug("Building payload for `commit` operation")
         xml_request = self._build_base_elem()
         xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value)
         xml_request.insert(0, xml_commit_element)
@@ -388,6 +446,9 @@ class NetconfScrapeBase(ScrapeBase):
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f"Built payload for `commit` operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -406,6 +467,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug("Building payload for `discard` operation.")
         xml_request = self._build_base_elem()
         xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value)
         xml_request.insert(0, xml_commit_element)
@@ -422,6 +484,9 @@ class NetconfScrapeBase(ScrapeBase):
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f"Built payload for `discard` operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -440,6 +505,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug("Building payload for `lock` operation.")
         self._validate_edit_config_target(target=target)
 
         xml_request = self._build_base_elem()
@@ -459,6 +525,7 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
+        self.logger.debug(f"Built payload for `lock` operation. Payload: {channel_input.decode()}")
         return response
 
     def _pre_unlock(self, target: str) -> NetconfResponse:
@@ -476,6 +543,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug("Building payload for `unlock` operation.")
         self._validate_edit_config_target(target=target)
 
         xml_request = self._build_base_elem()
@@ -497,6 +565,9 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
+        self.logger.debug(
+            f"Built payload for `unlock` operation. Payload: {channel_input.decode()}"
+        )
         return response
 
     def _pre_rpc(self, filter_: str) -> NetconfResponse:
@@ -514,6 +585,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        self.logger.debug("Building payload for `rpc` operation.")
         xml_request = self._build_base_elem()
 
         # build filter element
@@ -536,4 +608,5 @@ class NetconfScrapeBase(ScrapeBase):
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
+        self.logger.debug(f"Built payload for `rpc` operation. Payload: {channel_input.decode()}")
         return response

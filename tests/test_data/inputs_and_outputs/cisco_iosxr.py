@@ -3763,3 +3763,58 @@ CONFIG_FILTER_MULTI_GET_CONFIG_RESULT = """<rpc-reply xmlns="urn:ietf:params:xml
   </ssh>
  </data>
 </rpc-reply>"""
+
+EDIT_CONFIG_SINGLE = """
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+  <interface-configuration>
+    <active>act</active>
+    <interface-name>GigabitEthernet0/0/0/0</interface-name>
+    <description>scrapli was here</description>
+    <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+      <addresses>
+        <primary>
+          <address>10.10.0.1</address>
+          <netmask>255.255.255.0</netmask>
+        </primary>
+      </addresses>
+    </ipv4-network>
+  </interface-configuration>
+</interface-configurations>"""
+
+EDIT_CONFIG_SINGLE_VALIDATE_FILTER = """
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+  <interface-configuration>
+    <active>act</active>
+    <interface-name>GigabitEthernet0/0/0/0</interface-name>
+    <description></description>
+    <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+      <addresses>
+        <primary>
+          <address></address>
+          <netmask></netmask>
+        </primary>
+      </addresses>
+    </ipv4-network>
+  </interface-configuration>
+</interface-configurations>"""
+
+EDIT_CONFIG_SINGLE_VALIDATE_EXPECTED = """
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+ <data>
+  <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+   <interface-configuration>
+    <active>act</active>
+    <interface-name>GigabitEthernet0/0/0/0</interface-name>
+    <description>scrapli was here</description>
+    <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+     <addresses>
+      <primary>
+       <address>10.10.0.1</address>
+       <netmask>255.255.255.0</netmask>
+      </primary>
+     </addresses>
+    </ipv4-network>
+   </interface-configuration>
+  </interface-configurations>
+ </data>
+</rpc-reply>"""

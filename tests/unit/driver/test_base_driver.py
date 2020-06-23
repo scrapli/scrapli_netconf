@@ -116,6 +116,18 @@ def test_parse_server_capabilities_exception(dummy_conn):
     assert str(exc.value) == "Failed to parse server capabilities from host localhost"
 
 
+def test_build_readable_datastores(dummy_conn):
+    dummy_conn._parse_server_capabilities(raw_server_capabilities=SERVER_CAPABILITIES_1_1)
+    dummy_conn._build_readable_datastores()
+    assert dummy_conn.readable_datastores == ["running", "candidate"]
+
+
+def test_build_writeable_datastores(dummy_conn):
+    dummy_conn._parse_server_capabilities(raw_server_capabilities=SERVER_CAPABILITIES_1_1)
+    dummy_conn._build_writeable_datastores()
+    assert dummy_conn.writeable_datastores == ["candidate"]
+
+
 @pytest.mark.parametrize(
     "capabilities",
     [
@@ -129,11 +141,13 @@ def test_validate_get_config_target(dummy_conn, capabilities):
     source = capabilities[0]
     server_capabilities = capabilities[1]
     dummy_conn.server_capabilities = server_capabilities
+    dummy_conn._build_readable_datastores()
     dummy_conn._validate_get_config_target(source=source)
 
 
 def test_validate_get_config_target_exception(dummy_conn):
     with pytest.raises(ValueError) as exc:
+        dummy_conn._build_readable_datastores()
         dummy_conn._validate_get_config_target(source="tacocat")
     assert str(exc.value) == "`source` should be one of ['running'], got `tacocat`"
 
@@ -151,11 +165,13 @@ def test_validate_edit_config_target(dummy_conn, capabilities):
     target = capabilities[0]
     server_capabilities = capabilities[1]
     dummy_conn.server_capabilities = server_capabilities
+    dummy_conn._build_writeable_datastores()
     dummy_conn._validate_edit_config_target(target=target)
 
 
 def test_validate_edit_config_target_exception(dummy_conn):
     with pytest.raises(ValueError) as exc:
+        dummy_conn._build_writeable_datastores()
         dummy_conn._validate_edit_config_target(target="tacocat")
     assert str(exc.value) == "`target` should be one of [], got `tacocat`"
 
@@ -198,6 +214,7 @@ def test_build_filters_exception_unsupported(dummy_conn):
 )
 def test_pre_get(dummy_conn, capabilities):
     dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.readable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     response = dummy_conn._pre_get(filter_=filter_)
@@ -215,6 +232,7 @@ def test_pre_get(dummy_conn, capabilities):
 )
 def test_pre_get_config(dummy_conn, capabilities):
     dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.readable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     response = dummy_conn._pre_get_config(filters=[filter_])
@@ -232,6 +250,7 @@ def test_pre_get_config(dummy_conn, capabilities):
 )
 def test_pre_edit_config(dummy_conn, capabilities):
     dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
+    dummy_conn.writeable_datastores = ["running"]
     dummy_conn.netconf_version = capabilities[0]
     expected_channel_input = capabilities[1]
     configs = """<cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">
@@ -256,6 +275,7 @@ def test_pre_edit_config(dummy_conn, capabilities):
 )
 def test_pre_commit(dummy_conn, capabilities):
     dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.writeable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     response = dummy_conn._pre_commit()
     assert isinstance(response, NetconfResponse)
@@ -272,6 +292,7 @@ def test_pre_commit(dummy_conn, capabilities):
 )
 def test_pre_discard(dummy_conn, capabilities):
     dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.writeable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     response = dummy_conn._pre_discard()
     assert isinstance(response, NetconfResponse)
@@ -288,6 +309,7 @@ def test_pre_discard(dummy_conn, capabilities):
 )
 def test_pre_lock(dummy_conn, capabilities):
     dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
+    dummy_conn.writeable_datastores = ["running"]
     dummy_conn.netconf_version = capabilities[0]
     expected_channel_input = capabilities[1]
     response = dummy_conn._pre_lock(target="running")
@@ -305,6 +327,7 @@ def test_pre_lock(dummy_conn, capabilities):
 )
 def test_pre_unlock(dummy_conn, capabilities):
     dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
+    dummy_conn.writeable_datastores = ["running"]
     dummy_conn.netconf_version = capabilities[0]
     expected_channel_input = capabilities[1]
     response = dummy_conn._pre_unlock(target="running")
@@ -322,6 +345,7 @@ def test_pre_unlock(dummy_conn, capabilities):
 )
 def test_pre_rpc(dummy_conn, capabilities):
     dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.writeable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     response = dummy_conn._pre_rpc(filter_=filter_)

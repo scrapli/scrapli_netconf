@@ -29,10 +29,8 @@ def sync_conn(device_type, auth_type):
         device["auth_private_key"] = PRIVATE_KEY
     conn = NetconfScrape(**device)
     yield conn, device_type
-    # TODO need to fix isalive, think its always false rn
     if conn.isalive():
         conn.close()
-    conn.close()
     # at the very least iosxr vm seems to not handle back to back to back connections very well
     # a small sleep seems to appease it
     time.sleep(1)
@@ -48,10 +46,8 @@ async def async_conn(device_type, auth_type):
         device["auth_private_key"] = PRIVATE_KEY
     conn = AsyncNetconfScrape(**device)
     yield conn, device_type
-    # TODO need to fix isalive, think its always false rn
     if conn.isalive():
         await conn.close()
-    await conn.close()
     # at the very least iosxr vm seems to not handle back to back to back connections very well
     # a small sleep seems to appease it
     time.sleep(1)

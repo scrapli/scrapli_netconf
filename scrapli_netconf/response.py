@@ -25,6 +25,7 @@ class NetconfResponse(Response):
         netconf_version: NetconfVersion,
         xml_input: Element,
         strip_namespaces: bool = True,
+        failed_when_contains: str = "<rpc-error>",
         **kwargs: Any,
     ):
         """
@@ -37,6 +38,8 @@ class NetconfResponse(Response):
             netconf_version: string of netconf version; `1.0`|`1.1`
             xml_input: lxml Element of input to be sent to device
             strip_namespaces: strip out all namespaces if True, otherwise ignore them
+            failed_when_contains: list of strings that, if present in final output, represent a
+                failed command/interaction -- should only ever be "<rpc-error>" for netconf!
             kwargs: kwargs for instantiation of scrapli Response object supertype
 
         Returns:
@@ -55,7 +58,7 @@ class NetconfResponse(Response):
 
         self.xml_result: Element
 
-        super().__init__(**kwargs)
+        super().__init__(failed_when_contains=failed_when_contains, **kwargs)
 
     def _record_response(self, result: str) -> None:
         """
@@ -94,7 +97,8 @@ class NetconfResponse(Response):
             N/A
 
         """
-        self.failed = False
+        if not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
 
         # remove the message end characters and xml document header see:
         # https://github.com/scrapli/scrapli_netconf/issues/1
@@ -124,7 +128,8 @@ class NetconfResponse(Response):
             N/A
 
         """
-        self.failed = False
+        if not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
         result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
         # validate all received data

@@ -1,3 +1,5 @@
+import pytest
+
 from scrapli_netconf.response import NetconfResponse
 
 from ...helper import xmldiffs
@@ -11,7 +13,7 @@ def test_get_filter_subtree(sync_conn):
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
-        return
+        pytest.skip("need to add iosxe/junos tests here!")
 
     expected_config_elements = INPUTS_OUTPUTS[device_type].GET_SUBTREE_ELEMENTS
     expected_result = INPUTS_OUTPUTS[device_type].GET_SUBTREE_RESULT
@@ -78,7 +80,7 @@ def test_get_config_filtered_multi_filter_subtree(sync_conn):
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
-        return
+        pytest.skip("need to add iosxe/junos tests here!")
 
     config_replacer = CONFIG_REPLACER[device_type]
     expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS
@@ -101,12 +103,48 @@ def test_get_config_filtered_multi_filter_subtree(sync_conn):
 
 
 # def test_get_config_filter_multi_filter_xpath(sync_conn):
-#     # TODO do any of these platforms actually support xpath?
+#     # TODO do any of these platforms actually support xpath? and if they do is there a "multi"
+#     #  xpath filter option, i dont think so?
 #     pass
 
 
-# def test_edit_config(sync_conn):
-#     pass
+def test_edit_config_single_config(sync_conn):
+    conn = sync_conn[0]
+    device_type = sync_conn[1]
+
+    if device_type != "cisco_iosxr":
+        pytest.skip("skipping edit config on iosxe for now!")
+
+    configs = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE
+    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_FILTER
+    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_EXPECTED
+
+    conn.open()
+
+    target = "candidate"
+    if device_type == "cisco_iosxe":
+        # TODO maybe skip and have a test just for iosxe cuz of no candidate? also maybe just
+        #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
+        target = "running"
+
+    response = conn.edit_config(configs=configs, target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert not xmldiffs(
+        response.result,
+        """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
+    )
+
+    validation_response = conn.get_config(
+        source=target, filter_type="subtree", filters=validate_filter
+    )
+    assert isinstance(validation_response, NetconfResponse)
+    assert validation_response.failed is False
+    assert not xmldiffs(validation_response.result, expected_result)
+
+    discard_response = conn.discard()
+    assert isinstance(discard_response, NetconfResponse)
+    assert discard_response.failed is False
 
 
 # def test_commit(sync_conn):

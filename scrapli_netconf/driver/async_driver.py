@@ -25,6 +25,8 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
 
         self.strip_namespaces = strip_namespaces
         self.server_capabilities: List[str] = []
+        self.readable_datastores: List[str] = []
+        self.writeable_datastores: List[str] = []
         self.netconf_version = NetconfVersion.VERSION_1_0
         self.message_id = 101
 

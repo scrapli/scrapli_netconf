@@ -19,7 +19,7 @@ async def test_get_filter_subtree(async_conn):
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
-        return
+        pytest.skip("need to add iosxe/junos tests here!")
 
     expected_config_elements = INPUTS_OUTPUTS[device_type].GET_SUBTREE_ELEMENTS
     expected_result = INPUTS_OUTPUTS[device_type].GET_SUBTREE_RESULT
@@ -90,7 +90,7 @@ async def test_get_config_filtered_multi_filter_subtree(async_conn):
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
-        return
+        pytest.skip("need to add iosxe/junos tests here!")
 
     config_replacer = CONFIG_REPLACER[device_type]
     expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS
@@ -119,9 +119,44 @@ async def test_get_config_filtered_multi_filter_subtree(async_conn):
 #     pass
 
 
-# @pytest.mark.asyncio
-# async def test_edit_config(async_conn):
-#     pass
+@pytest.mark.asyncio
+async def test_edit_config(async_conn):
+    conn = async_conn[0]
+    device_type = async_conn[1]
+
+    if device_type != "cisco_iosxr":
+        pytest.skip("skipping edit config on iosxe for now!")
+
+    configs = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE
+    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_FILTER
+    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_EXPECTED
+
+    await conn.open()
+
+    target = "candidate"
+    if device_type == "cisco_iosxe":
+        # TODO maybe skip and have a test just for iosxe cuz of no candidate? also maybe just
+        #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
+        target = "running"
+
+    response = await conn.edit_config(configs=configs, target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert not xmldiffs(
+        response.result,
+        """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
+    )
+
+    validation_response = await conn.get_config(
+        source=target, filter_type="subtree", filters=validate_filter
+    )
+    assert isinstance(validation_response, NetconfResponse)
+    assert validation_response.failed is False
+    assert not xmldiffs(validation_response.result, expected_result)
+
+    discard_response = await conn.discard()
+    assert isinstance(discard_response, NetconfResponse)
+    assert discard_response.failed is False
 
 
 # @pytest.mark.asyncio

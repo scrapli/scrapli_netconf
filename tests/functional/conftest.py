@@ -31,9 +31,9 @@ def sync_conn(device_type, auth_type):
     yield conn, device_type
     if conn.isalive():
         conn.close()
-    # at the very least iosxr vm seems to not handle back to back to back connections very well
-    # a small sleep seems to appease it
-    time.sleep(1)
+        # at the very least iosxr vm seems to not handle back to back to back connections very well
+        # a small sleep seems to appease it
+        time.sleep(1)
 
 
 @pytest.fixture(scope="function")
@@ -48,6 +48,6 @@ async def async_conn(device_type, auth_type):
     yield conn, device_type
     if conn.isalive():
         await conn.close()
-    # at the very least iosxr vm seems to not handle back to back to back connections very well
-    # a small sleep seems to appease it
-    time.sleep(1)
+        # at the very least iosxr vm seems to not handle back to back to back connections very well
+        # a small sleep seems to appease it
+        time.sleep(1)

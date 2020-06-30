@@ -1,5 +1,6 @@
 """scrapli_netconf.driver.base_driver"""
 import re
+import warnings
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -48,6 +49,7 @@ class NetconfScrapeBase(ScrapeBase):
     writeable_datastores: List[str]
     netconf_version: NetconfVersion
     strip_namespaces: bool
+    strict_datastores: bool
     message_id: int
 
     def _process_open(self, raw_server_capabilities: bytes) -> NetconfClientCapabilities:
@@ -156,13 +158,15 @@ class NetconfScrapeBase(ScrapeBase):
             N/A  # noqa: DAR202
 
         Raises:
-            ValueError: if an invalid source was selected
+            ValueError: if an invalid source was selected and strict_datastores is True
 
         """
         if source not in self.readable_datastores:
-            raise ValueError(
-                f"`source` should be one of {self.readable_datastores}, got `{source}`"
-            )
+            msg = f"`source` should be one of {self.readable_datastores}, got `{source}`"
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
 
     def _validate_edit_config_target(self, target: str) -> None:
         """
@@ -179,9 +183,11 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         if target not in self.writeable_datastores:
-            raise ValueError(
-                f"`target` should be one of {self.writeable_datastores}, got `{target}`"
-            )
+            msg = f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
 
     def _build_base_elem(self) -> Element:
         """

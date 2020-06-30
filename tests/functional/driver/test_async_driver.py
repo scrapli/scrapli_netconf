@@ -15,11 +15,12 @@ TEST_DATA_DIR = f"{Path(scrapli_netconf.__file__).parents[1]}/tests/test_data"
 async def test_get_filter_subtree(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
-    await conn.open()
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
         pytest.skip("need to add iosxe/junos tests here!")
+
+    await conn.open()
 
     expected_config_elements = INPUTS_OUTPUTS[device_type].GET_SUBTREE_ELEMENTS
     expected_result = INPUTS_OUTPUTS[device_type].GET_SUBTREE_RESULT
@@ -86,11 +87,12 @@ async def test_get_config_filtered_single_filter_subtree(async_conn):
 async def test_get_config_filtered_multi_filter_subtree(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
-    await conn.open()
 
     # TODO juniper and iosxe
     if device_type != "cisco_iosxr":
         pytest.skip("need to add iosxe/junos tests here!")
+
+    await conn.open()
 
     config_replacer = CONFIG_REPLACER[device_type]
     expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS

@@ -114,7 +114,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         # self.logger.info(f"Read: {repr(output)}")
         return output
 
-    async def send_input_netconf(self, channel_input: str) -> str:
+    async def send_input_netconf(self, channel_input: str) -> bytes:
         """
         Send inputs to netconf server
 
@@ -122,7 +122,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             channel_input: string of the base xml message to send to netconf server
 
         Returns:
-            str: string result of message sent to netconf server
+            bytes: bytes result of message sent to netconf server
 
         Raises:
             N/A

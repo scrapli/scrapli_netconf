@@ -11,7 +11,13 @@ from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
 
 
 class NetconfScrape(Scrape, NetconfScrapeBase):
-    def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        port: int = 830,
+        strip_namespaces: bool = False,
+        strict_datastores: bool = False,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(port=port, **kwargs)
 
         if self._transport != "system":
@@ -24,6 +30,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
+        self.strict_datastores = strict_datastores
         self.server_capabilities: List[str] = []
         self.readable_datastores: List[str] = []
         self.writeable_datastores: List[str] = []

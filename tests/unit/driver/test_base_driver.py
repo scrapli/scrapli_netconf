@@ -146,6 +146,7 @@ def test_validate_get_config_target(dummy_conn, capabilities):
 
 
 def test_validate_get_config_target_exception(dummy_conn):
+    dummy_conn.strict_datastores = True
     with pytest.raises(ValueError) as exc:
         dummy_conn._build_readable_datastores()
         dummy_conn._validate_get_config_target(source="tacocat")
@@ -170,6 +171,7 @@ def test_validate_edit_config_target(dummy_conn, capabilities):
 
 
 def test_validate_edit_config_target_exception(dummy_conn):
+    dummy_conn.strict_datastores = True
     with pytest.raises(ValueError) as exc:
         dummy_conn._build_writeable_datastores()
         dummy_conn._validate_edit_config_target(target="tacocat")

@@ -2,7 +2,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -16,7 +16,7 @@ LOG = logging.getLogger("response")
 # "chunk match" matches two groups per section returned from the netconf server, first the length of
 # the response, and second the response itself. we use the length of the response to validate the
 # response is in fact X length
-CHUNK_MATCH_1_1 = re.compile(pattern=r"^#(\d+)(?:\n*)(((?!#).)*)", flags=re.M | re.S)
+CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!#).)*)", flags=re.M | re.S)
 
 
 class NetconfResponse(Response):
@@ -25,7 +25,7 @@ class NetconfResponse(Response):
         netconf_version: NetconfVersion,
         xml_input: Element,
         strip_namespaces: bool = True,
-        failed_when_contains: str = "<rpc-error>",
+        failed_when_contains: Optional[Union[bytes, List[bytes]]] = b"<rpc-error>",
         **kwargs: Any,
     ):
         """
@@ -38,8 +38,10 @@ class NetconfResponse(Response):
             netconf_version: string of netconf version; `1.0`|`1.1`
             xml_input: lxml Element of input to be sent to device
             strip_namespaces: strip out all namespaces if True, otherwise ignore them
-            failed_when_contains: list of strings that, if present in final output, represent a
-                failed command/interaction -- should only ever be "<rpc-error>" for netconf!
+            failed_when_contains: list of bytes that, if present in final output, represent a
+                failed command/interaction -- should generally be left alone for netconf. Note that
+                this differs from the base scrapli Response object as we want to be parsing/checking
+                for these strings in raw byte strings we get back from the device
             kwargs: kwargs for instantiation of scrapli Response object supertype
 
         Returns:
@@ -55,17 +57,20 @@ class NetconfResponse(Response):
         self.netconf_version = netconf_version
         self.xml_input = xml_input
         self.strip_namespaces = strip_namespaces
-
         self.xml_result: Element
 
-        super().__init__(failed_when_contains=failed_when_contains, **kwargs)
+        super().__init__(**kwargs)
 
-    def _record_response(self, result: str) -> None:
+        if isinstance(failed_when_contains, bytes):
+            failed_when_contains = [failed_when_contains]
+        self.failed_when_contains = failed_when_contains
+
+    def _record_response(self, result: bytes) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 
         Args:
-            result: string result of channel_input
+            result: bytes result of channel_input
 
         Returns:
             N/A  # noqa: DAR202
@@ -97,14 +102,16 @@ class NetconfResponse(Response):
             N/A
 
         """
-        if not any(err in self.raw_result for err in self.failed_when_contains):
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in self.raw_result for err in self.failed_when_contains):
             self.failed = False
 
         # remove the message end characters and xml document header see:
         # https://github.com/scrapli/scrapli_netconf/issues/1
         self.xml_result = etree.fromstring(
-            self.raw_result.replace("]]>]]>", "").replace(
-                '<?xml version="1.0" encoding="UTF-8"?>', ""
+            self.raw_result.replace(b"]]>]]>", b"").replace(
+                b'<?xml version="1.0" encoding="UTF-8"?>', b""
             )
         )
         self.result = etree.tostring(self.xml_result).decode()
@@ -128,8 +135,11 @@ class NetconfResponse(Response):
             N/A
 
         """
-        if not any(err in self.raw_result for err in self.failed_when_contains):
+        if not self.failed_when_contains:
             self.failed = False
+        elif not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
+
         result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
         # validate all received data
@@ -146,11 +156,11 @@ class NetconfResponse(Response):
                 self.failed = True
 
         self.xml_result = etree.fromstring(
-            "\n".join(
+            b"\n".join(
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1
-                    result[1].replace('<?xml version="1.0" encoding="UTF-8"?>', "").rstrip()
+                    result[1].replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"").rstrip()
                     for result in result_sections
                 ]
             )

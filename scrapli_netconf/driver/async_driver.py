@@ -11,7 +11,13 @@ from scrapli_netconf.transport.asyncssh_ import NetconfAsyncSSHTransport
 
 
 class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
-    def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        port: int = 830,
+        strip_namespaces: bool = True,
+        strict_datastores: bool = False,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(port=port, **kwargs)
 
         if self._transport != "asyncssh":
@@ -24,6 +30,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
+        self.strict_datastores = strict_datastores
         self.server_capabilities: List[str] = []
         self.readable_datastores: List[str] = []
         self.writeable_datastores: List[str] = []

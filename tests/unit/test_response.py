@@ -134,7 +134,7 @@ def test_response_init_exception():
             channel_input=channel_input,
             xml_input=xml_input,
             netconf_version=netconf_version,
-            failed_when_contains="<rpc-error>",
+            failed_when_contains=[b"<rpc-error>"],
         )
     assert str(exc.value) == "`netconf_version` should be one of 1.0|1.1, got `blah`"
 
@@ -153,7 +153,7 @@ def test_response_init(response_setup):
         channel_input=channel_input,
         xml_input=xml_input,
         netconf_version=netconf_version,
-        failed_when_contains="<rpc-error>",
+        failed_when_contains=[b"<rpc-error>"],
     )
     response_start_time = str(datetime.now())[:-7]
     assert response.host == "localhost"
@@ -164,7 +164,7 @@ def test_response_init(response_setup):
     assert bool(response) is True
     assert repr(response) == "Response <Success: False>"
     assert str(response) == "Response <Success: False>"
-    assert response.failed_when_contains == ["<rpc-error>"]
+    assert response.failed_when_contains == [b"<rpc-error>"]
     with pytest.raises(ScrapliCommandFailure):
         response.raise_for_status()
 
@@ -221,10 +221,10 @@ def test_record_response(response_setup):
         channel_input=channel_input,
         xml_input=xml_input,
         netconf_version=netconf_version,
-        failed_when_contains="<rpc-error>",
+        failed_when_contains=[b"<rpc-error>"],
         strip_namespaces=strip_namespaces,
     )
-    response._record_response(result=result)
+    response._record_response(result=result.encode())
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == final_result
     assert response.failed is False
@@ -242,7 +242,7 @@ def test_response_not_implemented_exceptions(method_to_test):
         channel_input=channel_input,
         xml_input=xml_input,
         netconf_version=NetconfVersion.VERSION_1_0,
-        failed_when_contains="<rpc-error>",
+        failed_when_contains=[b"<rpc-error>"],
     )
     method = getattr(response, f"{method_to_test}_parse_output")
     with pytest.raises(NotImplementedError) as exc:

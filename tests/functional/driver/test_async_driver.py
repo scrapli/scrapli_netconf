@@ -16,9 +16,9 @@ async def test_get_filter_subtree(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
 
-    # TODO juniper and iosxe
-    if device_type != "cisco_iosxr":
-        pytest.skip("need to add iosxe/junos tests here!")
+    # TODO juniper
+    if device_type == "juniper_junos_1_0":
+        pytest.skip("need to add junos tests here!")
 
     await conn.open()
 
@@ -89,7 +89,7 @@ async def test_get_config_filtered_multi_filter_subtree(async_conn):
     device_type = async_conn[1]
 
     # TODO juniper and iosxe
-    if device_type != "cisco_iosxr":
+    if device_type != "cisco_iosxr_1_1":
         pytest.skip("need to add iosxe/junos tests here!")
 
     await conn.open()
@@ -126,7 +126,7 @@ async def test_edit_config(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
 
-    if device_type != "cisco_iosxr":
+    if device_type != "cisco_iosxr_1_1":
         pytest.skip("skipping edit config on iosxe for now!")
 
     configs = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE
@@ -136,7 +136,7 @@ async def test_edit_config(async_conn):
     await conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe":
+    if device_type == "cisco_iosxe_1_0":
         # TODO maybe skip and have a test just for iosxe cuz of no candidate? also maybe just
         #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
         target = "running"
@@ -181,7 +181,7 @@ async def test_lock_unlock(async_conn):
     await conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe":
+    if device_type == "cisco_iosxe_1_0":
         target = "running"
 
     response = await conn.lock(target=target)

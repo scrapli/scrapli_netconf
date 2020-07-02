@@ -94,7 +94,7 @@ def xmldiffs(file1, file2):
 
 def cisco_iosxe_replace_config_data(config):
     config = re.sub(
-        pattern=r"! Last configuration change at \d{2}:\d{2}:\d{2} UTC \w{3} \w{3} \d{2} \d{4} .*",
+        pattern=r"! Last configuration change at \d{2}:\d{2}:\d{2} UTC \w{3} \w{3} \d{1,2} \d{4} .*",
         repl="TIMESTAMP",
         string=config,
         flags=re.M | re.I,

@@ -1,3 +1,21 @@
+GET_SUBTREE_FILTER = """
+<config-format-text-cmd>
+ <text-filter-spec> | include interface </text-filter-spec>
+</config-format-text-cmd>"""
+
+GET_SUBTREE_ELEMENTS = ["cli-config-data"]
+
+GET_SUBTREE_RESULT = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><data><cli-config-data><cmd>interface GigabitEthernet1</cmd>
+<cmd>interface GigabitEthernet2</cmd>
+<cmd>interface GigabitEthernet3</cmd>
+<cmd>interface GigabitEthernet4</cmd>
+<cmd>interface GigabitEthernet5</cmd>
+<cmd>interface GigabitEthernet6</cmd>
+<cmd>interface GigabitEthernet7</cmd>
+<cmd>interface GigabitEthernet8</cmd>
+<cmd>interface GigabitEthernet9</cmd>
+<cmd>interface GigabitEthernet10</cmd></cli-config-data></data></rpc-reply>"""
+
 FULL_GET_CONFIG_ELEMENTS = ["cli-config-data-block"]
 
 FULL_GET_CONFIG_RESULT = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><data><cli-config-data-block>!

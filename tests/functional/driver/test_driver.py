@@ -9,11 +9,12 @@ from ...test_data.devices import CONFIG_REPLACER, INPUTS_OUTPUTS
 def test_get_filter_subtree(sync_conn):
     conn = sync_conn[0]
     device_type = sync_conn[1]
-    conn.open()
 
-    # TODO juniper and iosxe
-    if device_type != "cisco_iosxr":
-        pytest.skip("need to add iosxe/junos tests here!")
+    # TODO juniper
+    if device_type == "juniper_junos_1_0":
+        pytest.skip("need to add junos tests here!")
+
+    conn.open()
 
     expected_config_elements = INPUTS_OUTPUTS[device_type].GET_SUBTREE_ELEMENTS
     expected_result = INPUTS_OUTPUTS[device_type].GET_SUBTREE_RESULT
@@ -79,7 +80,7 @@ def test_get_config_filtered_multi_filter_subtree(sync_conn):
     conn.open()
 
     # TODO juniper and iosxe
-    if device_type != "cisco_iosxr":
+    if device_type != "cisco_iosxr_1_1":
         pytest.skip("need to add iosxe/junos tests here!")
 
     config_replacer = CONFIG_REPLACER[device_type]
@@ -112,7 +113,7 @@ def test_edit_config_single_config(sync_conn):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
-    if device_type != "cisco_iosxr":
+    if device_type != "cisco_iosxr_1_1":
         pytest.skip("skipping edit config on iosxe for now!")
 
     configs = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE
@@ -122,7 +123,7 @@ def test_edit_config_single_config(sync_conn):
     conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe":
+    if device_type == "cisco_iosxe_1_0":
         # TODO maybe skip and have a test just for iosxe cuz of no candidate? also maybe just
         #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
         target = "running"
@@ -164,7 +165,7 @@ def test_lock_unlock(sync_conn):
     conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe":
+    if device_type == "cisco_iosxe_1_0":
         target = "running"
 
     response = conn.lock(target=target)

@@ -142,6 +142,9 @@ class NetconfScrapeBase(ScrapeBase):
         self.writeable_datastores = []
         if "urn:ietf:params:netconf:capability:writeable-running:1.0" in self.server_capabilities:
             self.writeable_datastores.append("running")
+        if "urn:ietf:params:netconf:capability:writable-running:1.0" in self.server_capabilities:
+            # NOTE: iosxe shows "writable" (as of 2020.07.01) despite RFC being "writeable"
+            self.writeable_datastores.append("running")
         if "urn:ietf:params:netconf:capability:candidate:1.0" in self.server_capabilities:
             self.writeable_datastores.append("candidate")
         if "urn:ietf:params:netconf:capability:startup:1.0" in self.server_capabilities:

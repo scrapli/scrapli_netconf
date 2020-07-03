@@ -37,37 +37,41 @@ COMMIT_FILTER = """
 """
 
 EDIT_NETCONF = """
-<configuration>
-    <system>
-        <services>
-            <netconf>
-                <ssh>
-                    <port>22</port>
-                </ssh>
-            </netconf>
-        </services>
-    </system>    
-</configuration>
+<config>
+    <configuration>
+        <system>
+            <services>
+                <netconf>
+                    <ssh>
+                        <port>22</port>
+                    </ssh>
+                </netconf>
+            </services>
+        </system>    
+    </configuration>
+</config>
 """
 
 EDIT_MULTIPLE = """
-<configuration>
-    <system>
-        <login>
-            <user>
-                <name>scrapli</name>
-                <uid>9999</uid>
-            </user>
-        </login>
-        <services>
-            <netconf>
-                <ssh>
-                    <port>22</port>
-                </ssh>
-            </netconf>
-        </services>        
-    </system>    
-</configuration>
+<config>
+    <configuration>
+        <system>
+            <login>
+                <user>
+                    <name>scrapli</name>
+                    <uid>9999</uid>
+                </user>
+            </login>
+            <services>
+                <netconf>
+                    <ssh>
+                        <port>22</port>
+                    </ssh>
+                </netconf>
+            </services>        
+        </system>    
+    </configuration>
+</config>
 """
 
 
@@ -100,17 +104,15 @@ def main():
     print(result.result)
 
     # edit the candidate configuration
-    result = conn.edit_config(configs=EDIT_NETCONF, target="candidate")
+    result = conn.edit_config(config=EDIT_NETCONF, target="candidate")
     print(result.result)
 
     # commit config changes
     conn.commit()
     print(result.result)
 
-    # edit multiple config elements, in the case of junos since its just a config, not a model and
-    # we are filtering for things under `configuration` this has to live in a single filter unlike
-    # iosxr
-    result = conn.edit_config(configs=EDIT_MULTIPLE, target="candidate")
+    # edit multiple config elements
+    result = conn.edit_config(config=EDIT_MULTIPLE, target="candidate")
     print(result.result)
 
     # discard this config change

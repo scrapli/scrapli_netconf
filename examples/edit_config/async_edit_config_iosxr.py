@@ -1,6 +1,7 @@
+import asyncio
 import logging
 
-from scrapli_netconf.driver import NetconfScrape
+from scrapli_netconf.driver import AsyncNetconfScrape
 
 logging.basicConfig(filename="scrapli.log", level=logging.INFO)
 logger = logging.getLogger("scrapli")
@@ -10,6 +11,7 @@ IOSXR_DEVICE = {
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
+    "transport": "asyncssh"
 }
 
 EDIT_INTERFACE_G_0_0_0_0 = """
@@ -33,30 +35,30 @@ EDIT_INTERFACE_G_0_0_0_0 = """
 """
 
 
-def main():
+async def main():
     # create scrapli_netconf connection just like with scrapli, open the connection
-    conn = NetconfScrape(**IOSXR_DEVICE)
-    conn.open()
+    conn = AsyncNetconfScrape(**IOSXR_DEVICE)
+    await conn.open()
 
     # lock the candidate config before starting because why not
-    result = conn.lock(target="candidate")
+    result = await conn.lock(target="candidate")
     print(result.result)
 
     config = EDIT_INTERFACE_G_0_0_0_0
-    result = conn.edit_config(config=config, target="candidate")
+    result = await conn.edit_config(config=config, target="candidate")
     print(result.result)
 
     # commit config changes
-    conn.commit()
+    result = await conn.commit()
     print(result.result)
 
     # unlock the candidate now that we're done
-    result = conn.unlock(target="candidate")
+    result = await conn.unlock(target="candidate")
     print(result.result)
 
     # close the session
-    conn.close()
+    await conn.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.get_event_loop().run_until_complete(main())

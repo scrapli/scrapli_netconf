@@ -35,7 +35,7 @@ class NetconfBaseOperations(Enum):
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
-    EDIT_CONFIG = "<edit-config><target><{target}/></target><config></config></edit-config>"
+    EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
     COMMIT = "<commit/>"
     DISCARD = "<discard-changes/>"
     LOCK = "<lock><target><{target}/></target></lock>"
@@ -366,13 +366,13 @@ class NetconfScrapeBase(ScrapeBase):
         return response
 
     def _pre_edit_config(
-        self, configs: Union[str, List[str]], target: str = "running"
+        self, config: Union[str, List[str]], target: str = "running"
     ) -> NetconfResponse:
         """
         Handle pre "edit_config" tasks for consistency between sync/async versions
 
         Args:
-            configs: configuration(s) to send to device
+            config: configuration to send to device
             target: configuration source to target; running|startup|candidate
 
         Returns:
@@ -384,15 +384,12 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         self.logger.debug(
-            f"Building payload for `get-config` operation. target: {target}, configs: {configs}"
+            f"Building payload for `get-config` operation. target: {target}, config: {config}"
         )
         self._validate_edit_config_target(target=target)
 
-        if isinstance(configs, str):
-            configs = [configs]
-
-        # build config(s) first to ensure valid xml
-        xml_configs = [etree.fromstring(config) for config in configs]
+        # build config first to ensure valid xml
+        xml_config = etree.fromstring(config)
 
         # build base request and insert the edit-config element
         xml_request = self._build_base_elem()
@@ -401,10 +398,10 @@ class NetconfScrapeBase(ScrapeBase):
         )
         xml_request.insert(0, xml_edit_config_element)
 
-        # insert parent filter element
-        edit_config_element = xml_request.find("edit-config/config")
-        for xml_config in xml_configs:
-            edit_config_element.insert(0, xml_config)
+        # insert parent filter element to first position so that target stays first just for nice
+        # output/readability
+        edit_config_element = xml_request.find("edit-config")
+        edit_config_element.insert(1, xml_config)
 
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"

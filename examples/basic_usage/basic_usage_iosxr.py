@@ -35,22 +35,26 @@ PLATFORM_FILTER = """
 """
 
 EDIT_CDP = """
-<cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">
-    <timer>80</timer>
-    <enable>true</enable>
-    <log-adjacency></log-adjacency>
-    <hold-time>200</hold-time>
-    <advertise-v1-only></advertise-v1-only>
-</cdp>
+<config>
+    <cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">
+        <timer>80</timer>
+        <enable>true</enable>
+        <log-adjacency></log-adjacency>
+        <hold-time>200</hold-time>
+        <advertise-v1-only></advertise-v1-only>
+    </cdp>
+</config>
 """
 
 EDIT_BANNER = """
-<banners xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-infra-cfg">
-    <banner>
-      <banner-name>motd</banner-name>
-      <banner-text>somestupidbanner</banner-text>
-    </banner>
-</banners>
+<config>
+    <banners xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-infra-cfg">
+        <banner>
+          <banner-name>motd</banner-name>
+          <banner-text>somestupidbanner</banner-text>
+        </banner>
+    </banners>
+</config>
 """
 
 
@@ -81,17 +85,16 @@ def main():
     print(result.result)
 
     # edit the candidate configuration
-    result = conn.edit_config(configs=EDIT_CDP, target="candidate")
+    result = conn.edit_config(config=EDIT_CDP, target="candidate")
     print(result.result)
 
     # commit config changes
     conn.commit()
     print(result.result)
 
-    # edit multiple elements of the config -- note you can do this in one big xml, or pass a list
-    # of things to edit
-    configs = [EDIT_CDP, EDIT_BANNER]
-    result = conn.edit_config(configs=configs, target="candidate")
+    # stage a config we'll discard
+    config = EDIT_BANNER
+    result = conn.edit_config(config=config, target="candidate")
     print(result.result)
 
     # discard this config change

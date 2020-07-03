@@ -255,14 +255,14 @@ def test_pre_edit_config(dummy_conn, capabilities):
     dummy_conn.writeable_datastores = ["running"]
     dummy_conn.netconf_version = capabilities[0]
     expected_channel_input = capabilities[1]
-    configs = """<cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">
+    config = """<config><cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">
     <timer>80</timer>
     <enable>true</enable>
     <log-adjacency></log-adjacency>
     <hold-time>200</hold-time>
     <advertise-v1-only></advertise-v1-only>
-</cdp>"""
-    response = dummy_conn._pre_edit_config(configs=configs)
+</cdp></config>"""
+    response = dummy_conn._pre_edit_config(config=config)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
 

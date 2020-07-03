@@ -116,9 +116,9 @@ def test_edit_config_single_config(sync_conn):
     if device_type != "cisco_iosxr_1_1":
         pytest.skip("skipping edit config on iosxe for now!")
 
-    configs = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE
-    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_FILTER
-    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_SINGLE_VALIDATE_EXPECTED
+    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
+    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_FILTER
+    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
 
     conn.open()
 
@@ -128,7 +128,7 @@ def test_edit_config_single_config(sync_conn):
         #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
         target = "running"
 
-    response = conn.edit_config(configs=configs, target=target)
+    response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
     assert not xmldiffs(

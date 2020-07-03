@@ -7,7 +7,6 @@ from scrapli_netconf.driver.driver import NetconfScrape
 
 from ..test_data.devices import DEVICES, PRIVATE_KEY
 
-
 NETCONF_1_0_DEVICE_TYPES = ["cisco_iosxe_1_0", "juniper_junos_1_0"]
 NETCONF_1_1_DEVICE_TYPES = ["cisco_iosxr_1_1"]
 NETCONF_ALL_VERSIONS_DEVICE_TYPES = NETCONF_1_0_DEVICE_TYPES + NETCONF_1_1_DEVICE_TYPES

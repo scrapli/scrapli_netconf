@@ -112,13 +112,13 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
         return response
 
     async def edit_config(
-        self, configs: Union[str, List[str]], target: str = "running"
+        self, config: str, target: str = "running"
     ) -> NetconfResponse:
         """
         Netconf get-config operation
 
         Args:
-            configs: configuration(s) to send to device
+            config: configuration to send to device
             target: configuration source to target; running|startup|candidate
 
         Returns:
@@ -128,7 +128,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
             N/A
 
         """
-        response = self._pre_edit_config(configs=configs, target=target)
+        response = self._pre_edit_config(config=config, target=target)
         raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response

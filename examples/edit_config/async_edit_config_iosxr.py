@@ -11,7 +11,7 @@ IOSXR_DEVICE = {
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
-    "transport": "asyncssh"
+    "transport": "asyncssh",
 }
 
 EDIT_INTERFACE_G_0_0_0_0 = """

@@ -3,45 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.5" />
-<title>scrapli_netconf.transport.netconf API documentation</title>
-<meta name="description" content="scrapli_netconf.transport.netconf" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<meta name="generator" content="pdoc 0.8.3" />
+<title>scrapli_netconf.transport.systemssh API documentation</title>
+<meta name="description" content="scrapli_netconf.transport.systemssh" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli_netconf.transport.netconf</code></h1>
+<h1 class="title">Module <code>scrapli_netconf.transport.systemssh</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli_netconf.transport.netconf</p>
+<p>scrapli_netconf.transport.systemssh</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport.netconf&#34;&#34;&#34;
-from logging import getLogger
-from subprocess import Popen
-from typing import TYPE_CHECKING, Any
+<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport.systemssh&#34;&#34;&#34;
+from typing import Any
 
 from scrapli.decorators import operation_timeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 from scrapli.transport.ptyprocess import PtyProcess
 
-if TYPE_CHECKING:
-    PopenBytes = Popen[bytes]  # pylint: disable=E1136
 
-LOG = getLogger(&#34;transport&#34;)
-
-
-class NetconfTransport(SystemSSHTransport):
+class NetconfSystemSSHTransport(SystemSSHTransport):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
@@ -53,11 +48,8 @@ class NetconfTransport(SystemSSHTransport):
         &#34;&#34;&#34;
         Netconf open method
 
-        Netconf seems to always force a pty which means that scrapli cannot use its preferred
-        `open_pipes` method of connecting to the server. This means that we always force the open
-        method to open via pty, and due to this several of the base SystemSSHTransport methods must
-        be overridden in order to properly authenticate via password or key, as well as to capture
-        output of server capabilities that must be parsed.
+        Several of the base SystemSSHTransport methods must be overridden in order to capture output
+        of server capabilities that must be parsed.
 
         Args:
             N/A
@@ -69,8 +61,6 @@ class NetconfTransport(SystemSSHTransport):
             N/A
 
         &#34;&#34;&#34;
-        self.session_lock.acquire()
-
         login_bytes = self._open_netconf_pty()
 
         if self.keepalive:
@@ -94,26 +84,25 @@ class NetconfTransport(SystemSSHTransport):
 
         &#34;&#34;&#34;
         self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
-        self.session_lock.release()
-        login_bytes: bytes = self._pty_authenticate(self.session)
-        LOG.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
+        login_bytes: bytes = self._authenticate()
+        self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
         return login_bytes
 
     @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
-    def _pty_authenticate(self, pty_session: PtyProcess) -&gt; bytes:
+    def _authenticate(self) -&gt; bytes:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session
 
         Args:
-            pty_session: PtyProcess session object
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
-                host key checking is enabled and failed.
+            ScrapliAuthenticationFailed: if we see a password prompt more than once, or we got an
+                unhandled EOF message
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
@@ -121,33 +110,38 @@ class NetconfTransport(SystemSSHTransport):
         password_count = 0
         while True:
             try:
-                new_output = pty_session.read()
+                new_output = self.session.read()
                 output += new_output
-                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
+                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
-                msg = f&#34;Failed to open connection to host {self.host}&#34;
-                if b&#34;Host key verification failed&#34; in output:
-                    msg = f&#34;Host key verification failed for host {self.host}&#34;
-                elif b&#34;Operation timed out&#34; in output:
-                    msg = f&#34;Timed out connecting to host {self.host}&#34;
-                LOG.critical(msg)
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard --
+                # did you disable strict key message/exception
+                msg = (
+                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+                    &#34;`auth_strict_key`?&#34;
+                )
+                self.logger.critical(msg)
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b&#34;password:&#34; in output.lower():
                 # if password is seen in the output, reset output and enter the password
                 # count the times password occurs to have a decent idea if auth failed
                 password_count += 1
                 output = b&#34;&#34;
-                LOG.info(&#34;Found password prompt, sending password&#34;)
-                pty_session.write(self.auth_password.encode())
-                pty_session.write(self._comms_return_char.encode())
+                self.logger.info(&#34;Found password prompt, sending password&#34;)
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
             if password_count &gt; 1:
                 msg = (
                     &#34;`password` seen multiple times during session establishment, &#34;
                     &#34;likely failed authentication&#34;
                 )
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b&#34;&lt;hello&#34; in output.lower():
-                LOG.info(&#34;Found start of server capabilities, authentication successful&#34;)
+                self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
+                self._isauthenticated = True
                 self.session_lock.release()
                 return output
 
@@ -162,9 +156,10 @@ class NetconfTransport(SystemSSHTransport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         &#34;&#34;&#34;
+        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -177,9 +172,10 @@ class NetconfTransport(SystemSSHTransport):
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -191,23 +187,18 @@ class NetconfTransport(SystemSSHTransport):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.transport.netconf.NetconfTransport"><code class="flex name class">
-<span>class <span class="ident">NetconfTransport</span></span>
-<span>(</span><span>**kwargs)</span>
+<dt id="scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport"><code class="flex name class">
+<span>class <span class="ident">NetconfSystemSSHTransport</span></span>
+<span>(</span><span>**kwargs: Any)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Helper class that provides a standard way to create an ABC using
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <p>SystemSSHTransport Object</p>
 <p>Inherit from Transport ABC
 SSH2Transport &lt;- Transport (ABC)</p>
 <p>If using this driver, and passing a ssh_config_file (or setting this argument to <code>True</code>),
 all settings in the ssh config file will be superseded by any arguments passed here!</p>
-<p>SystemSSHTransport <em>always</em> prefers public key auth if given the option! If auth_private_key
-is set in the provided arguments OR if ssh_config_file is passed/True and there is a key for
-ANY match (i.e. <code>*</code> has a key in ssh config file!!), we will use that key! If public key
-auth fails and a username and password is set (manually or by ssh config file), password
-auth will be attempted.</p>
 <p>Note that comms_prompt_pattern, comms_return_char and comms_ansi are only passed here to
 handle "in channel" authentication required by SystemSSH &ndash; these are assigned to private
 attributes in this class and ignored after authentication. If you wish to modify these
@@ -225,6 +216,8 @@ authentication methods here.</p>
 <dd>username for authentication</dd>
 <dt><strong><code>auth_private_key</code></strong></dt>
 <dd>path to private key for authentication</dd>
+<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
+<dd>passphrase for decrypting ssh key if necessary</dd>
 <dt><strong><code>auth_password</code></strong></dt>
 <dd>password for authentication</dd>
 <dt><strong><code>auth_strict_key</code></strong></dt>
@@ -259,7 +252,7 @@ transport channel. This is useful for network-y type devices that may not suppor
 system ssh</dd>
 <dt><strong><code>keepalive_pattern</code></strong></dt>
 <dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
+u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
 line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
 can be acquired. This is only applicable if using keepalives and if the keepalive
 type is 'network'</dd>
@@ -288,23 +281,31 @@ is completed.</dd>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
 <dd>string to path for ssh known hosts file</dd>
+<dt><strong><code>transport_options</code></strong></dt>
+<dd>SystemSSHTransport specific transport options (options that don't
+apply to any of the other transport classes) supplied in a dictionary where the key
+is the name of the option and the value is of course the value.
+- open_cmd: string or list of strings to extend the open_cmd with, for example:
+<code>["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]</code> or:
+<code>-oKexAlgorithms=+diffie-hellman-group1-sha1</code>
+these commands will be appended to the open command that scrapli builds which
+looks something like the following depending on the inputs provided:
+ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
+-l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+-F /dev/null
+You can pass any arguments that would be supported if you were ssh'ing on your
+terminal "normally", passing some bad arguments can break things!</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetconfTransport(SystemSSHTransport):
+<pre><code class="python">class NetconfSystemSSHTransport(SystemSSHTransport):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
 
@@ -316,11 +317,8 @@ is completed.</dd>
         &#34;&#34;&#34;
         Netconf open method
 
-        Netconf seems to always force a pty which means that scrapli cannot use its preferred
-        `open_pipes` method of connecting to the server. This means that we always force the open
-        method to open via pty, and due to this several of the base SystemSSHTransport methods must
-        be overridden in order to properly authenticate via password or key, as well as to capture
-        output of server capabilities that must be parsed.
+        Several of the base SystemSSHTransport methods must be overridden in order to capture output
+        of server capabilities that must be parsed.
 
         Args:
             N/A
@@ -332,8 +330,6 @@ is completed.</dd>
             N/A
 
         &#34;&#34;&#34;
-        self.session_lock.acquire()
-
         login_bytes = self._open_netconf_pty()
 
         if self.keepalive:
@@ -357,26 +353,25 @@ is completed.</dd>
 
         &#34;&#34;&#34;
         self.session = PtyProcess.spawn(self.open_cmd)
-        LOG.debug(f&#34;Session to host {self.host} spawned&#34;)
-        self.session_lock.release()
-        login_bytes: bytes = self._pty_authenticate(self.session)
-        LOG.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
+        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
+        login_bytes: bytes = self._authenticate()
+        self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
         return login_bytes
 
     @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
-    def _pty_authenticate(self, pty_session: PtyProcess) -&gt; bytes:
+    def _authenticate(self) -&gt; bytes:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session
 
         Args:
-            pty_session: PtyProcess session object
+            N/A
 
         Returns:
             N/A  # noqa: DAR202
 
         Raises:
-            ScrapliAuthenticationFailed: if we receive an EOFError -- this usually indicates that
-                host key checking is enabled and failed.
+            ScrapliAuthenticationFailed: if we see a password prompt more than once, or we got an
+                unhandled EOF message
 
         &#34;&#34;&#34;
         self.session_lock.acquire()
@@ -384,33 +379,38 @@ is completed.</dd>
         password_count = 0
         while True:
             try:
-                new_output = pty_session.read()
+                new_output = self.session.read()
                 output += new_output
-                LOG.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
+                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
             except EOFError:
-                msg = f&#34;Failed to open connection to host {self.host}&#34;
-                if b&#34;Host key verification failed&#34; in output:
-                    msg = f&#34;Host key verification failed for host {self.host}&#34;
-                elif b&#34;Operation timed out&#34; in output:
-                    msg = f&#34;Timed out connecting to host {self.host}&#34;
-                LOG.critical(msg)
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard --
+                # did you disable strict key message/exception
+                msg = (
+                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
+                    &#34;`auth_strict_key`?&#34;
+                )
+                self.logger.critical(msg)
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b&#34;password:&#34; in output.lower():
                 # if password is seen in the output, reset output and enter the password
                 # count the times password occurs to have a decent idea if auth failed
                 password_count += 1
                 output = b&#34;&#34;
-                LOG.info(&#34;Found password prompt, sending password&#34;)
-                pty_session.write(self.auth_password.encode())
-                pty_session.write(self._comms_return_char.encode())
+                self.logger.info(&#34;Found password prompt, sending password&#34;)
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
             if password_count &gt; 1:
                 msg = (
                     &#34;`password` seen multiple times during session establishment, &#34;
                     &#34;likely failed authentication&#34;
                 )
+                self.session_lock.release()
                 raise ScrapliAuthenticationFailed(msg)
             if b&#34;&lt;hello&#34; in output.lower():
-                LOG.info(&#34;Found start of server capabilities, authentication successful&#34;)
+                self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
+                self._isauthenticated = True
                 self.session_lock.release()
                 return output
 
@@ -425,9 +425,10 @@ is completed.</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
         &#34;&#34;&#34;
+        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
 
     def _keepalive_standard(self) -&gt; None:
         &#34;&#34;&#34;
@@ -440,40 +441,36 @@ is completed.</dd>
             N/A  # noqa: DAR202
 
         Raises:
-            N/A
+            NotImplementedError: always for now...
 
-        &#34;&#34;&#34;</code></pre>
+        &#34;&#34;&#34;
+        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>scrapli.transport.systemssh.SystemSSHTransport</li>
 <li>scrapli.transport.transport.Transport</li>
+<li>scrapli.transport.base_transport.TransportBase</li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli_netconf.transport.netconf.NetconfTransport.open_netconf"><code class="name flex">
-<span>def <span class="ident">open_netconf</span></span>(<span>self)</span>
+<dt id="scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport.open_netconf"><code class="name flex">
+<span>def <span class="ident">open_netconf</span></span>(<span>self) ‑> bytes</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf open method</p>
-<p>Netconf seems to always force a pty which means that scrapli cannot use its preferred
-<code>open_pipes</code> method of connecting to the server. This means that we always force the open
-method to open via pty, and due to this several of the base SystemSSHTransport methods must
-be overridden in order to properly authenticate via password or key, as well as to capture
-output of server capabilities that must be parsed.</p>
+<div class="desc"><p>Netconf open method</p>
+<p>Several of the base SystemSSHTransport methods must be overridden in order to capture output
+of server capabilities that must be parsed.</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>bytes</code></strong></dt>
+<dt><code>bytes</code></dt>
 <dd>bytes output from server captured while opening the connection</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -482,11 +479,8 @@ output of server capabilities that must be parsed.</p>
     &#34;&#34;&#34;
     Netconf open method
 
-    Netconf seems to always force a pty which means that scrapli cannot use its preferred
-    `open_pipes` method of connecting to the server. This means that we always force the open
-    method to open via pty, and due to this several of the base SystemSSHTransport methods must
-    be overridden in order to properly authenticate via password or key, as well as to capture
-    output of server capabilities that must be parsed.
+    Several of the base SystemSSHTransport methods must be overridden in order to capture output
+    of server capabilities that must be parsed.
 
     Args:
         N/A
@@ -498,8 +492,6 @@ output of server capabilities that must be parsed.</p>
         N/A
 
     &#34;&#34;&#34;
-    self.session_lock.acquire()
-
     login_bytes = self._open_netconf_pty()
 
     if self.keepalive:
@@ -527,9 +519,9 @@ output of server capabilities that must be parsed.</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli_netconf.transport.netconf.NetconfTransport" href="#scrapli_netconf.transport.netconf.NetconfTransport">NetconfTransport</a></code></h4>
+<h4><code><a title="scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport" href="#scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport">NetconfSystemSSHTransport</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.transport.netconf.NetconfTransport.open_netconf" href="#scrapli_netconf.transport.netconf.NetconfTransport.open_netconf">open_netconf</a></code></li>
+<li><code><a title="scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport.open_netconf" href="#scrapli_netconf.transport.systemssh.NetconfSystemSSHTransport.open_netconf">open_netconf</a></code></li>
 </ul>
 </li>
 </ul>
@@ -538,9 +530,7 @@ output of server capabilities that must be parsed.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

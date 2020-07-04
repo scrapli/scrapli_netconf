@@ -1,4 +1,4 @@
-# scrapli>=2020.06.06  <- uncomment and update pin once the bytes conversion for channel is on pypi
--e git+https://github.com/carlmontanari/scrapli@develop#egg=scrapli
-scrapli_asyncssh>=2020.06.06
+# scrapli>=2020.07.04  <- uncomment and update pin once the bytes conversion for channel is on pypi
+-e git+https://github.com/carlmontanari/scrapli@master#egg=scrapli
+scrapli_asyncssh>=2020.07.04
 lxml>=4.5.1

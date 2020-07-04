@@ -1,5 +1,5 @@
 """scrapli_netconf scrapli netconf plugin"""
-from scrapli_netconf.driver import NetconfScrape
+from scrapli_netconf.driver import NetconfScrape, AsyncNetconfScrape
 
-__version__ = "2020.04.19"
-__all__ = ("NetconfScrape",)
+__version__ = "2020.07.04"
+__all__ = ("NetconfScrape", "AsyncNetconfScrape")

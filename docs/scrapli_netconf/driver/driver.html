@@ -3,15 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.7.5" />
+<meta name="generator" content="pdoc 0.8.3" />
 <title>scrapli_netconf.driver.driver API documentation</title>
 <meta name="description" content="scrapli_netconf.driver.driver" />
-<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
-<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
-<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
-<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
 <main>
@@ -26,88 +28,43 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.driver.driver&#34;&#34;&#34;
-import logging
-import re
 from typing import Any, List, Optional, Union
 
-from lxml import etree
-from lxml.etree import Element
 from scrapli import Scrape
-
+from scrapli.exceptions import TransportPluginError
 from scrapli_netconf.channel.channel import NetconfChannel
-from scrapli_netconf.exceptions import CouldNotExchangeCapabilities
+from scrapli_netconf.constants import NetconfVersion
+from scrapli_netconf.driver.base_driver import NetconfScrapeBase
 from scrapli_netconf.response import NetconfResponse
-from scrapli_netconf.transport.netconf import NetconfTransport
-
-LOG = logging.getLogger(&#34;driver&#34;)
-
-CLIENT_CAPABILITIES_1_0 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.0&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;
-CLIENT_CAPABILITIES_1_1 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.1&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;
-
-BASE_RPC_1_0 = (
-    &#34;&lt;rpc xmlns=&#39;urn:ietf:params:xml:ns:netconf:base:1.0&#39; message-id=&#39;{message_id}&#39;&gt;&lt;/rpc&gt;&#34;
-)
-BASE_GET = &#34;&lt;get&gt;&lt;/get&gt;&#34;
-BASE_GET_CONFIG = &#34;&lt;get-config&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/get-config&gt;&#34;
-BASE_EDIT_CONFIG = &#34;&lt;edit-config&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;config&gt;&lt;/config&gt;&lt;/edit-config&gt;&#34;
-BASE_FILTER = &#34;&lt;filter type=&#39;{filter_type}&#39;&gt;&lt;/filter&gt;&#34;
-BASE_COMMIT = &#34;&lt;commit/&gt;&#34;
-BASE_DISCARD = &#34;&lt;discard-changes/&gt;&#34;
-BASE_LOCK = &#34;&lt;lock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/lock&gt;&#34;
-BASE_UNLOCK = &#34;&lt;unlock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/unlock&gt;&#34;
+from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
 
 
-class NetconfScrape(Scrape):
-    def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -&gt; None:
+class NetconfScrape(Scrape, NetconfScrapeBase):
+    def __init__(
+        self,
+        port: int = 830,
+        strip_namespaces: bool = False,
+        strict_datastores: bool = False,
+        **kwargs: Any,
+    ) -&gt; None:
         super().__init__(port=port, **kwargs)
 
-        self.transport_class = NetconfTransport
-        self.transport = NetconfTransport(**self.transport_args)
+        if self._transport != &#34;system&#34;:
+            msg = &#34;`NetconfScrape` is only supported using the `system` transport plugin&#34;
+            self.logger.exception(msg)
+            raise TransportPluginError(msg)
+
+        self.transport_class = NetconfSystemSSHTransport
+        self.transport = NetconfSystemSSHTransport(**self.transport_args)  # type: ignore
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
+        self.strict_datastores = strict_datastores
         self.server_capabilities: List[str] = []
-        self.netconf_version = &#34;1.0&#34;
+        self.readable_datastores: List[str] = []
+        self.writeable_datastores: List[str] = []
+        self.netconf_version = NetconfVersion.VERSION_1_0
         self.message_id = 101
-
-    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; None:
-        &#34;&#34;&#34;
-        Parse netconf server capabilities
-
-        Args:
-            raw_server_capabilities: raw bytes containing server capabilities
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
-
-        &#34;&#34;&#34;
-        filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;hello.*&lt;\/hello&gt;)&#34;, string=raw_server_capabilities, flags=re.I | re.S
-        )
-        if filtered_raw_server_capabilities is None:
-            msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
-            raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
-        for elem in server_capabilities_xml.iter():
-            if &#34;capability&#34; not in elem.tag:
-                continue
-            self.server_capabilities.append(elem.text)
-        LOG.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
 
     def open(self) -&gt; None:
         &#34;&#34;&#34;
@@ -123,43 +80,18 @@ class NetconfScrape(Scrape):
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         login_bytes = self.transport.open_netconf()
         raw_server_capabilities = self.channel._get_server_capabilities(  # pylint: disable=W0212
             login_bytes
         )
-        self._parse_server_capabilities(  # pylint: disable=W0212
-            raw_server_capabilities=raw_server_capabilities
-        )
 
-        client_capabilities = CLIENT_CAPABILITIES_1_0
-        if &#34;urn:ietf:params:netconf:base:1.1&#34; in self.server_capabilities:
-            client_capabilities = CLIENT_CAPABILITIES_1_1
-            self.netconf_version = &#34;1.1&#34;
+        client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
         self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
-
-    def _build_base_elem(self) -&gt; Element:
-        &#34;&#34;&#34;
-        Create base element for netconf operations
-
-        Args:
-            N/A
-
-        Returns:
-            Element: lxml base element to use for netconf operation
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        base_xml_str = BASE_RPC_1_0.format(message_id=self.message_id)
-        self.message_id += 1
-        base_elem = etree.fromstring(base_xml_str)
-        return base_elem
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
@@ -173,40 +105,11 @@ class NetconfScrape(Scrape):
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter value
+            N/A
 
         &#34;&#34;&#34;
-        if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-        # build filter(s) first to ensure valid xml
-        xml_filter_element = etree.fromstring(filter_)
-
-        # build base request and insert the get element
-        xml_request = self._build_base_elem()
-        xml_get_element = etree.fromstring(BASE_GET)
-        xml_request.insert(0, xml_get_element)
-
-        # build filter element
-        xml_filter_elem = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-        # insert parent filter element
-        get_element = xml_request.find(&#34;get&#34;)
-        get_element.insert(0, xml_filter_elem)
-
-        # insert filter element
-        get_filter = xml_request.find(&#34;get/filter&#34;)
-        get_filter.insert(1, xml_filter_element)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_get(filter_=filter_, filter_type=filter_type)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -220,7 +123,7 @@ class NetconfScrape(Scrape):
         Netconf get-config operation
 
         Args:
-            source: configuration source to get; running|startup|candidate
+            source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
 
@@ -228,98 +131,32 @@ class NetconfScrape(Scrape):
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter value
-            ValueError: if invalid configuration source value
+            N/A
 
         &#34;&#34;&#34;
-        if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-        if source not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`source` should be one of running|startup|candidate, got `{source}`&#34;)
-        if isinstance(filters, str):
-            filters = [filters]
+        response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
 
-        # build filter(s) first to ensure valid xml
-        xml_filters = []
-        if filters:
-            xml_filters = [etree.fromstring(filter_) for filter_ in filters]
-
-        # build base request and insert the get-config element
-        xml_request = self._build_base_elem()
-        xml_get_config_element = etree.fromstring(BASE_GET_CONFIG.format(source=source))
-        xml_request.insert(0, xml_get_config_element)
-
-        if filters:
-            # build filter element
-            xml_filter_element = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-            # insert parent filter element
-            get_config_element = xml_request.find(&#34;get-config&#34;)
-            get_config_element.insert(1, xml_filter_element)
-
-            # insert filter element(s)
-            get_config_filter_element = xml_request.find(&#34;get-config/filter&#34;)
-            for xml_filter_ in xml_filters:
-                get_config_filter_element.insert(0, xml_filter_)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def edit_config(
-        self, configs: Union[str, List[str]], target: str = &#34;running&#34;
-    ) -&gt; NetconfResponse:
+    def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf get-config operation
 
         Args:
-            configs: configuration(s) to send to device
+            config: configuration to send to device
             target: configuration source to target; running|startup|candidate
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration target value
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        if isinstance(configs, str):
-            configs = [configs]
-
-        # build config(s) first to ensure valid xml
-        xml_configs = [etree.fromstring(config) for config in configs]
-
-        # build base request and insert the edit-config element
-        xml_request = self._build_base_elem()
-        xml_edit_config_element = etree.fromstring(BASE_EDIT_CONFIG.format(target=target))
-        xml_request.insert(0, xml_edit_config_element)
-
-        # insert parent filter element
-        edit_config_element = xml_request.find(&#34;edit-config/config&#34;)
-        for xml_config in xml_configs:
-            edit_config_element.insert(0, xml_config)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_edit_config(config=config, target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -337,19 +174,8 @@ class NetconfScrape(Scrape):
             N/A
 
         &#34;&#34;&#34;
-        xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(BASE_COMMIT)
-        xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_commit()
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -367,19 +193,8 @@ class NetconfScrape(Scrape):
             N/A
 
         &#34;&#34;&#34;
-        xml_request = self._build_base_elem()
-        xml_discard_element = etree.fromstring(BASE_DISCARD)
-        xml_request.insert(0, xml_discard_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_discard()
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -394,24 +209,11 @@ class NetconfScrape(Scrape):
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        xml_request = self._build_base_elem()
-        xml_lock_element = etree.fromstring(BASE_LOCK.format(target=target))
-        xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_lock(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -426,30 +228,19 @@ class NetconfScrape(Scrape):
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        xml_request = self._build_base_elem()
-        xml_unlock_element = etree.fromstring(BASE_UNLOCK.format(target=target))
-        xml_request.insert(0, xml_unlock_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_unlock(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
+    def rpc(self, filter_: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
-        Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
+        Netconf &#34;rpc&#34; operation; typically only used with juniper devices
+
+        You can also use this to build send your own payload in a more manual fashion
 
         Args:
             filter_: filter/rpc to execute
@@ -461,25 +252,8 @@ class NetconfScrape(Scrape):
             N/A
 
         &#34;&#34;&#34;
-        # build base request
-        xml_request = self._build_base_elem()
-
-        # build filter element
-        xml_filter_elem = etree.fromstring(filter_)
-
-        # insert filter element
-        xml_request.insert(0, xml_filter_elem)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_rpc(filter_=filter_)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response</code></pre>
 </details>
@@ -495,10 +269,10 @@ class NetconfScrape(Scrape):
 <dl>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape"><code class="flex name class">
 <span>class <span class="ident">NetconfScrape</span></span>
-<span>(</span><span>port=830, strip_namespaces=True, **kwargs)</span>
+<span>(</span><span>port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, **kwargs: Any)</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Scrape Object</p>
+<div class="desc"><p>Scrape Object</p>
 <p>Scrape is the base class for NetworkDriver, and subsequent platform specific drivers (i.e.
 IOSXEDriver). Scrape can be used on its own and offers a semi-pexpect like experience in
 that it doesn't know or care about privilege levels, platform types, and things like that.</p>
@@ -507,144 +281,44 @@ itself, but instead are used to construct the Transport and Channel classes that
 relies on, see Transport and Channel docs for details.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass ssh key or password auth for devices without authentication, or that
-have auth prompts after ssh session establishment. Currently only supported on
-system transport; ignored on other transports</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>system|ssh2|paramiko|telnet &ndash; type of transport to use for connection
-system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python
-paramiko uses&hellip; paramiko
-telnet uses telnetlib
-choice of driver depends on the features you need. in general system is easiest as
-it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-'/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
-libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-has more features built in (though scrapli does not expose/support them all).</dd>
+<dt><strong><code>kwargs</code></strong></dt>
+<dd>Keyword arguments to pass to <code>ScrapeBase</code> &ndash; see <code>ScrapeBase</code> for available args</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if transport value is invalid</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetconfScrape(Scrape):
-    def __init__(self, port: int = 830, strip_namespaces: bool = True, **kwargs: Any) -&gt; None:
+<pre><code class="python">class NetconfScrape(Scrape, NetconfScrapeBase):
+    def __init__(
+        self,
+        port: int = 830,
+        strip_namespaces: bool = False,
+        strict_datastores: bool = False,
+        **kwargs: Any,
+    ) -&gt; None:
         super().__init__(port=port, **kwargs)
 
-        self.transport_class = NetconfTransport
-        self.transport = NetconfTransport(**self.transport_args)
+        if self._transport != &#34;system&#34;:
+            msg = &#34;`NetconfScrape` is only supported using the `system` transport plugin&#34;
+            self.logger.exception(msg)
+            raise TransportPluginError(msg)
+
+        self.transport_class = NetconfSystemSSHTransport
+        self.transport = NetconfSystemSSHTransport(**self.transport_args)  # type: ignore
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
+        self.strict_datastores = strict_datastores
         self.server_capabilities: List[str] = []
-        self.netconf_version = &#34;1.0&#34;
+        self.readable_datastores: List[str] = []
+        self.writeable_datastores: List[str] = []
+        self.netconf_version = NetconfVersion.VERSION_1_0
         self.message_id = 101
-
-    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; None:
-        &#34;&#34;&#34;
-        Parse netconf server capabilities
-
-        Args:
-            raw_server_capabilities: raw bytes containing server capabilities
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
-
-        &#34;&#34;&#34;
-        filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;hello.*&lt;\/hello&gt;)&#34;, string=raw_server_capabilities, flags=re.I | re.S
-        )
-        if filtered_raw_server_capabilities is None:
-            msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
-            raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
-        for elem in server_capabilities_xml.iter():
-            if &#34;capability&#34; not in elem.tag:
-                continue
-            self.server_capabilities.append(elem.text)
-        LOG.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
 
     def open(self) -&gt; None:
         &#34;&#34;&#34;
@@ -660,43 +334,18 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
-        LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+        self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
         login_bytes = self.transport.open_netconf()
         raw_server_capabilities = self.channel._get_server_capabilities(  # pylint: disable=W0212
             login_bytes
         )
-        self._parse_server_capabilities(  # pylint: disable=W0212
-            raw_server_capabilities=raw_server_capabilities
-        )
 
-        client_capabilities = CLIENT_CAPABILITIES_1_0
-        if &#34;urn:ietf:params:netconf:base:1.1&#34; in self.server_capabilities:
-            client_capabilities = CLIENT_CAPABILITIES_1_1
-            self.netconf_version = &#34;1.1&#34;
+        client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
         self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
-        LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
-
-    def _build_base_elem(self) -&gt; Element:
-        &#34;&#34;&#34;
-        Create base element for netconf operations
-
-        Args:
-            N/A
-
-        Returns:
-            Element: lxml base element to use for netconf operation
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        base_xml_str = BASE_RPC_1_0.format(message_id=self.message_id)
-        self.message_id += 1
-        base_elem = etree.fromstring(base_xml_str)
-        return base_elem
+        self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
@@ -710,40 +359,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter value
+            N/A
 
         &#34;&#34;&#34;
-        if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-        # build filter(s) first to ensure valid xml
-        xml_filter_element = etree.fromstring(filter_)
-
-        # build base request and insert the get element
-        xml_request = self._build_base_elem()
-        xml_get_element = etree.fromstring(BASE_GET)
-        xml_request.insert(0, xml_get_element)
-
-        # build filter element
-        xml_filter_elem = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-        # insert parent filter element
-        get_element = xml_request.find(&#34;get&#34;)
-        get_element.insert(0, xml_filter_elem)
-
-        # insert filter element
-        get_filter = xml_request.find(&#34;get/filter&#34;)
-        get_filter.insert(1, xml_filter_element)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_get(filter_=filter_, filter_type=filter_type)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -757,7 +377,7 @@ has more features built in (though scrapli does not expose/support them all).</d
         Netconf get-config operation
 
         Args:
-            source: configuration source to get; running|startup|candidate
+            source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
 
@@ -765,98 +385,32 @@ has more features built in (though scrapli does not expose/support them all).</d
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid filter value
-            ValueError: if invalid configuration source value
+            N/A
 
         &#34;&#34;&#34;
-        if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-        if source not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`source` should be one of running|startup|candidate, got `{source}`&#34;)
-        if isinstance(filters, str):
-            filters = [filters]
+        response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
 
-        # build filter(s) first to ensure valid xml
-        xml_filters = []
-        if filters:
-            xml_filters = [etree.fromstring(filter_) for filter_ in filters]
-
-        # build base request and insert the get-config element
-        xml_request = self._build_base_elem()
-        xml_get_config_element = etree.fromstring(BASE_GET_CONFIG.format(source=source))
-        xml_request.insert(0, xml_get_config_element)
-
-        if filters:
-            # build filter element
-            xml_filter_element = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-            # insert parent filter element
-            get_config_element = xml_request.find(&#34;get-config&#34;)
-            get_config_element.insert(1, xml_filter_element)
-
-            # insert filter element(s)
-            get_config_filter_element = xml_request.find(&#34;get-config/filter&#34;)
-            for xml_filter_ in xml_filters:
-                get_config_filter_element.insert(0, xml_filter_)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def edit_config(
-        self, configs: Union[str, List[str]], target: str = &#34;running&#34;
-    ) -&gt; NetconfResponse:
+    def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf get-config operation
 
         Args:
-            configs: configuration(s) to send to device
+            config: configuration to send to device
             target: configuration source to target; running|startup|candidate
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration target value
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        if isinstance(configs, str):
-            configs = [configs]
-
-        # build config(s) first to ensure valid xml
-        xml_configs = [etree.fromstring(config) for config in configs]
-
-        # build base request and insert the edit-config element
-        xml_request = self._build_base_elem()
-        xml_edit_config_element = etree.fromstring(BASE_EDIT_CONFIG.format(target=target))
-        xml_request.insert(0, xml_edit_config_element)
-
-        # insert parent filter element
-        edit_config_element = xml_request.find(&#34;edit-config/config&#34;)
-        for xml_config in xml_configs:
-            edit_config_element.insert(0, xml_config)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_edit_config(config=config, target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -874,19 +428,8 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
-        xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(BASE_COMMIT)
-        xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_commit()
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -904,19 +447,8 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
-        xml_request = self._build_base_elem()
-        xml_discard_element = etree.fromstring(BASE_DISCARD)
-        xml_request.insert(0, xml_discard_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_discard()
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -931,24 +463,11 @@ has more features built in (though scrapli does not expose/support them all).</d
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        xml_request = self._build_base_elem()
-        xml_lock_element = etree.fromstring(BASE_LOCK.format(target=target))
-        xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_lock(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
@@ -963,30 +482,19 @@ has more features built in (though scrapli does not expose/support them all).</d
             NetconfResponse: scrapli_netconf NetconfResponse object
 
         Raises:
-            ValueError: if invalid configuration source
+            N/A
 
         &#34;&#34;&#34;
-        if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-            raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-        xml_request = self._build_base_elem()
-        xml_unlock_element = etree.fromstring(BASE_UNLOCK.format(target=target))
-        xml_request.insert(0, xml_unlock_element)
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_unlock(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
+    def rpc(self, filter_: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
-        Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
+        Netconf &#34;rpc&#34; operation; typically only used with juniper devices
+
+        You can also use this to build send your own payload in a more manual fashion
 
         Args:
             filter_: filter/rpc to execute
@@ -998,112 +506,33 @@ has more features built in (though scrapli does not expose/support them all).</d
             N/A
 
         &#34;&#34;&#34;
-        # build base request
-        xml_request = self._build_base_elem()
-
-        # build filter element
-        xml_filter_elem = etree.fromstring(filter_)
-
-        # insert filter element
-        xml_request.insert(0, xml_filter_elem)
-
-        channel_input = etree.tostring(xml_request)
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        raw_response = self.channel.send_input_netconf(channel_input)
+        response = self._pre_rpc(filter_=filter_)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>scrapli.driver.driver.Scrape</li>
+<li><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfScrapeBase">NetconfScrapeBase</a></li>
+<li>scrapli.driver.base_driver.ScrapeBase</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli_netconf.driver.driver.NetconfScrape.bare_rpc"><code class="name flex">
-<span>def <span class="ident">bare_rpc</span></span>(<span>self, filter_)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>Netconf "bare_rpc" operation; typically only used with juniper devices</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>filter_</code></strong></dt>
-<dd>filter/rpc to execute</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def bare_rpc(self, filter_: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf &#34;bare_rpc&#34; operation; typically only used with juniper devices
-
-    Args:
-        filter_: filter/rpc to execute
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    # build base request
-    xml_request = self._build_base_elem()
-
-    # build filter element
-    xml_filter_elem = etree.fromstring(filter_)
-
-    # insert filter element
-    xml_request.insert(0, xml_filter_elem)
-
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
-    response._record_response(raw_response)  # pylint: disable=W0212
-    return response</code></pre>
-</details>
-</dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.commit"><code class="name flex">
-<span>def <span class="ident">commit</span></span>(<span>self)</span>
+<span>def <span class="ident">commit</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf commit config operation</p>
+<div class="desc"><p>Netconf commit config operation</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1122,40 +551,26 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
-    xml_request = self._build_base_elem()
-    xml_commit_element = etree.fromstring(BASE_COMMIT)
-    xml_request.insert(0, xml_commit_element)
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_commit()
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.discard"><code class="name flex">
-<span>def <span class="ident">discard</span></span>(<span>self)</span>
+<span>def <span class="ident">discard</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf discard config operation</p>
+<div class="desc"><p>Netconf discard config operation</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1174,103 +589,61 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
-    xml_request = self._build_base_elem()
-    xml_discard_element = etree.fromstring(BASE_DISCARD)
-    xml_request.insert(0, xml_discard_element)
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_discard()
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.edit_config"><code class="name flex">
-<span>def <span class="ident">edit_config</span></span>(<span>self, configs, target='running')</span>
+<span>def <span class="ident">edit_config</span></span>(<span>self, config: str, target: str = 'running') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf get-config operation</p>
+<div class="desc"><p>Netconf get-config operation</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>configs</code></strong></dt>
-<dd>configuration(s) to send to device</dd>
+<dt><strong><code>config</code></strong></dt>
+<dd>configuration to send to device</dd>
 <dt><strong><code>target</code></strong></dt>
 <dd>configuration source to target; running|startup|candidate</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid configuration target value</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def edit_config(
-    self, configs: Union[str, List[str]], target: str = &#34;running&#34;
-) -&gt; NetconfResponse:
+<pre><code class="python">def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
     &#34;&#34;&#34;
     Netconf get-config operation
 
     Args:
-        configs: configuration(s) to send to device
+        config: configuration to send to device
         target: configuration source to target; running|startup|candidate
 
     Returns:
         NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
-        ValueError: if invalid configuration target value
+        N/A
 
     &#34;&#34;&#34;
-    if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-        raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-    if isinstance(configs, str):
-        configs = [configs]
-
-    # build config(s) first to ensure valid xml
-    xml_configs = [etree.fromstring(config) for config in configs]
-
-    # build base request and insert the edit-config element
-    xml_request = self._build_base_elem()
-    xml_edit_config_element = etree.fromstring(BASE_EDIT_CONFIG.format(target=target))
-    xml_request.insert(0, xml_edit_config_element)
-
-    # insert parent filter element
-    edit_config_element = xml_request.find(&#34;edit-config/config&#34;)
-    for xml_config in xml_configs:
-        edit_config_element.insert(0, xml_config)
-
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_edit_config(config=config, target=target)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.get"><code class="name flex">
-<span>def <span class="ident">get</span></span>(<span>self, filter_, filter_type='subtree')</span>
+<span>def <span class="ident">get</span></span>(<span>self, filter_: str, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf get operation</p>
+<div class="desc"><p>Netconf get operation</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>filter_</code></strong></dt>
@@ -1280,14 +653,11 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid filter value</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1304,53 +674,24 @@ has more features built in (though scrapli does not expose/support them all).</d
         NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
-        ValueError: if invalid filter value
+        N/A
 
     &#34;&#34;&#34;
-    if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-        raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-    # build filter(s) first to ensure valid xml
-    xml_filter_element = etree.fromstring(filter_)
-
-    # build base request and insert the get element
-    xml_request = self._build_base_elem()
-    xml_get_element = etree.fromstring(BASE_GET)
-    xml_request.insert(0, xml_get_element)
-
-    # build filter element
-    xml_filter_elem = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-    # insert parent filter element
-    get_element = xml_request.find(&#34;get&#34;)
-    get_element.insert(0, xml_filter_elem)
-
-    # insert filter element
-    get_filter = xml_request.find(&#34;get/filter&#34;)
-    get_filter.insert(1, xml_filter_element)
-
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_get(filter_=filter_, filter_type=filter_type)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.get_config"><code class="name flex">
-<span>def <span class="ident">get_config</span></span>(<span>self, source='running', filters=None, filter_type='subtree')</span>
+<span>def <span class="ident">get_config</span></span>(<span>self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf get-config operation</p>
+<div class="desc"><p>Netconf get-config operation</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>source</code></strong></dt>
-<dd>configuration source to get; running|startup|candidate</dd>
+<dd>configuration source to get; typically one of running|startup|candidate</dd>
 <dt><strong><code>filters</code></strong></dt>
 <dd>string or list of strings of filters to apply to configuration</dd>
 <dt><strong><code>filter_type</code></strong></dt>
@@ -1358,16 +699,11 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid filter value</dd>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid configuration source value</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1382,7 +718,7 @@ has more features built in (though scrapli does not expose/support them all).</d
     Netconf get-config operation
 
     Args:
-        source: configuration source to get; running|startup|candidate
+        source: configuration source to get; typically one of running|startup|candidate
         filters: string or list of strings of filters to apply to configuration
         filter_type: type of filter; subtree|xpath
 
@@ -1390,59 +726,21 @@ has more features built in (though scrapli does not expose/support them all).</d
         NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
-        ValueError: if invalid filter value
-        ValueError: if invalid configuration source value
+        N/A
 
     &#34;&#34;&#34;
-    if filter_type not in (&#34;subtree&#34;, &#34;xpath&#34;):
-        raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-    if source not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-        raise ValueError(f&#34;`source` should be one of running|startup|candidate, got `{source}`&#34;)
-    if isinstance(filters, str):
-        filters = [filters]
+    response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
 
-    # build filter(s) first to ensure valid xml
-    xml_filters = []
-    if filters:
-        xml_filters = [etree.fromstring(filter_) for filter_ in filters]
-
-    # build base request and insert the get-config element
-    xml_request = self._build_base_elem()
-    xml_get_config_element = etree.fromstring(BASE_GET_CONFIG.format(source=source))
-    xml_request.insert(0, xml_get_config_element)
-
-    if filters:
-        # build filter element
-        xml_filter_element = etree.fromstring(BASE_FILTER.format(filter_type=filter_type))
-
-        # insert parent filter element
-        get_config_element = xml_request.find(&#34;get-config&#34;)
-        get_config_element.insert(1, xml_filter_element)
-
-        # insert filter element(s)
-        get_config_filter_element = xml_request.find(&#34;get-config/filter&#34;)
-        for xml_filter_ in xml_filters:
-            get_config_filter_element.insert(0, xml_filter_)
-
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.lock"><code class="name flex">
-<span>def <span class="ident">lock</span></span>(<span>self, target)</span>
+<span>def <span class="ident">lock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf lock operation</p>
+<div class="desc"><p>Netconf lock operation</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>target</code></strong></dt>
@@ -1450,14 +748,11 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid configuration source</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1473,46 +768,27 @@ has more features built in (though scrapli does not expose/support them all).</d
         NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
-        ValueError: if invalid configuration source
+        N/A
 
     &#34;&#34;&#34;
-    if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-        raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-    xml_request = self._build_base_elem()
-    xml_lock_element = etree.fromstring(BASE_LOCK.format(target=target))
-    xml_request.insert(0, xml_lock_element)
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_lock(target=target)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
+<span>def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
-<section class="desc"><p>Open netconf connection to server</p>
+<div class="desc"><p>Open netconf connection to server</p>
 <h2 id="args">Args</h2>
 <p>N/A</p>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>N</code>/<code>A</code>
-# <code>noqa</code>: <code>DAR202</code></dt>
-<dd>&nbsp;</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><code>N</code>/<code>A</code></dt>
-<dd>&nbsp;</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1531,31 +807,69 @@ has more features built in (though scrapli does not expose/support them all).</d
         N/A
 
     &#34;&#34;&#34;
-    LOG.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
+    self.logger.info(f&#34;Opening connection to {self._initialization_args[&#39;host&#39;]}&#34;)
     login_bytes = self.transport.open_netconf()
     raw_server_capabilities = self.channel._get_server_capabilities(  # pylint: disable=W0212
         login_bytes
     )
-    self._parse_server_capabilities(  # pylint: disable=W0212
-        raw_server_capabilities=raw_server_capabilities
-    )
 
-    client_capabilities = CLIENT_CAPABILITIES_1_0
-    if &#34;urn:ietf:params:netconf:base:1.1&#34; in self.server_capabilities:
-        client_capabilities = CLIENT_CAPABILITIES_1_1
-        self.netconf_version = &#34;1.1&#34;
+    client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
     self.channel._send_client_capabilities(  # pylint: disable=W0212
         client_capabilities=client_capabilities, capabilities_version=self.netconf_version
     )
-    LOG.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+    self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.driver.driver.NetconfScrape.rpc"><code class="name flex">
+<span>def <span class="ident">rpc</span></span>(<span>self, filter_: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Netconf "rpc" operation; typically only used with juniper devices</p>
+<p>You can also use this to build send your own payload in a more manual fashion</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>filter_</code></strong></dt>
+<dd>filter/rpc to execute</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfResponse</code></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rpc(self, filter_: str) -&gt; NetconfResponse:
+    &#34;&#34;&#34;
+    Netconf &#34;rpc&#34; operation; typically only used with juniper devices
+
+    You can also use this to build send your own payload in a more manual fashion
+
+    Args:
+        filter_: filter/rpc to execute
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_rpc(filter_=filter_)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
+    response._record_response(raw_response)  # pylint: disable=W0212
+    return response</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.driver.driver.NetconfScrape.unlock"><code class="name flex">
-<span>def <span class="ident">unlock</span></span>(<span>self, target)</span>
+<span>def <span class="ident">unlock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
-<section class="desc"><p>Netconf unlock operation</p>
+<div class="desc"><p>Netconf unlock operation</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>target</code></strong></dt>
@@ -1563,14 +877,11 @@ has more features built in (though scrapli does not expose/support them all).</d
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>NetconfResponse</code></strong></dt>
+<dt><code>NetconfResponse</code></dt>
 <dd>scrapli_netconf NetconfResponse object</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<dl>
-<dt><strong><code>ValueError</code></strong></dt>
-<dd>if invalid configuration source</dd>
-</dl></section>
+<p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1586,24 +897,11 @@ has more features built in (though scrapli does not expose/support them all).</d
         NetconfResponse: scrapli_netconf NetconfResponse object
 
     Raises:
-        ValueError: if invalid configuration source
+        N/A
 
     &#34;&#34;&#34;
-    if target not in (&#34;running&#34;, &#34;startup&#34;, &#34;candidate&#34;):
-        raise ValueError(f&#34;`target` should be one of running|startup|candidate, got `{target}`&#34;)
-    xml_request = self._build_base_elem()
-    xml_unlock_element = etree.fromstring(BASE_UNLOCK.format(target=target))
-    xml_request.insert(0, xml_unlock_element)
-    channel_input = etree.tostring(xml_request)
-
-    response = NetconfResponse(
-        host=self.transport.host,
-        channel_input=channel_input.decode(),
-        xml_input=xml_request,
-        netconf_version=self.netconf_version,
-        strip_namespaces=self.strip_namespaces,
-    )
-    raw_response = self.channel.send_input_netconf(channel_input)
+    response = self._pre_unlock(target=target)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
 </details>
@@ -1629,7 +927,6 @@ has more features built in (though scrapli does not expose/support them all).</d
 <li>
 <h4><code><a title="scrapli_netconf.driver.driver.NetconfScrape" href="#scrapli_netconf.driver.driver.NetconfScrape">NetconfScrape</a></code></h4>
 <ul class="two-column">
-<li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.bare_rpc" href="#scrapli_netconf.driver.driver.NetconfScrape.bare_rpc">bare_rpc</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.commit" href="#scrapli_netconf.driver.driver.NetconfScrape.commit">commit</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.discard" href="#scrapli_netconf.driver.driver.NetconfScrape.discard">discard</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.edit_config" href="#scrapli_netconf.driver.driver.NetconfScrape.edit_config">edit_config</a></code></li>
@@ -1637,6 +934,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.get_config" href="#scrapli_netconf.driver.driver.NetconfScrape.get_config">get_config</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.lock" href="#scrapli_netconf.driver.driver.NetconfScrape.lock">lock</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.open" href="#scrapli_netconf.driver.driver.NetconfScrape.open">open</a></code></li>
+<li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.rpc" href="#scrapli_netconf.driver.driver.NetconfScrape.rpc">rpc</a></code></li>
 <li><code><a title="scrapli_netconf.driver.driver.NetconfScrape.unlock" href="#scrapli_netconf.driver.driver.NetconfScrape.unlock">unlock</a></code></li>
 </ul>
 </li>
@@ -1646,9 +944,7 @@ has more features built in (though scrapli does not expose/support them all).</d
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.3</a>.</p>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-<script>hljs.initHighlightingOnLoad()</script>
 </body>
 </html>

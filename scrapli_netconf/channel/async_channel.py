@@ -1,4 +1,5 @@
 """scrapli_netconf.channel.async_channel"""
+import asyncio
 from typing import Any, Optional
 
 from scrapli.channel import AsyncChannel
@@ -16,6 +17,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         super().__init__(transport=transport, comms_prompt_pattern="]]>]]>", **kwargs)
 
         self.netconf_version = NetconfVersion.VERSION_1_0
+        self._server_echo = False
 
     @operation_timeout(
         "timeout_ops",
@@ -63,10 +65,17 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         """
-        bytes_client_capabilities = self._pre_send_client_capabilities(
-            client_capabilities=client_capabilities
-        )
-        await self._read_until_input(bytes_client_capabilities)
+        _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
+
+        try:
+            # try to read one byte... if we get anything from the server we know it echoes the input
+            # back to us -- seems this only happens on iosxe with netconf 1.1... and I think it is
+            # probably not "right" per the standard but haven't investigated enough to confirm
+            await asyncio.wait_for(self.transport.stdout.read(65535), timeout=1)
+            self._server_echo = True
+        except asyncio.exceptions.TimeoutError:
+            pass
+
         self._send_return()
         self._post_send_client_capabilities(capabilities_version=capabilities_version)
 
@@ -93,25 +102,28 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
 
         """
         output = b""
-        #
-        # if not channel_input:
-        #     self.logger.info(f"Read: {repr(output)}")
-        #     return output
-        #
-        # if auto_expand is None:
-        #     auto_expand = self.comms_auto_expand
-        #
-        # while True:
-        #     output += await self._read_chunk()
-        #
-        #     if not auto_expand and channel_input in output:
-        #         break
-        #     if auto_expand and self._process_auto_expand(
-        #         output=output, channel_input=channel_input
-        #     ):
-        #         break
-        #
-        # self.logger.info(f"Read: {repr(output)}")
+
+        if self._server_echo is False:
+            return output
+
+        if not channel_input:
+            self.logger.info(f"Read: {repr(output)}")
+            return output
+
+        if auto_expand is None:
+            auto_expand = self.comms_auto_expand
+
+        while True:
+            output += await self._read_chunk()
+
+            if not auto_expand and channel_input in output:
+                break
+            if auto_expand and self._process_auto_expand(
+                output=output, channel_input=channel_input
+            ):
+                break
+
+        self.logger.info(f"Read: {repr(output)}")
         return output
 
     async def send_input_netconf(self, channel_input: str) -> bytes:

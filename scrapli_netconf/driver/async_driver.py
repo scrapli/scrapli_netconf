@@ -111,9 +111,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
-    async def edit_config(
-        self, config: str, target: str = "running"
-    ) -> NetconfResponse:
+    async def edit_config(self, config: str, target: str = "running") -> NetconfResponse:
         """
         Netconf get-config operation
 
@@ -211,7 +209,9 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
 
     async def rpc(self, filter_: str) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices?
+        Netconf "rpc" operation; typically only used with juniper devices
+
+        You can also use this to build send your own payload in a more manual fashion
 
         Args:
             filter_: filter/rpc to execute

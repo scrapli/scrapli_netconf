@@ -188,9 +188,13 @@ class NetconfResponse(Response):
         """
         xml_elements = {}
         data_element = self.xml_result.find("data", namespaces=self.xml_result.nsmap)
-        for child in data_element.iterchildren():
-            _tag = etree.QName(child.tag).localname
-            xml_elements[_tag] = child
+
+        # juniper doesn't return data in a "data" element for bare rpc calls, guard against that
+        # breaking the iterchildren()
+        if data_element is not None:
+            for child in data_element.iterchildren():
+                _tag = etree.QName(child.tag).localname
+                xml_elements[_tag] = child
         return xml_elements
 
     def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:

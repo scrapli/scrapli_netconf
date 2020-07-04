@@ -16,9 +16,8 @@ async def test_get_filter_subtree(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
 
-    # TODO juniper
     if device_type == "juniper_junos_1_0":
-        pytest.skip("need to add junos tests here!")
+        pytest.skip("juniper get data is retrieved with the 'bare' rpc call")
 
     await conn.open()
 
@@ -30,16 +29,37 @@ async def test_get_filter_subtree(async_conn):
 
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
+
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
     assert not xmldiffs(response.result, expected_result)
 
 
-# @pytest.mark.asyncio
-# async def test_get_filter_xpath(async_conn):
-#     # TODO do any of these platforms actually support xpath?
-#     pass
+@pytest.mark.asyncio
+async def test_get_filter_xpath(async_conn):
+    conn = async_conn[0]
+    device_type = async_conn[1]
+
+    if device_type != "cisco_iosxe_1_1":
+        pytest.skip(
+            "iosxe with netconf 1.1 is the only test device type supporting xpath filtering"
+        )
+
+    await conn.open()
+
+    expected_config_elements = INPUTS_OUTPUTS[device_type].GET_XPATH_ELEMENTS
+    expected_result = INPUTS_OUTPUTS[device_type].GET_XPATH_RESULT
+    filter_ = INPUTS_OUTPUTS[device_type].GET_XPATH_FILTER
+
+    response = await conn.get(filter_=filter_, filter_type="xpath")
+
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert all(
+        elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
+    )
+    assert not xmldiffs(response.result, expected_result)
 
 
 @pytest.mark.asyncio
@@ -73,7 +93,7 @@ async def test_get_config_filtered_single_filter_subtree(async_conn):
     filters = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE
     expected_config = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE_GET_CONFIG_RESULT
 
-    response = await conn.get_config(filters=filters)
+    response = await conn.get_config(filters=filters, filter_type="subtree")
 
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
@@ -84,13 +104,10 @@ async def test_get_config_filtered_single_filter_subtree(async_conn):
 
 
 @pytest.mark.asyncio
-async def test_get_config_filtered_multi_filter_subtree(async_conn):
-    conn = async_conn[0]
-    device_type = async_conn[1]
-
-    # TODO juniper and iosxe
-    if device_type != "cisco_iosxr_1_1":
-        pytest.skip("need to add iosxe/junos tests here!")
+async def test_get_config_filtered_multi_filter_subtree(async_conn_1_1):
+    # only testing the "multi" filter on 1.1 devices
+    conn = async_conn_1_1[0]
+    device_type = async_conn_1_1[1]
 
     await conn.open()
 
@@ -109,26 +126,41 @@ async def test_get_config_filtered_multi_filter_subtree(async_conn):
     assert not xmldiffs(config_replacer(response.result), expected_result)
 
 
-# @pytest.mark.asyncio
-# async def test_get_config_filter_single_filter_xpath(async_conn):
-#     # TODO do any of these platforms actually support xpath?
-#     pass
+@pytest.mark.asyncio
+async def test_get_config_filter_single_filter_xpath(async_conn_1_1):
+    conn = async_conn_1_1[0]
+    device_type = async_conn_1_1[1]
 
+    if device_type != "cisco_iosxe_1_1":
+        pytest.skip(
+            "iosxe with netconf 1.1 is the only test device type supporting xpath filtering"
+        )
 
-# @pytest.mark.asyncio
-# async def test_get_config_filter_multi_filter_xpath(async_conn):
-#     # TODO do any of these platforms actually support xpath?
-#     pass
+    await conn.open()
+
+    expected_config_elements = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_ELEMENTS
+    expected_result = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_RESULT
+    filter_ = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_FILTER
+
+    response = await conn.get_config(filters=filter_, filter_type="xpath")
+
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert all(
+        elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
+    )
+    assert not xmldiffs(response.result, expected_result)
 
 
 @pytest.mark.asyncio
-async def test_edit_config(async_conn):
+async def test_edit_config_and_discard(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]
 
-    if device_type != "cisco_iosxr_1_1":
-        pytest.skip("skipping edit config on iosxe for now!")
+    if device_type in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
+        pytest.skip("skipping for platforms with no candidate config")
 
+    config_replacer = CONFIG_REPLACER[device_type]
     config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
     validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_FILTER
     expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
@@ -136,16 +168,11 @@ async def test_edit_config(async_conn):
     await conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe_1_0":
-        # TODO maybe skip and have a test just for iosxe cuz of no candidate? also maybe just
-        #  upgrade iosxe in the lab to the new 16.X w/ actual netconfyang support
-        target = "running"
-
     response = await conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
     assert not xmldiffs(
-        response.result,
+        config_replacer(response.result),
         """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
     )
 
@@ -154,21 +181,60 @@ async def test_edit_config(async_conn):
     )
     assert isinstance(validation_response, NetconfResponse)
     assert validation_response.failed is False
-    assert not xmldiffs(validation_response.result, expected_result)
+    assert not xmldiffs(config_replacer(validation_response.result), expected_result)
 
     discard_response = await conn.discard()
     assert isinstance(discard_response, NetconfResponse)
     assert discard_response.failed is False
 
 
-# @pytest.mark.asyncio
-# async def test_commit(async_conn):
-#     pass
+@pytest.mark.asyncio
+async def test_edit_config_and_commit(async_conn):
+    conn = async_conn[0]
+    device_type = async_conn[1]
 
+    config_replacer = CONFIG_REPLACER[device_type]
+    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
+    remove_config = INPUTS_OUTPUTS[device_type].REMOVE_EDIT_CONFIG
+    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_FILTER
+    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
 
-# @pytest.mark.asyncio
-# async def test_discard(async_conn):
-#     pass
+    await conn.open()
+
+    target = "running"
+    if device_type not in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
+        target = "candidate"
+
+    response = await conn.edit_config(config=config, target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert not xmldiffs(
+        config_replacer(response.result),
+        """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
+    )
+
+    if device_type not in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
+        # no commit for iosxe!
+        commit_response = await conn.commit()
+        assert isinstance(commit_response, NetconfResponse)
+        assert commit_response.failed is False
+
+    validation_response = await conn.get_config(
+        source=target, filter_type="subtree", filters=validate_filter
+    )
+    assert isinstance(validation_response, NetconfResponse)
+    assert validation_response.failed is False
+    assert not xmldiffs(config_replacer(validation_response.result), expected_result)
+
+    response = await conn.edit_config(config=remove_config, target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+
+    if device_type not in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
+        # no commit for iosxe!
+        commit_response = await conn.commit()
+        assert isinstance(commit_response, NetconfResponse)
+        assert commit_response.failed is False
 
 
 @pytest.mark.asyncio
@@ -181,7 +247,7 @@ async def test_lock_unlock(async_conn):
     await conn.open()
 
     target = "candidate"
-    if device_type == "cisco_iosxe_1_0":
+    if device_type in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
         target = "running"
 
     response = await conn.lock(target=target)
@@ -193,3 +259,24 @@ async def test_lock_unlock(async_conn):
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
     assert not xmldiffs(response.result, """<rpc-reply message-id="102"><ok/></rpc-reply>""")
+
+
+@pytest.mark.asyncio
+async def test_rpc(async_conn):
+    conn = async_conn[0]
+    device_type = async_conn[1]
+
+    await conn.open()
+
+    expected_config_elements = INPUTS_OUTPUTS[device_type].RPC_ELEMENTS
+    expected_result = INPUTS_OUTPUTS[device_type].RPC_EXPECTED
+    filter_ = INPUTS_OUTPUTS[device_type].RPC_FILTER
+
+    response = await conn.rpc(filter_=filter_)
+
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert all(
+        elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
+    )
+    assert not xmldiffs(response.result, expected_result)

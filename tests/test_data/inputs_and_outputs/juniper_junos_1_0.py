@@ -217,3 +217,353 @@ CONFIG_FILTER_MULTI = [CONFIG_FILTER_SINGLE, _CONFIG_FILTER_MULTI]
 CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS = ["configuration"]
 
 CONFIG_FILTER_MULTI_GET_CONFIG_RESULT = """"""
+
+EDIT_CONFIG = """
+<config>
+  <configuration>
+    <interfaces>
+        <interface>
+            <name>ge-0/0/0</name>
+            <description>scrapli was here</description>
+        </interface>
+    </interfaces>
+  </configuration>
+</config>"""
+
+REMOVE_EDIT_CONFIG = """
+<config>
+  <configuration>
+    <interfaces>
+        <interface>
+            <name>ge-0/0/0</name>
+            <description operation="delete"></description>
+        </interface>
+    </interfaces>
+  </configuration>
+</config>"""
+
+EDIT_CONFIG_VALIDATE_FILTER = """
+<configuration>
+    <interfaces>
+    </interfaces>
+</configuration>"""
+
+EDIT_CONFIG_VALIDATE_EXPECTED = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+<data>
+<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" timestamp="TIMESTAMP">
+    <interfaces>
+        <interface>
+            <name>ge-0/0/0</name>
+            <description>scrapli was here</description>
+        </interface>
+        <interface>
+            <name>fxp0</name>
+            <unit>
+                <name>0</name>
+                <family>
+                    <inet>
+                        <address>
+                            <name>10.0.0.15/24</name>
+                        </address>
+                    </inet>
+                </family>
+            </unit>
+        </interface>
+    </interfaces>
+</configuration>
+</data>
+</rpc-reply>"""
+
+RPC_FILTER = """<get-interface-information><terse/></get-interface-information>"""
+
+RPC_ELEMENTS = []
+
+RPC_EXPECTED = """<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos">
+    <interface-information junos:style="terse" xmlns="http://xml.juniper.net/junos/17.3R2/junos-interface">
+        <physical-interface>
+            <name>ge-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>gr-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ip-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>lsq-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>lt-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>mt-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>sp-0/0/0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+            <logical-interface>
+                <name>sp-0/0/0.0</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                </address-family>
+                <address-family>
+                    <address-family-name>inet6</address-family-name>
+                </address-family>
+            </logical-interface>
+            <logical-interface>
+                <name>sp-0/0/0.16383</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                </address-family>
+            </logical-interface>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/1</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/2</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/3</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/4</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/5</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/6</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/7</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/8</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ge-0/0/9</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>dsc</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>em0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+            <logical-interface>
+                <name>em0.0</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                    <interface-address>
+                        <ifa-local junos:emit="emit">128.0.0.1/2</ifa-local>
+                    </interface-address>
+                </address-family>
+            </logical-interface>
+        </physical-interface>
+        <physical-interface>
+            <name>em1</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+            <logical-interface>
+                <name>em1.32768</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                    <interface-address>
+                        <ifa-local junos:emit="emit">192.168.1.2/24</ifa-local>
+                    </interface-address>
+                </address-family>
+            </logical-interface>
+        </physical-interface>
+        <physical-interface>
+            <name>em2</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>fxp0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+            <logical-interface>
+                <name>fxp0.0</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                    <interface-address>
+                        <ifa-local junos:emit="emit">10.0.0.15/24</ifa-local>
+                    </interface-address>
+                </address-family>
+            </logical-interface>
+        </physical-interface>
+        <physical-interface>
+            <name>gre</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ipip</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>irb</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>lo0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+            <logical-interface>
+                <name>lo0.16384</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                    <interface-address>
+                        <ifa-local>127.0.0.1</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                </address-family>
+            </logical-interface>
+            <logical-interface>
+                <name>lo0.16385</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+                <address-family>
+                    <address-family-name>inet</address-family-name>
+                    <interface-address>
+                        <ifa-local>10.0.0.1</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                    <interface-address>
+                        <ifa-local>10.0.0.16</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                    <interface-address>
+                        <ifa-local>128.0.0.1</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                    <interface-address>
+                        <ifa-local>128.0.0.4</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                    <interface-address>
+                        <ifa-local>128.0.1.16</ifa-local>
+                        <ifa-destination junos:emit="emit">0/0</ifa-destination>
+                    </interface-address>
+                </address-family>
+            </logical-interface>
+            <logical-interface>
+                <name>lo0.32768</name>
+                <admin-status>up</admin-status>
+                <oper-status>up</oper-status>
+                <filter-information/>
+            </logical-interface>
+        </physical-interface>
+        <physical-interface>
+            <name>lsi</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>mtun</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>pimd</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>pime</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>pp0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ppd0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>ppe0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>st0</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>tap</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>vlan</name>
+            <admin-status>up</admin-status>
+            <oper-status>down</oper-status>
+        </physical-interface>
+        <physical-interface>
+            <name>vtep</name>
+            <admin-status>up</admin-status>
+            <oper-status>up</oper-status>
+        </physical-interface>
+    </interface-information>
+</rpc-reply>"""

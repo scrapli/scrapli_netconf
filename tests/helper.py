@@ -99,9 +99,16 @@ def cisco_iosxe_replace_config_data(config):
         string=config,
         flags=re.M | re.I,
     )
+    config = re.sub(
+        pattern=r"([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}",
+        repl="MAC_ADDRESS",
+        string=config,
+        flags=re.M | re.I,
+    )
     # iosxe does stupid stuff where there are a few single character trailing white spaces somehow?
     # that or i need to be doing this in the library like i do in scrapli core??
     config = "\n".join([line.rstrip() for line in config.splitlines()])
+    config = replace_message_id(config)
     return config
 
 
@@ -112,6 +119,7 @@ def cisco_iosxr_replace_config_data(config):
     # iosxe does stupid stuff where there are a few single character trailing white spaces somehow?
     # that or i need to be doing this in the library like i do in scrapli core??
     config = "\n".join([line.rstrip() for line in config.splitlines()])
+    config = replace_message_id(config)
     return config
 
 
@@ -123,9 +131,26 @@ def juniper_junos_replace_config_data(config):
         flags=re.M | re.I,
     )
     config = re.sub(
+        pattern=r'junos:changed-seconds="\d+" junos:changed-localtime="\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC"',
+        repl='timestamp="TIMESTAMP"',
+        string=config,
+        flags=re.M | re.I,
+    )
+    config = re.sub(
         pattern=r"<encrypted-password>.*</encrypted-password>",
         repl="PASSWORD",
         string=config,
         flags=re.M | re.I,
     )
+    config = replace_message_id(config)
     return config
+
+
+def replace_message_id(response_string):
+    response_string = re.sub(
+        pattern=r"message-id=\"\d+\"",
+        repl='message-id="101"',
+        string=response_string,
+        flags=re.M | re.I,
+    )
+    return response_string

@@ -51,11 +51,14 @@ DEVICES = {
         "host": "172.18.0.15",
         "port": 22,
         "strip_namespaces": False,
+        # commits takes a long time and transport gets nothing during this time
+        "timeout_transport": 15,
     },
 }
 
 CONFIG_REPLACER = {
     "cisco_iosxe_1_0": cisco_iosxe_replace_config_data,
+    "cisco_iosxe_1_1": cisco_iosxe_replace_config_data,
     "cisco_iosxr_1_1": cisco_iosxr_replace_config_data,
     "juniper_junos_1_0": juniper_junos_replace_config_data,
 }

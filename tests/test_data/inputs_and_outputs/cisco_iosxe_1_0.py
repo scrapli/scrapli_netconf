@@ -325,3 +325,58 @@ CONFIG_FILTER_SINGLE_GET_CONFIG_RESULT = """<rpc-reply xmlns="urn:ietf:params:xm
 <cmd> no mop enabled</cmd>
 <cmd> no mop sysid</cmd>
 <cmd>end</cmd></cli-config-data></data></rpc-reply>"""
+
+EDIT_CONFIG = """
+<config>
+<cli-config-data>
+<cmd>interface GigabitEthernet2</cmd>
+<cmd>description scrapli was here!</cmd>
+</cli-config-data>
+</config>"""
+
+REMOVE_EDIT_CONFIG = """
+<config>
+<cli-config-data>
+<cmd>interface GigabitEthernet2</cmd>
+<cmd>no description</cmd>
+</cli-config-data>
+</config>"""
+
+EDIT_CONFIG_VALIDATE_FILTER = """
+<config-format-text-cmd>
+ <text-filter-spec>
+   interface GigabitEthernet2
+ </text-filter-spec>
+</config-format-text-cmd>"""
+
+EDIT_CONFIG_VALIDATE_EXPECTED = """<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <data>
+        <cli-config-data>
+            <cmd>!</cmd>
+            <cmd>interface GigabitEthernet2</cmd>
+            <cmd>description scrapli was here!</cmd>
+            <cmd>no ip address</cmd>
+            <cmd>shutdown</cmd>
+            <cmd>negotiation auto</cmd>
+            <cmd>no mop enabled</cmd>
+            <cmd>no mop sysid</cmd>
+            <cmd>end</cmd></cli-config-data>
+    </data>
+</rpc-reply>"""
+
+RPC_FILTER = """<get><filter type="subtree"><config-format-text-cmd>
+    <text-filter-spec> | include interface </text-filter-spec>
+</config-format-text-cmd></filter></get>"""
+
+RPC_ELEMENTS = ["cli-config-data"]
+
+RPC_EXPECTED = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><data><cli-config-data><cmd>interface GigabitEthernet1</cmd>
+<cmd>interface GigabitEthernet2</cmd>
+<cmd>interface GigabitEthernet3</cmd>
+<cmd>interface GigabitEthernet4</cmd>
+<cmd>interface GigabitEthernet5</cmd>
+<cmd>interface GigabitEthernet6</cmd>
+<cmd>interface GigabitEthernet7</cmd>
+<cmd>interface GigabitEthernet8</cmd>
+<cmd>interface GigabitEthernet9</cmd>
+<cmd>interface GigabitEthernet10</cmd></cli-config-data></data></rpc-reply>"""

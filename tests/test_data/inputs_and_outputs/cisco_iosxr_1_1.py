@@ -3783,6 +3783,23 @@ EDIT_CONFIG = """
   </interface-configurations>
 </config>"""
 
+REMOVE_EDIT_CONFIG = """
+<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+    <interface-configuration>
+      <active>act</active>
+      <interface-name>GigabitEthernet0/0/0/0</interface-name>
+      <description xc:operation="delete"></description>
+      <ipv4-network xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-io-cfg">
+        <addresses>
+          <primary xc:operation="delete">
+          </primary>
+        </addresses>
+      </ipv4-network>
+    </interface-configuration>
+  </interface-configurations>
+</config>"""
+
 EDIT_CONFIG_VALIDATE_FILTER = """
 <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
   <interface-configuration>
@@ -3801,7 +3818,7 @@ EDIT_CONFIG_VALIDATE_FILTER = """
 </interface-configurations>"""
 
 EDIT_CONFIG_VALIDATE_EXPECTED = """
-<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
  <data>
   <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
    <interface-configuration>
@@ -3818,5 +3835,34 @@ EDIT_CONFIG_VALIDATE_EXPECTED = """
     </ipv4-network>
    </interface-configuration>
   </interface-configurations>
+ </data>
+</rpc-reply>"""
+
+RPC_FILTER = """<get><filter type="subtree">
+<components xmlns="http://openconfig.net/yang/platform">
+    <component>
+        <name>
+          0/0-Virtual-Motherboard
+        </name>
+        <state>
+        </state>
+    </component>
+</components></filter></get>"""
+
+RPC_ELEMENTS = ["components"]
+
+RPC_EXPECTED = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+ <data>
+  <components xmlns="http://openconfig.net/yang/platform">
+   <component>
+    <name>0/0-Virtual-Motherboard</name>
+    <state>
+     <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
+     <name>0/0-Virtual-Motherboard</name>
+     <type xmlns:idx="http://openconfig.net/yang/platform-types">idx:MODULE</type>
+     <id>65538</id>
+    </state>
+   </component>
+  </components>
  </data>
 </rpc-reply>"""

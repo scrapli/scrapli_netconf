@@ -14,7 +14,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
     def __init__(
         self,
         port: int = 830,
-        strip_namespaces: bool = True,
+        strip_namespaces: bool = False,
         strict_datastores: bool = False,
         **kwargs: Any,
     ) -> None:

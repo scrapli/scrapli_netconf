@@ -29,3 +29,12 @@ cov_unit:
 	--cov-report html \
 	--cov-report term \
 	tests/unit/
+
+test:
+	python -m pytest tests/
+
+test_unit:
+	python -m pytest tests/unit/
+
+test_functional:
+	python -m pytest tests/functional/

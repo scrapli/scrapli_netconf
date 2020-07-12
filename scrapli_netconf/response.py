@@ -117,8 +117,7 @@ class NetconfResponse(Response):
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def _record_response_netconf_1_1(self) -> None:
@@ -160,7 +159,7 @@ class NetconfResponse(Response):
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1
-                    result[1].replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"").rstrip()
+                    result[1].replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"")
                     for result in result_sections
                 ]
             )
@@ -168,8 +167,7 @@ class NetconfResponse(Response):
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def get_xml_elements(self) -> Dict[str, Element]:

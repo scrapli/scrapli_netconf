@@ -32,7 +32,7 @@ import asyncio
 from typing import Any, Optional
 
 from scrapli.channel import AsyncChannel
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.transport.async_transport import AsyncTransport
 from scrapli_netconf.channel.base_channel import NetconfChannelBase
 from scrapli_netconf.constants import NetconfVersion
@@ -48,7 +48,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         self.netconf_version = NetconfVersion.VERSION_1_0
         self._server_echo = False
 
-    @operation_timeout(
+    @OperationTimeout(
         &#34;timeout_ops&#34;,
         &#34;Timed out determining if session is authenticated/getting server capabilities&#34;,
     )
@@ -74,7 +74,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         self.transport.session_lock.release()
         return output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
     async def _send_client_capabilities(
         self,
         client_capabilities: NetconfClientCapabilities,
@@ -224,7 +224,7 @@ inheritance.</p>
         self.netconf_version = NetconfVersion.VERSION_1_0
         self._server_echo = False
 
-    @operation_timeout(
+    @OperationTimeout(
         &#34;timeout_ops&#34;,
         &#34;Timed out determining if session is authenticated/getting server capabilities&#34;,
     )
@@ -250,7 +250,7 @@ inheritance.</p>
         self.transport.session_lock.release()
         return output
 
-    @operation_timeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
+    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
     async def _send_client_capabilities(
         self,
         client_capabilities: NetconfClientCapabilities,

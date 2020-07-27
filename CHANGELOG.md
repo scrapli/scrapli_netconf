@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+# 2020.07.26
+- Update to match scrapli core -- moved to updated timeout decorator, fixed a test to match a better exception message
+
 # 2020.07.12
 - Minor improvements to response recording (should be a tick faster)
 - Update decorators for async things to use the improved `async_operation_timeout` in scrapli 2020.07.12

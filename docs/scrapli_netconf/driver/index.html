@@ -63,7 +63,7 @@ __all__ = (
 <dl>
 <dt id="scrapli_netconf.driver.AsyncNetconfScrape"><code class="flex name class">
 <span>class <span class="ident">AsyncNetconfScrape</span></span>
-<span>(</span><span>port: int = 830, strip_namespaces: bool = True, strict_datastores: bool = False, **kwargs: Any)</span>
+<span>(</span><span>port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>AsyncScrape Object</p>
@@ -83,7 +83,10 @@ relies on, see Transport and Channel docs for details.</p>
 <p>N/A
 # noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<dl>
+<dt><code>TransportPluginError</code></dt>
+<dd>if attempting to use a non-asyncio transport plugin</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -92,7 +95,7 @@ relies on, see Transport and Channel docs for details.</p>
     def __init__(
         self,
         port: int = 830,
-        strip_namespaces: bool = True,
+        strip_namespaces: bool = False,
         strict_datastores: bool = False,
         **kwargs: Any,
     ) -&gt; None:
@@ -724,7 +727,10 @@ relies on, see Transport and Channel docs for details.</p>
 <p>N/A
 # noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<dl>
+<dt><code>TransportPluginError</code></dt>
+<dd>if attempting to use an asyncio transport plugin</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>

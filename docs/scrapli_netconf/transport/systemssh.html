@@ -30,7 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport.systemssh&#34;&#34;&#34;
 from typing import Any
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 from scrapli.transport.ptyprocess import PtyProcess
@@ -89,7 +89,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
         return login_bytes
 
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
+    @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _authenticate(self) -&gt; bytes:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session
@@ -358,7 +358,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
         return login_bytes
 
-    @operation_timeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
+    @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _authenticate(self) -&gt; bytes:
         &#34;&#34;&#34;
         Private method to check initial authentication when using pty_session

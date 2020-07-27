@@ -9,7 +9,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="scrapli_netconf",
-    version="2020.07.12",
+    version="2020.07.26",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",
@@ -17,7 +17,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/scrapli/scrapli_netconf",
     packages=setuptools.find_packages(),
-    install_requires=["scrapli>=2020.06.06", "lxml>=4.5.1"],
+    install_requires=["scrapli>=2020.07.26", "lxml>=4.5.1"],
     extras_require={},
     classifiers=[
         "License :: OSI Approved :: MIT License",

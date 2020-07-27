@@ -1,7 +1,7 @@
 """scrapli_netconf.transport.systemssh"""
 from typing import Any
 
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 from scrapli.transport.ptyprocess import PtyProcess
@@ -60,7 +60,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         self.logger.debug(f"Authenticated to host {self.host} successfully")
         return login_bytes
 
-    @operation_timeout("_timeout_ops", "Timed out looking for SSH login password prompt")
+    @OperationTimeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _authenticate(self) -> bytes:
         """
         Private method to check initial authentication when using pty_session

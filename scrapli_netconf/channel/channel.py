@@ -2,7 +2,7 @@
 from typing import Any
 
 from scrapli.channel import Channel
-from scrapli.decorators import operation_timeout
+from scrapli.decorators import OperationTimeout
 from scrapli.transport import Transport
 from scrapli_netconf.channel.base_channel import NetconfChannelBase
 from scrapli_netconf.constants import NetconfVersion
@@ -17,7 +17,7 @@ class NetconfChannel(Channel, NetconfChannelBase):
 
         self.netconf_version = NetconfVersion.VERSION_1_0
 
-    @operation_timeout(
+    @OperationTimeout(
         "timeout_ops",
         "Timed out determining if session is authenticated/getting server capabilities",
     )
@@ -43,7 +43,7 @@ class NetconfChannel(Channel, NetconfChannelBase):
         self.transport.session_lock.release()
         return output
 
-    @operation_timeout("timeout_ops", "Timed out sending client capabilities")
+    @OperationTimeout("timeout_ops", "Timed out sending client capabilities")
     def _send_client_capabilities(
         self,
         client_capabilities: NetconfClientCapabilities,

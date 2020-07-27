@@ -146,8 +146,7 @@ class NetconfResponse(Response):
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def _record_response_netconf_1_1(self) -&gt; None:
@@ -189,7 +188,7 @@ class NetconfResponse(Response):
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1
-                    result[1].replace(b&#39;&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&#39;, b&#34;&#34;).rstrip()
+                    result[1].replace(b&#39;&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&#39;, b&#34;&#34;)
                     for result in result_sections
                 ]
             )
@@ -197,8 +196,7 @@ class NetconfResponse(Response):
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def get_xml_elements(self) -&gt; Dict[str, Element]:
@@ -270,7 +268,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7f956889a5f0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = b&#x27;&lt;rpc-error&gt;&#x27;, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fc780bc4110>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = b&#x27;&lt;rpc-error&gt;&#x27;, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -402,8 +400,7 @@ for these strings in raw byte strings we get back from the device</dd>
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def _record_response_netconf_1_1(self) -&gt; None:
@@ -445,7 +442,7 @@ for these strings in raw byte strings we get back from the device</dd>
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1
-                    result[1].replace(b&#39;&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&#39;, b&#34;&#34;).rstrip()
+                    result[1].replace(b&#39;&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&#39;, b&#34;&#34;)
                     for result in result_sections
                 ]
             )
@@ -453,8 +450,7 @@ for these strings in raw byte strings we get back from the device</dd>
         self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
-            xml_result = etree.fromstring(self.result)
-            self.xml_result = remove_namespaces(xml_result)
+            self.xml_result = remove_namespaces(self.xml_result)
             self.result = etree.tostring(self.xml_result).decode()
 
     def get_xml_elements(self) -&gt; Dict[str, Element]:
@@ -557,7 +553,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7f956889a5f0>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fc780bc4110>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>

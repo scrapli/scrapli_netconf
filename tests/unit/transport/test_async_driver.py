@@ -10,7 +10,7 @@ def test_init_invalid_transport():
         AsyncNetconfScrape(host="localhost")
     assert (
         str(exc.value)
-        == "`AsyncNetconfScrape` is only supported using the `asyncssh` transport plugin"
+        == "Attempting to use transport type system with an asyncio driver, must use one of ['asyncssh'] transports"
     )
 
 

@@ -1,6 +1,6 @@
 lint:
-	python -m isort -rc -y scrapli_netconf/
-	python -m isort -rc -y tests/
+	python -m isort scrapli_netconf/
+	python -m isort tests/
 	python -m black scrapli_netconf/
 	python -m black tests/
 	python -m pylama scrapli_netconf/

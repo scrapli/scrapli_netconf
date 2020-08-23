@@ -84,7 +84,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
                 new_output = self.session.read()
                 output += new_output
                 self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-            except EOFError:
+            except EOFError as exc:
                 self._ssh_message_handler(output=output)
                 # if _ssh_message_handler didn't raise any exception, we can raise the standard --
                 # did you disable strict key message/exception
@@ -94,7 +94,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
                 )
                 self.logger.critical(msg)
                 self.session_lock.release()
-                raise ScrapliAuthenticationFailed(msg)
+                raise ScrapliAuthenticationFailed(msg) from exc
             if b"password:" in output.lower():
                 # if password is seen in the output, reset output and enter the password
                 # count the times password occurs to have a decent idea if auth failed

@@ -13,21 +13,24 @@ NETCONF_ALL_VERSIONS_DEVICE_TYPES = NETCONF_1_0_DEVICE_TYPES + NETCONF_1_1_DEVIC
 
 
 @pytest.fixture(
-    scope="session", params=NETCONF_1_0_DEVICE_TYPES,
+    scope="session",
+    params=NETCONF_1_0_DEVICE_TYPES,
 )
 def device_type_1_0(request):
     yield request.param
 
 
 @pytest.fixture(
-    scope="session", params=NETCONF_1_1_DEVICE_TYPES,
+    scope="session",
+    params=NETCONF_1_1_DEVICE_TYPES,
 )
 def device_type_1_1(request):
     yield request.param
 
 
 @pytest.fixture(
-    scope="session", params=NETCONF_ALL_VERSIONS_DEVICE_TYPES,
+    scope="session",
+    params=NETCONF_ALL_VERSIONS_DEVICE_TYPES,
 )
 def device_type(request):
     yield request.param

@@ -141,7 +141,10 @@ def test_response_init_exception():
 
 @pytest.mark.parametrize(
     "response_setup",
-    [(NetconfVersion.VERSION_1_0, "<something/>"), (NetconfVersion.VERSION_1_1, "<something/>"),],
+    [
+        (NetconfVersion.VERSION_1_0, "<something/>"),
+        (NetconfVersion.VERSION_1_1, "<something/>"),
+    ],
     ids=["1.0", "1.1"],
 )
 def test_response_init(response_setup):
@@ -232,7 +235,9 @@ def test_record_response(response_setup):
 
 
 @pytest.mark.parametrize(
-    "method_to_test", ["textfsm", "genie"], ids=["textfsm", "genie"],
+    "method_to_test",
+    ["textfsm", "genie"],
+    ids=["textfsm", "genie"],
 )
 def test_response_not_implemented_exceptions(method_to_test):
     channel_input = "<something/>"

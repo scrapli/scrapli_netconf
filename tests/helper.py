@@ -114,7 +114,10 @@ def cisco_iosxe_replace_config_data(config):
 
 def cisco_iosxr_replace_config_data(config):
     config = re.sub(
-        pattern=r"<password>.*</password>", repl="PASSWORD", string=config, flags=re.M | re.I,
+        pattern=r"<password>.*</password>",
+        repl="PASSWORD",
+        string=config,
+        flags=re.M | re.I,
     )
     # iosxe does stupid stuff where there are a few single character trailing white spaces somehow?
     # that or i need to be doing this in the library like i do in scrapli core??

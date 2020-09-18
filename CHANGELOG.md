@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+# 2020.09.18
+- Fix some pins for dev requirements
+- Add 3.9-dev to actions
+- Fix `scrapli-asycnssh` not in setup.py `install_requires`
+- Retest everything! In general, just get this updated/ready for `nornir-scrapli`!
+
 # 2020.07.26
 - Update to match scrapli core -- moved to updated timeout decorator, fixed a test to match a better exception message
 

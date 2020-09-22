@@ -99,7 +99,7 @@ class NetconfScrapeBase(ScrapeBase):
         for elem in server_capabilities_xml.iter():
             if "capability" not in elem.tag:
                 continue
-            self.server_capabilities.append(elem.text)
+            self.server_capabilities.append(elem.text.strip())
         self._build_readable_datastores()
         self._build_writeable_datastores()
         self.logger.info(f"Server capabilities received and parsed: {self.server_capabilities}")

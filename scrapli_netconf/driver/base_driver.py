@@ -36,11 +36,13 @@ class NetconfBaseOperations(Enum):
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
+    DELETE_CONFIG = "<delete-config><target><{target}/></target></delete-config>"
     COMMIT = "<commit/>"
     DISCARD = "<discard-changes/>"
     LOCK = "<lock><target><{target}/></target></lock>"
     UNLOCK = "<unlock><target><{target}/></target></unlock>"
     RPC = "<rpc xmlns='urn:ietf:params:xml:ns:netconf:base:1.0' message-id='{message_id}'></rpc>"
+    VALIDATE = "<validate><source><{source}/></source></validate>"
 
 
 class NetconfScrapeBase(ScrapeBase):
@@ -99,7 +101,7 @@ class NetconfScrapeBase(ScrapeBase):
         for elem in server_capabilities_xml.iter():
             if "capability" not in elem.tag:
                 continue
-            self.server_capabilities.append(elem.text)
+            self.server_capabilities.append(elem.text.strip())
         self._build_readable_datastores()
         self._build_writeable_datastores()
         self.logger.info(f"Server capabilities received and parsed: {self.server_capabilities}")
@@ -187,6 +189,29 @@ class NetconfScrapeBase(ScrapeBase):
         """
         if target not in self.writeable_datastores:
             msg = f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _validate_delete_config_target(self, target: str) -> None:
+        """
+        Validate delete-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to delete; typically one of startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid target was selected
+
+        """
+        if target == "running" or target not in self.writeable_datastores:
+            msg = f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            if target == "running":
+                msg = "delete-config `target` may not be `running`"
             self.logger.warning(msg)
             if self.strict_datastores is True:
                 raise ValueError(msg)
@@ -422,6 +447,48 @@ class NetconfScrapeBase(ScrapeBase):
         )
         return response
 
+    def _pre_delete_config(self, target: str = "running") -> NetconfResponse:
+        """
+        Handle pre "edit_config" tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        """
+        self.logger.debug(f"Building payload for `delete-config` operation. target: {target}")
+        self._validate_delete_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b"\n]]>]]>"
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f"Built payload for `delete-config` operation. Payload: {channel_input.decode()}"
+        )
+        return response
+
     def _pre_commit(self) -> NetconfResponse:
         """
         Handle pre "commit" tasks for consistency between sync/async versions
@@ -615,4 +682,58 @@ class NetconfScrapeBase(ScrapeBase):
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(f"Built payload for `rpc` operation. Payload: {channel_input.decode()}")
+        return response
+
+    def _pre_validate(self, source: str) -> NetconfResponse:
+        """
+        Handle pre "validate" tasks for consistency between sync/async versions
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            CapabilityNotSupported: if `validate` ca
+
+        """
+        self.logger.debug("Building payload for `validate` operation.")
+
+        if not any(
+            cap in self.server_capabilities
+            for cap in (
+                "urn:ietf:params:netconf:capability:validate:1.0",
+                "urn:ietf:params:netconf:capability:validate:1.1",
+            )
+        ):
+            msg = "validate requested, but is not supported by the server"
+            self.logger.exception(msg)
+            raise CapabilityNotSupported(msg)
+
+        self._validate_edit_config_target(target=source)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.VALIDATE.value.format(source=source)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b"\n]]>]]>"
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f"Built payload for `validate` operation. Payload: {channel_input.decode()}"
+        )
         return response

@@ -238,6 +238,45 @@ async def test_edit_config_and_commit(async_conn):
 
 
 @pytest.mark.asyncio
+async def test_delete_config(async_conn):
+    conn = async_conn[0]
+    device_type = async_conn[1]
+
+    if device_type in ["cisco_iosxe_1_0", "cisco_iosxe_1_1", "cisco_iosxr_1_1"]:
+        pytest.skip(
+            "skipping `delete_config` for iosxe as there is no candidate data store, and "
+            "iosxr version used in vrnetlab test environment does not support delete-config"
+        )
+
+    config_replacer = CONFIG_REPLACER[device_type]
+    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
+
+    conn.strip_namespaces = True
+    await conn.open()
+
+    target = "candidate"
+
+    _ = await conn.get_config(source=target)
+
+    edit_response = await conn.edit_config(config=config, target=target)
+    assert isinstance(edit_response, NetconfResponse)
+    assert edit_response.failed is False
+    assert not xmldiffs(
+        config_replacer(edit_response.result),
+        """<rpc-reply message-id="101">\n <ok/>\n</rpc-reply>""",
+    )
+
+    response = await conn.delete_config(target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+
+    post_delete_config = await conn.get_config(source=target)
+    # confirm that the config we got back is empty (since we deleted it!)
+    assert post_delete_config.xml_result.xpath("//configuration")[0].text.strip() == ""
+    await conn.discard()
+
+
+@pytest.mark.asyncio
 async def test_lock_unlock(async_conn):
     conn = async_conn[0]
     device_type = async_conn[1]

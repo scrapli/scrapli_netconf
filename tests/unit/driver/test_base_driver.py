@@ -56,6 +56,8 @@ GET_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<r
 GET_CONFIG_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get-config></rpc>"""
 EDIT_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><edit-config><target><running/></target><config><cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">\n    <timer>80</timer>\n    <enable>true</enable>\n    <log-adjacency/>\n    <hold-time>200</hold-time>\n    <advertise-v1-only/>\n</cdp></config></edit-config></rpc>\n]]>]]>"""
 EDIT_CONFIG_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><edit-config><target><running/></target><config><cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg">\n    <timer>80</timer>\n    <enable>true</enable>\n    <log-adjacency/>\n    <hold-time>200</hold-time>\n    <advertise-v1-only/>\n</cdp></config></edit-config></rpc>"""
+DELETE_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><delete-config><target><candidate/></target></delete-config></rpc>\n]]>]]>"""
+DELETE_CONFIG_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><delete-config><target><candidate/></target></delete-config></rpc>"""
 COMMIT_CHANNEL_INPUT_1_0 = """<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><commit/></rpc>\n]]>]]>"""
 COMMIT_CHANNEL_INPUT_1_1 = (
     """<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><commit/></rpc>"""
@@ -68,6 +70,8 @@ UNLOCK_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc x
 UNLOCK_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><unlock><target><running/></target></unlock></rpc>"""
 RPC_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></rpc>\n]]>]]>"""
 RPC_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></rpc>"""
+VALIDATE_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>\n]]>]]>"""
+VALIDATE_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>"""
 
 
 @pytest.mark.parametrize(
@@ -270,6 +274,33 @@ def test_pre_edit_config(dummy_conn, capabilities):
 @pytest.mark.parametrize(
     "capabilities",
     [
+        (NetconfVersion.VERSION_1_0, DELETE_CONFIG_CHANNEL_INPUT_1_0),
+        (NetconfVersion.VERSION_1_1, DELETE_CONFIG_CHANNEL_INPUT_1_1),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_delete_config(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
+    dummy_conn.writeable_datastores = ["running", "candidate"]
+    dummy_conn.netconf_version = capabilities[0]
+    expected_channel_input = capabilities[1]
+    response = dummy_conn._pre_delete_config(target="candidate")
+    assert isinstance(response, NetconfResponse)
+    assert response.channel_input == expected_channel_input
+
+
+def test_pre_delete_config_running(dummy_conn):
+    dummy_conn.strict_datastores = True
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
+    dummy_conn.writeable_datastores = ["running", "candidate"]
+    with pytest.raises(ValueError) as exc:
+        dummy_conn._pre_delete_config(target="running")
+    assert str(exc.value) == "delete-config `target` may not be `running`"
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
         (NetconfVersion.VERSION_1_0, COMMIT_CHANNEL_INPUT_1_0),
         (NetconfVersion.VERSION_1_1, COMMIT_CHANNEL_INPUT_1_1),
     ],
@@ -353,3 +384,27 @@ def test_pre_rpc(dummy_conn, capabilities):
     response = dummy_conn._pre_rpc(filter_=filter_)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, VALIDATE_CHANNEL_INPUT_1_0),
+        (NetconfVersion.VERSION_1_1, VALIDATE_CHANNEL_INPUT_1_1),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_validate(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:validate:1.0"]
+    dummy_conn.writeable_datastores = ["candidate"]
+    dummy_conn.netconf_version = capabilities[0]
+    expected_channel_input = capabilities[1]
+    response = dummy_conn._pre_validate(source="candidate")
+    assert isinstance(response, NetconfResponse)
+    assert response.channel_input == expected_channel_input
+
+
+def test_pre_validate_no_capability(dummy_conn):
+    with pytest.raises(CapabilityNotSupported) as exc:
+        dummy_conn._pre_validate(source="candidate")
+    assert str(exc.value) == "validate requested, but is not supported by the server"

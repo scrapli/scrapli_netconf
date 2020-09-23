@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+# 2020.XX.XX
+- 
+
 # 2020.09.23
 - Strip server capabilities so we don't save capabilities with newlines/whitespace
 - Add `validate` and `delete_config` methods

@@ -268,7 +268,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7ffe382a4ee0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = b&#x27;&lt;rpc-error&gt;&#x27;, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fd568388110>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = b&#x27;&lt;rpc-error&gt;&#x27;, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -553,7 +553,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7ffe382a4ee0>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fd568388110>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>

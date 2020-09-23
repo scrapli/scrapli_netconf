@@ -212,6 +212,25 @@ relies on, see Transport and Channel docs for details.</p>
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
+    async def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Netconf delete-config operation
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_delete_config(target=target)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
     async def commit(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf commit config operation
@@ -307,6 +326,25 @@ relies on, see Transport and Channel docs for details.</p>
         response = self._pre_rpc(filter_=filter_)
         raw_response = await self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
+    async def validate(self, source: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Netconf &#34;validate&#34; operation
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_validate(source=source)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -350,6 +388,47 @@ relies on, see Transport and Channel docs for details.</p>
 
     &#34;&#34;&#34;
     response = self._pre_commit()
+    raw_response = await self.channel.send_input_netconf(response.channel_input)
+    response._record_response(raw_response)  # pylint: disable=W0212
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.driver.AsyncNetconfScrape.delete_config"><code class="name flex">
+<span>async def <span class="ident">delete_config</span></span>(<span>self, target: str = 'candidate') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Netconf delete-config operation</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target</code></strong></dt>
+<dd>configuration source to target; startup|candidate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfResponse</code></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
+    &#34;&#34;&#34;
+    Netconf delete-config operation
+
+    Args:
+        target: configuration source to target; startup|candidate
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_delete_config(target=target)
     raw_response = await self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
@@ -704,6 +783,47 @@ relies on, see Transport and Channel docs for details.</p>
     return response</code></pre>
 </details>
 </dd>
+<dt id="scrapli_netconf.driver.AsyncNetconfScrape.validate"><code class="name flex">
+<span>async def <span class="ident">validate</span></span>(<span>self, source: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Netconf "validate" operation</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>source</code></strong></dt>
+<dd>configuration source to validate; typically one of running|startup|candidate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfResponse</code></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def validate(self, source: str) -&gt; NetconfResponse:
+    &#34;&#34;&#34;
+    Netconf &#34;validate&#34; operation
+
+    Args:
+        source: configuration source to validate; typically one of running|startup|candidate
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_validate(source=source)
+    raw_response = await self.channel.send_input_netconf(response.channel_input)
+    response._record_response(raw_response)  # pylint: disable=W0212
+    return response</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="scrapli_netconf.driver.NetconfScrape"><code class="flex name class">
@@ -856,6 +976,25 @@ relies on, see Transport and Channel docs for details.</p>
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
+    def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Netconf delete-config operation
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_delete_config(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
     def commit(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf commit config operation
@@ -951,6 +1090,25 @@ relies on, see Transport and Channel docs for details.</p>
         response = self._pre_rpc(filter_=filter_)
         raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
+    def validate(self, source: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Netconf &#34;validate&#34; operation
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        response = self._pre_validate(source=source)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
         return response</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -994,6 +1152,47 @@ relies on, see Transport and Channel docs for details.</p>
 
     &#34;&#34;&#34;
     response = self._pre_commit()
+    raw_response = self.channel.send_input_netconf(response.channel_input)
+    response._record_response(raw_response)  # pylint: disable=W0212
+    return response</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.driver.NetconfScrape.delete_config"><code class="name flex">
+<span>def <span class="ident">delete_config</span></span>(<span>self, target: str = 'candidate') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Netconf delete-config operation</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>target</code></strong></dt>
+<dd>configuration source to target; startup|candidate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfResponse</code></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
+    &#34;&#34;&#34;
+    Netconf delete-config operation
+
+    Args:
+        target: configuration source to target; startup|candidate
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_delete_config(target=target)
     raw_response = self.channel.send_input_netconf(response.channel_input)
     response._record_response(raw_response)  # pylint: disable=W0212
     return response</code></pre>
@@ -1348,6 +1547,47 @@ relies on, see Transport and Channel docs for details.</p>
     return response</code></pre>
 </details>
 </dd>
+<dt id="scrapli_netconf.driver.NetconfScrape.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, source: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Netconf "validate" operation</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>source</code></strong></dt>
+<dd>configuration source to validate; typically one of running|startup|candidate</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfResponse</code></dt>
+<dd>scrapli_netconf NetconfResponse object</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def validate(self, source: str) -&gt; NetconfResponse:
+    &#34;&#34;&#34;
+    Netconf &#34;validate&#34; operation
+
+    Args:
+        source: configuration source to validate; typically one of running|startup|candidate
+
+    Returns:
+        NetconfResponse: scrapli_netconf NetconfResponse object
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    response = self._pre_validate(source=source)
+    raw_response = self.channel.send_input_netconf(response.channel_input)
+    response._record_response(raw_response)  # pylint: disable=W0212
+    return response</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -1377,6 +1617,7 @@ relies on, see Transport and Channel docs for details.</p>
 <h4><code><a title="scrapli_netconf.driver.AsyncNetconfScrape" href="#scrapli_netconf.driver.AsyncNetconfScrape">AsyncNetconfScrape</a></code></h4>
 <ul class="two-column">
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.commit" href="#scrapli_netconf.driver.AsyncNetconfScrape.commit">commit</a></code></li>
+<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.delete_config" href="#scrapli_netconf.driver.AsyncNetconfScrape.delete_config">delete_config</a></code></li>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.discard" href="#scrapli_netconf.driver.AsyncNetconfScrape.discard">discard</a></code></li>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.edit_config" href="#scrapli_netconf.driver.AsyncNetconfScrape.edit_config">edit_config</a></code></li>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.get" href="#scrapli_netconf.driver.AsyncNetconfScrape.get">get</a></code></li>
@@ -1385,12 +1626,14 @@ relies on, see Transport and Channel docs for details.</p>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.open" href="#scrapli_netconf.driver.AsyncNetconfScrape.open">open</a></code></li>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.rpc" href="#scrapli_netconf.driver.AsyncNetconfScrape.rpc">rpc</a></code></li>
 <li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.unlock" href="#scrapli_netconf.driver.AsyncNetconfScrape.unlock">unlock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.validate" href="#scrapli_netconf.driver.AsyncNetconfScrape.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="scrapli_netconf.driver.NetconfScrape" href="#scrapli_netconf.driver.NetconfScrape">NetconfScrape</a></code></h4>
 <ul class="two-column">
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.commit" href="#scrapli_netconf.driver.NetconfScrape.commit">commit</a></code></li>
+<li><code><a title="scrapli_netconf.driver.NetconfScrape.delete_config" href="#scrapli_netconf.driver.NetconfScrape.delete_config">delete_config</a></code></li>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.discard" href="#scrapli_netconf.driver.NetconfScrape.discard">discard</a></code></li>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.edit_config" href="#scrapli_netconf.driver.NetconfScrape.edit_config">edit_config</a></code></li>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.get" href="#scrapli_netconf.driver.NetconfScrape.get">get</a></code></li>
@@ -1399,6 +1642,7 @@ relies on, see Transport and Channel docs for details.</p>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.open" href="#scrapli_netconf.driver.NetconfScrape.open">open</a></code></li>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.rpc" href="#scrapli_netconf.driver.NetconfScrape.rpc">rpc</a></code></li>
 <li><code><a title="scrapli_netconf.driver.NetconfScrape.unlock" href="#scrapli_netconf.driver.NetconfScrape.unlock">unlock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.NetconfScrape.validate" href="#scrapli_netconf.driver.NetconfScrape.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>

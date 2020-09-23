@@ -65,11 +65,13 @@ class NetconfBaseOperations(Enum):
     GET = &#34;&lt;get&gt;&lt;/get&gt;&#34;
     GET_CONFIG = &#34;&lt;get-config&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/get-config&gt;&#34;
     EDIT_CONFIG = &#34;&lt;edit-config&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/edit-config&gt;&#34;
+    DELETE_CONFIG = &#34;&lt;delete-config&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/delete-config&gt;&#34;
     COMMIT = &#34;&lt;commit/&gt;&#34;
     DISCARD = &#34;&lt;discard-changes/&gt;&#34;
     LOCK = &#34;&lt;lock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/lock&gt;&#34;
     UNLOCK = &#34;&lt;unlock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/unlock&gt;&#34;
     RPC = &#34;&lt;rpc xmlns=&#39;urn:ietf:params:xml:ns:netconf:base:1.0&#39; message-id=&#39;{message_id}&#39;&gt;&lt;/rpc&gt;&#34;
+    VALIDATE = &#34;&lt;validate&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/validate&gt;&#34;
 
 
 class NetconfScrapeBase(ScrapeBase):
@@ -128,7 +130,7 @@ class NetconfScrapeBase(ScrapeBase):
         for elem in server_capabilities_xml.iter():
             if &#34;capability&#34; not in elem.tag:
                 continue
-            self.server_capabilities.append(elem.text)
+            self.server_capabilities.append(elem.text.strip())
         self._build_readable_datastores()
         self._build_writeable_datastores()
         self.logger.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
@@ -216,6 +218,29 @@ class NetconfScrapeBase(ScrapeBase):
         &#34;&#34;&#34;
         if target not in self.writeable_datastores:
             msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _validate_delete_config_target(self, target: str) -&gt; None:
+        &#34;&#34;&#34;
+        Validate delete-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to delete; typically one of startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid target was selected
+
+        &#34;&#34;&#34;
+        if target == &#34;running&#34; or target not in self.writeable_datastores:
+            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            if target == &#34;running&#34;:
+                msg = &#34;delete-config `target` may not be `running`&#34;
             self.logger.warning(msg)
             if self.strict_datastores is True:
                 raise ValueError(msg)
@@ -451,6 +476,48 @@ class NetconfScrapeBase(ScrapeBase):
         )
         return response
 
+    def _pre_delete_config(self, target: str = &#34;running&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;Building payload for `delete-config` operation. target: {target}&#34;)
+        self._validate_delete_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `delete-config` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
     def _pre_commit(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Handle pre &#34;commit&#34; tasks for consistency between sync/async versions
@@ -644,6 +711,60 @@ class NetconfScrapeBase(ScrapeBase):
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(f&#34;Built payload for `rpc` operation. Payload: {channel_input.decode()}&#34;)
+        return response
+
+    def _pre_validate(self, source: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;validate&#34; tasks for consistency between sync/async versions
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            CapabilityNotSupported: if `validate` ca
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `validate` operation.&#34;)
+
+        if not any(
+            cap in self.server_capabilities
+            for cap in (
+                &#34;urn:ietf:params:netconf:capability:validate:1.0&#34;,
+                &#34;urn:ietf:params:netconf:capability:validate:1.1&#34;,
+            )
+        ):
+            msg = &#34;validate requested, but is not supported by the server&#34;
+            self.logger.exception(msg)
+            raise CapabilityNotSupported(msg)
+
+        self._validate_edit_config_target(target=source)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.VALIDATE.value.format(source=source)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `validate` operation. Payload: {channel_input.decode()}&#34;
+        )
         return response</code></pre>
 </details>
 </section>
@@ -672,11 +793,13 @@ class NetconfScrapeBase(ScrapeBase):
     GET = &#34;&lt;get&gt;&lt;/get&gt;&#34;
     GET_CONFIG = &#34;&lt;get-config&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/get-config&gt;&#34;
     EDIT_CONFIG = &#34;&lt;edit-config&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/edit-config&gt;&#34;
+    DELETE_CONFIG = &#34;&lt;delete-config&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/delete-config&gt;&#34;
     COMMIT = &#34;&lt;commit/&gt;&#34;
     DISCARD = &#34;&lt;discard-changes/&gt;&#34;
     LOCK = &#34;&lt;lock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/lock&gt;&#34;
     UNLOCK = &#34;&lt;unlock&gt;&lt;target&gt;&lt;{target}/&gt;&lt;/target&gt;&lt;/unlock&gt;&#34;
-    RPC = &#34;&lt;rpc xmlns=&#39;urn:ietf:params:xml:ns:netconf:base:1.0&#39; message-id=&#39;{message_id}&#39;&gt;&lt;/rpc&gt;&#34;</code></pre>
+    RPC = &#34;&lt;rpc xmlns=&#39;urn:ietf:params:xml:ns:netconf:base:1.0&#39; message-id=&#39;{message_id}&#39;&gt;&lt;/rpc&gt;&#34;
+    VALIDATE = &#34;&lt;validate&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/validate&gt;&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -685,6 +808,10 @@ class NetconfScrapeBase(ScrapeBase):
 <h3>Class variables</h3>
 <dl>
 <dt id="scrapli_netconf.driver.base_driver.NetconfBaseOperations.COMMIT"><code class="name">var <span class="ident">COMMIT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseOperations.DELETE_CONFIG"><code class="name">var <span class="ident">DELETE_CONFIG</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -721,6 +848,10 @@ class NetconfScrapeBase(ScrapeBase):
 <div class="desc"></div>
 </dd>
 <dt id="scrapli_netconf.driver.base_driver.NetconfBaseOperations.UNLOCK"><code class="name">var <span class="ident">UNLOCK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseOperations.VALIDATE"><code class="name">var <span class="ident">VALIDATE</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -939,7 +1070,7 @@ docs for given transport class for details of what to pass here</dd>
         for elem in server_capabilities_xml.iter():
             if &#34;capability&#34; not in elem.tag:
                 continue
-            self.server_capabilities.append(elem.text)
+            self.server_capabilities.append(elem.text.strip())
         self._build_readable_datastores()
         self._build_writeable_datastores()
         self.logger.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
@@ -1027,6 +1158,29 @@ docs for given transport class for details of what to pass here</dd>
         &#34;&#34;&#34;
         if target not in self.writeable_datastores:
             msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _validate_delete_config_target(self, target: str) -&gt; None:
+        &#34;&#34;&#34;
+        Validate delete-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to delete; typically one of startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid target was selected
+
+        &#34;&#34;&#34;
+        if target == &#34;running&#34; or target not in self.writeable_datastores:
+            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            if target == &#34;running&#34;:
+                msg = &#34;delete-config `target` may not be `running`&#34;
             self.logger.warning(msg)
             if self.strict_datastores is True:
                 raise ValueError(msg)
@@ -1262,6 +1416,48 @@ docs for given transport class for details of what to pass here</dd>
         )
         return response
 
+    def _pre_delete_config(self, target: str = &#34;running&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;Building payload for `delete-config` operation. target: {target}&#34;)
+        self._validate_delete_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `delete-config` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
     def _pre_commit(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Handle pre &#34;commit&#34; tasks for consistency between sync/async versions
@@ -1455,6 +1651,60 @@ docs for given transport class for details of what to pass here</dd>
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(f&#34;Built payload for `rpc` operation. Payload: {channel_input.decode()}&#34;)
+        return response
+
+    def _pre_validate(self, source: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;validate&#34; tasks for consistency between sync/async versions
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            CapabilityNotSupported: if `validate` ca
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `validate` operation.&#34;)
+
+        if not any(
+            cap in self.server_capabilities
+            for cap in (
+                &#34;urn:ietf:params:netconf:capability:validate:1.0&#34;,
+                &#34;urn:ietf:params:netconf:capability:validate:1.1&#34;,
+            )
+        ):
+            msg = &#34;validate requested, but is not supported by the server&#34;
+            self.logger.exception(msg)
+            raise CapabilityNotSupported(msg)
+
+        self._validate_edit_config_target(target=source)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.VALIDATE.value.format(source=source)
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.transport.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `validate` operation. Payload: {channel_input.decode()}&#34;
+        )
         return response</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -1487,6 +1737,7 @@ docs for given transport class for details of what to pass here</dd>
 <h4><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations">NetconfBaseOperations</a></code></h4>
 <ul class="two-column">
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.COMMIT" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.COMMIT">COMMIT</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.DELETE_CONFIG" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.DELETE_CONFIG">DELETE_CONFIG</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.DISCARD" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.DISCARD">DISCARD</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.EDIT_CONFIG" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.EDIT_CONFIG">EDIT_CONFIG</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.FILTER_SUBTREE" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.FILTER_SUBTREE">FILTER_SUBTREE</a></code></li>
@@ -1496,6 +1747,7 @@ docs for given transport class for details of what to pass here</dd>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.LOCK" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.LOCK">LOCK</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.RPC" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.RPC">RPC</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.UNLOCK" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.UNLOCK">UNLOCK</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.VALIDATE" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.VALIDATE">VALIDATE</a></code></li>
 </ul>
 </li>
 <li>

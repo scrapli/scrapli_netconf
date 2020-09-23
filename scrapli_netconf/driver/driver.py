@@ -131,6 +131,25 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         response._record_response(raw_response)  # pylint: disable=W0212
         return response
 
+    def delete_config(self, target: str = "candidate") -> NetconfResponse:
+        """
+        Netconf delete-config operation
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
+        response = self._pre_delete_config(target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
     def commit(self) -> NetconfResponse:
         """
         Netconf commit config operation
@@ -224,6 +243,25 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         """
         response = self._pre_rpc(filter_=filter_)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response._record_response(raw_response)  # pylint: disable=W0212
+        return response
+
+    def validate(self, source: str) -> NetconfResponse:
+        """
+        Netconf "validate" operation
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
+        response = self._pre_validate(source=source)
         raw_response = self.channel.send_input_netconf(response.channel_input)
         response._record_response(raw_response)  # pylint: disable=W0212
         return response

@@ -36,6 +36,7 @@ scrapli_netconf aims to be fully RFC compliant at some point, but at the moment 
   - [Get](#get-operations)
   - [Lock and Unlock](#lock-and-unlock)
   - [Edit Config](#edit-config)
+  - [Delete Config](#delete-config)
   - [Commit and Discard](#commit-and-discard)
   - [RPC](#rpc)
 - [Advanced Usage](#advanced-usage)
@@ -424,6 +425,32 @@ result = conn.edit_config(config=cdp_config, target="candidate")
 print(result.result)
 ```
 
+
+## Delete Config
+
+Some devices may allow you to delete a candidate/startup configuration. You can do so with the `delete_config` method
+; note that this is only currently tested on Junos as the test environment IOSXR version does not support this method
+. Per the RFC, "running" is never a valid target; `scrapli_netconf` will produce a warning indicating this if
+ "running" is set as the target; if `strict_datastores` is set to `True` an exception will be raised.
+
+```python
+from scrapli_netconf.driver import NetconfScrape
+
+my_device = {
+    "host": "172.18.0.13",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+    "port": 830
+}
+
+conn = NetconfScrape(**my_device)
+conn.open()
+result = conn.delete_config(target="candidate")
+print(result.result)
+```
+
+
 ## RPC
 
 The `rpc` method is a "bare-bones" rpc call which does not apply any formatting/standardization beyond the outer most
@@ -506,7 +533,7 @@ scrapli_netconf drives contain an option `strict_datastores` which defaults to `
    . Net/net though is they are just different! Use whichever you prefer! 
 - Question: Is this easy to use?
   - Answer: Biased, but I think so! A big part of the goal of all of this was to have a consistent feel across ssh
-   and netconf both with sync and async support, and (again, biased) I think that has been acheived.
+   and netconf both with sync and async support, and (again, biased) I think that has been achieved.
 - Other questions? Ask away!
 
 

@@ -3,6 +3,7 @@ CHANGELOG
 
 # 2020.XX.XX
 - Strip server capabilities so we don't save capabilities with newlines/whitespace
+- Add `validate` and `delete_config` methods
 
 # 2020.09.18
 - Fix some pins for dev requirements

@@ -222,6 +222,44 @@ def test_edit_config_and_commit(sync_conn):
         assert commit_response.failed is False
 
 
+def test_delete_config(sync_conn):
+    conn = sync_conn[0]
+    device_type = sync_conn[1]
+
+    if device_type in ["cisco_iosxe_1_0", "cisco_iosxe_1_1", "cisco_iosxr_1_1"]:
+        pytest.skip(
+            "skipping `delete_config` for iosxe as there is no candidate data store, and "
+            "iosxr version used in vrnetlab test environment does not support delete-config"
+        )
+
+    config_replacer = CONFIG_REPLACER[device_type]
+    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
+
+    conn.strip_namespaces = True
+    conn.open()
+
+    target = "candidate"
+
+    _ = conn.get_config(source=target)
+
+    response = conn.edit_config(config=config, target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+    assert not xmldiffs(
+        config_replacer(response.result),
+        """<rpc-reply message-id="101">\n <ok/>\n</rpc-reply>""",
+    )
+
+    response = conn.delete_config(target=target)
+    assert isinstance(response, NetconfResponse)
+    assert response.failed is False
+
+    post_delete_config = conn.get_config(source=target)
+    # confirm that the config we got back is empty (since we deleted it!)
+    assert post_delete_config.xml_result.xpath("//configuration")[0].text.strip() == ""
+    conn.discard()
+
+
 def test_lock_unlock(sync_conn):
     conn = sync_conn[0]
     device_type = sync_conn[1]

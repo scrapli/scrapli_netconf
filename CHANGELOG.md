@@ -2,7 +2,8 @@ CHANGELOG
 =========
 
 # 2020.XX.XX
-- 
+- Handle netconf 1.1 devices that have chunk sizes of 1
+- Ensure results are "pretty printed"
 
 # 2020.09.23
 - Strip server capabilities so we don't save capabilities with newlines/whitespace

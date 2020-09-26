@@ -119,9 +119,9 @@ class NetconfResponse(Response):
 
         if self.strip_namespaces:
             self.xml_result = remove_namespaces(self.xml_result)
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
         else:
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
     def _record_response_netconf_1_1(self) -> None:
         """
@@ -173,9 +173,9 @@ class NetconfResponse(Response):
 
         if self.strip_namespaces:
             self.xml_result = remove_namespaces(self.xml_result)
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
         else:
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
     def get_xml_elements(self) -> Dict[str, Element]:
         """

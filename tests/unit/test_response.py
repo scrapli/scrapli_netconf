@@ -36,7 +36,8 @@ RESPONSE_1_0 = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/ju
     <database-status-information>
 </database-status-information>
   </data>
-</rpc-reply>"""
+</rpc-reply>
+"""
 RESULT_1_0 = RESPONSE_1_0
 RESULT_1_0_STRIP = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" message-id="101">
   <data>
@@ -67,7 +68,8 @@ RESULT_1_0_STRIP = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R
     <database-status-information>
 </database-status-information>
   </data>
-</rpc-reply>"""
+</rpc-reply>
+"""
 XML_ELEMENTS_1_0 = ["configuration", "database-status-information"]
 
 RESPONSE_1_1 = """#520
@@ -103,7 +105,8 @@ RESULT_1_1 = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" messa
    </component>
   </components>
  </data>
-</rpc-reply>"""
+</rpc-reply>
+"""
 RESULT_1_1_STRIP = """<rpc-reply message-id="101">
  <data>
   <components>
@@ -118,7 +121,8 @@ RESULT_1_1_STRIP = """<rpc-reply message-id="101">
    </component>
   </components>
  </data>
-</rpc-reply>"""
+</rpc-reply>
+"""
 XML_ELEMENTS_1_1 = ["components"]
 
 

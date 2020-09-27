@@ -92,35 +92,35 @@ RESPONSE_1_1 = """#520
 
 ##"""
 RESULT_1_1 = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
- <data>
-  <components xmlns="http://openconfig.net/yang/platform">
-   <component>
-    <name>0/0-Virtual-Motherboard</name>
-    <state>
-     <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
-     <name>0/0-Virtual-Motherboard</name>
-     <type xmlns:idx="http://openconfig.net/yang/platform-types">idx:MODULE</type>
-     <id>65538</id>
-    </state>
-   </component>
-  </components>
- </data>
+  <data>
+    <components xmlns="http://openconfig.net/yang/platform">
+      <component>
+        <name>0/0-Virtual-Motherboard</name>
+        <state>
+          <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
+          <name>0/0-Virtual-Motherboard</name>
+          <type xmlns:idx="http://openconfig.net/yang/platform-types">idx:MODULE</type>
+          <id>65538</id>
+        </state>
+      </component>
+    </components>
+  </data>
 </rpc-reply>
 """
 RESULT_1_1_STRIP = """<rpc-reply message-id="101">
- <data>
-  <components>
-   <component>
-    <name>0/0-Virtual-Motherboard</name>
-    <state>
-     <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
-     <name>0/0-Virtual-Motherboard</name>
-     <type>idx:MODULE</type>
-     <id>65538</id>
-    </state>
-   </component>
-  </components>
- </data>
+  <data>
+    <components>
+      <component>
+        <name>0/0-Virtual-Motherboard</name>
+        <state>
+          <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
+          <name>0/0-Virtual-Motherboard</name>
+          <type>idx:MODULE</type>
+          <id>65538</id>
+        </state>
+      </component>
+    </components>
+  </data>
 </rpc-reply>
 """
 XML_ELEMENTS_1_1 = ["components"]

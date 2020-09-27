@@ -115,6 +115,7 @@ class NetconfResponse(Response):
             self.raw_result.replace(b"]]>]]>", b"").replace(
                 b'<?xml version="1.0" encoding="UTF-8"?>', b""
             ),
+            parser=PARSER,
         )
 
         if self.strip_namespaces:
@@ -169,6 +170,7 @@ class NetconfResponse(Response):
                     for result in result_sections
                 ]
             ),
+            parser=PARSER,
         )
 
         if self.strip_namespaces:

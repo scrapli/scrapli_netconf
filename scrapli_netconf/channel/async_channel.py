@@ -41,7 +41,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
              timeout_transport: transport timeout value to modify to use as timeout to test echo
 
         Returns:
-            N/A
+            N/A  # noqa: DAR202
 
         Raises:
             N/A

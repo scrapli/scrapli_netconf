@@ -6,6 +6,7 @@ CHANGELOG
 - Ensure results are "pretty printed"
 - Above two items were worked out with thanks to Hugo Tinoco! PS - this has been tested on Nokia devices now too!
 - Hopefully improved asyncssh "echo checker" (see _check_echo) method in async_channel for details
+- Update CI to use 3.9 instead of 3.9-dev (and update deprecated set-env)
 
 
 # 2020.09.23

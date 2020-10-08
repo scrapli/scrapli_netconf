@@ -26,6 +26,7 @@ scrapli_netconf aims to be fully RFC compliant at some point, but at the moment 
   - [More Examples](#more-examples)
   - [Documentation](#documentation)
 - [scrapli_netconf: What is it](#scrapli-what-is-it)
+- [Related Scrapli Libraries](#related-scrapli-libraries)
 - [Supported Platforms](#supported-platforms)
 - [Advanced Installation](#advanced-installation)
 - [Basic Usage](#basic-usage)
@@ -151,6 +152,19 @@ A great question to ask right now is: "why"! The primary driver is to get `nccli
       for netconf operations.
 
 
+# Related Scrapli Libraries
+
+This repo is the "netconf" component scrapli project, however there are other libraries/repos in the scrapli family
+ -- here is a list/link to all of the other scrapli things!
+
+- [scrapli](https://github.com/carlmontanari/scrapli) -- the "core" project
+- [scrapli_paramiko](https://github.com/scrapli/scrapli_paramiko) -- the paramiko transport driver
+- [scrapli_ssh2](https://github.com/scrapli/scrapli_ssh2) -- the ssh2-python transport driver
+- [scrapli_asyncssh](https://github.com/scrapli/scrapli_asyncssh) -- the asyncssh transport driver
+- [nornir_scrapli](https://github.com/scrapli/nornir_scrapli) -- scrapli's nornir plugin
+- [scrapli_stubs](https://github.com/scrapli/scrapli_stubs) -- scrapli type stubs
+
+
 # Supported Platforms
 
 At this time scrapli_netconf is a base implementation of netconf 1.0 and netconf 1.1 (note that scrapli is not 100
@@ -160,6 +174,9 @@ At this time scrapli_netconf is a base implementation of netconf 1.0 and netconf
 - Cisco IOS-XE (tested on: 16.12.03) with Netconf 1.0 and 1.1
 - Cisco IOS-XR (tested on: 6.5.3) with Netconf 1.1
 - Juniper JunOS (tested on: 17.3R2.10) with Netconf 1.0
+
+In addition to the above devices, there has been testing on various versions of Juniper SRX, QFX, and MX platforms on
+ ~18ish+ code, as well as Cisco NCS devices on 6.6.2+ code, and finally there has been limited testing on Nokia devices.
 
 
 # Advanced Installation

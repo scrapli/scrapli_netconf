@@ -63,7 +63,7 @@ def unit_tests(session):
     )
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def isort(session):
     """
     Nox run isort
@@ -82,7 +82,7 @@ def isort(session):
     session.run("isort", "-c", ".")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def black(session):
     """
     Nox run black
@@ -101,7 +101,7 @@ def black(session):
     session.run("black", "--check", ".")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def pylama(session):
     """
     Nox run pylama
@@ -121,7 +121,7 @@ def pylama(session):
     session.run("pylama", ".")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def pydocstyle(session):
     """
     Nox run pydocstyle
@@ -140,7 +140,7 @@ def pydocstyle(session):
     session.run("pydocstyle", ".")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def mypy(session):
     """
     Nox run mypy
@@ -161,7 +161,7 @@ def mypy(session):
     session.run("mypy", "--strict", "scrapli_netconf/")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.9"])
 def darglint(session):
     """
     Nox run darglint

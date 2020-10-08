@@ -35,12 +35,11 @@ class NetconfChannel(Channel, NetconfChannelBase):
             N/A
 
         """
-        self.transport.session_lock.acquire()
-        output = login_bytes
-        while b"]]>]]>" not in output:
-            output += self.transport.read()
-        self.logger.debug(f"Received raw server capabilities: {repr(output)}")
-        self.transport.session_lock.release()
+        with self.transport.session_lock:
+            output = login_bytes
+            while b"]]>]]>" not in output:
+                output += self.transport.read()
+            self.logger.debug(f"Received raw server capabilities: {repr(output)}")
         return output
 
     @OperationTimeout("timeout_ops", "Timed out sending client capabilities")

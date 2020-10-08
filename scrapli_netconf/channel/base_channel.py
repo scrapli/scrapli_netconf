@@ -44,7 +44,11 @@ class NetconfChannelBase(ChannelBase):
             # format message for chunk message types
             final_channel_input = msg_template.format(len(channel_input), channel_input)
             return final_channel_input
-        return channel_input
+
+        # some (vMX for some reason?) devices seem to get carried away if there are *any* returns in
+        # the input... this causes the server to output the rpc result which breaks the normal
+        # scrapli "read_until_input" behavior, so we'll simply remove new lines in channel inputs
+        return channel_input.replace("\n", "")
 
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
@@ -67,7 +71,7 @@ class NetconfChannelBase(ChannelBase):
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
         self.transport.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities)}")
+        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
 
     def _post_send_client_capabilities(

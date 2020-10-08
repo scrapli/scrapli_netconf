@@ -5,6 +5,7 @@ CHANGELOG
 - Handle netconf 1.1 devices that have chunk sizes of 1
 - Ensure results are "pretty printed"
 - Above two items were worked out with thanks to Hugo Tinoco! PS - this has been tested on Nokia devices now too!
+- Hopefully improved asyncssh "echo checker" (see _check_echo) method in async_channel for details
 
 
 # 2020.09.23

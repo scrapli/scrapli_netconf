@@ -76,45 +76,45 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
                 unhandled EOF message
 
         """
-        self.session_lock.acquire()
         output = b""
         password_count = 0
-        while True:
-            try:
-                new_output = self.session.read()
-                output += new_output
-                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-            except EOFError as exc:
-                self._ssh_message_handler(output=output)
-                # if _ssh_message_handler didn't raise any exception, we can raise the standard --
-                # did you disable strict key message/exception
-                msg = (
-                    f"Failed to open connection to host {self.host}. Do you need to disable "
-                    "`auth_strict_key`?"
-                )
-                self.logger.critical(msg)
-                self.session_lock.release()
-                raise ScrapliAuthenticationFailed(msg) from exc
-            if b"password:" in output.lower():
-                # if password is seen in the output, reset output and enter the password
-                # count the times password occurs to have a decent idea if auth failed
-                password_count += 1
-                output = b""
-                self.logger.info("Found password prompt, sending password")
-                self.session.write(self.auth_password.encode())
-                self.session.write(self._comms_return_char.encode())
-            if password_count > 1:
-                msg = (
-                    "`password` seen multiple times during session establishment, "
-                    "likely failed authentication"
-                )
-                self.session_lock.release()
-                raise ScrapliAuthenticationFailed(msg)
-            if b"<hello" in output.lower():
-                self.logger.info("Found start of server capabilities, authentication successful")
-                self._isauthenticated = True
-                self.session_lock.release()
-                return output
+
+        with self.session_lock:
+            while True:
+                try:
+                    new_output = self.session.read()
+                    output += new_output
+                    self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+                except EOFError as exc:
+                    self._ssh_message_handler(output=output)
+                    # if _ssh_message_handler didn't raise any exception, we can raise the standard
+                    # -- did you disable strict key message/exception
+                    msg = (
+                        f"Failed to open connection to host {self.host}. Do you need to disable "
+                        "`auth_strict_key`?"
+                    )
+                    self.logger.critical(msg)
+                    raise ScrapliAuthenticationFailed(msg) from exc
+                if b"password:" in output.lower():
+                    # if password is seen in the output, reset output and enter the password
+                    # count the times password occurs to have a decent idea if auth failed
+                    password_count += 1
+                    output = b""
+                    self.logger.info("Found password prompt, sending password")
+                    self.session.write(self.auth_password.encode())
+                    self.session.write(self._comms_return_char.encode())
+                if password_count > 1:
+                    msg = (
+                        "`password` seen multiple times during session establishment, "
+                        "likely failed authentication"
+                    )
+                    raise ScrapliAuthenticationFailed(msg)
+                if b"<hello" in output.lower():
+                    self.logger.info(
+                        "Found start of server capabilities, authentication successful"
+                    )
+                    self._isauthenticated = True
+                    return output
 
     def _keepalive_network(self) -> None:
         """

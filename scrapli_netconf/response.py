@@ -18,6 +18,8 @@ LOG = logging.getLogger("response")
 # response is in fact X length
 CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!#).)*)", flags=re.M | re.S)
 
+PARSER = etree.XMLParser(remove_blank_text=True)
+
 
 class NetconfResponse(Response):
     def __init__(
@@ -112,13 +114,15 @@ class NetconfResponse(Response):
         self.xml_result = etree.fromstring(
             self.raw_result.replace(b"]]>]]>", b"").replace(
                 b'<?xml version="1.0" encoding="UTF-8"?>', b""
-            )
+            ),
+            parser=PARSER,
         )
-        self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
             self.xml_result = remove_namespaces(self.xml_result)
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
+        else:
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
     def _record_response_netconf_1_1(self) -> None:
         """
@@ -147,6 +151,9 @@ class NetconfResponse(Response):
             result_value = result[1]
             # account for trailing newline char
             actual_len = len(result_value) - 1
+            if expected_len == 1:
+                # at least nokia tends to have itty bitty chunks of one element, deal w/ that
+                actual_len = 1
             if expected_len != actual_len:
                 LOG.critical(
                     f"Return element length invalid, expected {expected_len} got {actual_len} for "
@@ -162,13 +169,15 @@ class NetconfResponse(Response):
                     result[1].replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"")
                     for result in result_sections
                 ]
-            )
+            ),
+            parser=PARSER,
         )
-        self.result = etree.tostring(self.xml_result).decode()
 
         if self.strip_namespaces:
             self.xml_result = remove_namespaces(self.xml_result)
-            self.result = etree.tostring(self.xml_result).decode()
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
+        else:
+            self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
     def get_xml_elements(self) -> Dict[str, Element]:
         """

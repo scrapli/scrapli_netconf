@@ -32,7 +32,5 @@ def test_build_message(dummy_conn, capabilities):
 def test_post_send_client_capabilities(dummy_conn, capabilities):
     netconf_version = capabilities[0]
     expected_prompt_pattern = capabilities[1]
-    dummy_conn.transport.session_lock.acquire()
     dummy_conn.channel._post_send_client_capabilities(capabilities_version=netconf_version)
-    assert dummy_conn.transport.session_lock.locked() is False
     assert dummy_conn.channel.comms_prompt_pattern == expected_prompt_pattern

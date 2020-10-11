@@ -19,6 +19,46 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         self.netconf_version = NetconfVersion.VERSION_1_0
         self._server_echo = False
 
+    async def _check_echo(self, timeout_transport: float) -> None:
+        """
+        Determine if inputs are "echoed" back on stdout
+
+        At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
+        input commands back to the client. In the case of "normal" scrapli netconf with the system
+        transport this happens anyway because we combine the stdin and stdout fds into a single pty,
+        however for asyncssh we have an actual stdin and stdout fd to read/write. It seems that at
+        the very least Juniper seems to want to echo inputs back onto to the stdout for the channel.
+        This is totally ok and we can deal with it, we just need to *know* that it is happening and
+        that gives us somewhat of a dilemma... we want to give the device time to echo this data
+        back to us, but we also dont want to just arbitrarily wait (especially in the more common
+        case where the device is *not* echoing anything back). So we take 1/20th of the transport
+        timeout and we wait that long to see -- if we get echo, we return immediately of course,
+        otherwise there is an unfortunate slight delay here :(
+
+        See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
+
+        Args:
+             timeout_transport: transport timeout value to modify to use as timeout to test echo
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        try:
+            await asyncio.wait_for(
+                self.transport.stdout.read(65535), timeout=timeout_transport / 20
+            )
+            self.logger.info(
+                "Determined that server echoes inputs on stdout, setting `_server_echo` to `True`"
+            )
+            self._server_echo = True
+        except asyncio.exceptions.TimeoutError:
+            pass
+        return
+
     @OperationTimeout(
         "timeout_ops",
         "Timed out determining if session is authenticated/getting server capabilities",
@@ -37,12 +77,11 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         """
-        self.transport.session_lock.acquire()
-        output = login_bytes
-        while b"]]>]]>" not in output:
-            output += await self.transport.read()
-        self.logger.debug(f"Received raw server capabilities: {repr(output)}")
-        self.transport.session_lock.release()
+        with self.session_lock:
+            output = login_bytes
+            while b"]]>]]>" not in output:
+                output += await self.transport.read()
+            self.logger.debug(f"Received raw server capabilities: {repr(output)}")
         return output
 
     @OperationTimeout("timeout_ops", "Timed out sending client capabilities")
@@ -65,19 +104,10 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         """
-        _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
-
-        try:
-            # try to read one byte... if we get anything from the server we know it echoes the input
-            # back to us -- seems this only happens on iosxe with netconf 1.1... and I think it is
-            # probably not "right" per the standard but haven't investigated enough to confirm
-            await asyncio.wait_for(self.transport.stdout.read(65535), timeout=1)
-            self._server_echo = True
-        except asyncio.exceptions.TimeoutError:
-            pass
-
-        self._send_return()
-        self._post_send_client_capabilities(capabilities_version=capabilities_version)
+        with self.session_lock:
+            _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
+            self._send_return()
+            self._post_send_client_capabilities(capabilities_version=capabilities_version)
 
     async def _read_until_input(
         self, channel_input: bytes, auto_expand: Optional[bool] = None

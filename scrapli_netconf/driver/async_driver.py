@@ -1,4 +1,5 @@
 """scrapli_netconf.driver.driver"""
+import asyncio
 from typing import Any, List, Optional, Union
 
 from scrapli import AsyncScrape
@@ -59,10 +60,20 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
 
         client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
+        check_echo_coroutine = asyncio.create_task(
+            self.channel._check_echo(  # pylint: disable=W0212
+                timeout_transport=self.transport.timeout_transport
+            )
+        )
+
         await self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
         self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
+
+        # wait for the check echo coroutine to complete; we need to know if the server echoes
+        # inputs back or not before sending commands
+        await asyncio.wait([check_echo_coroutine])
 
     async def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """

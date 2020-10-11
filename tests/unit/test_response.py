@@ -8,68 +8,68 @@ from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.response import NetconfResponse
 
 RESPONSE_1_0 = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
-<data>
-<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" junos:commit-seconds="1592677253" junos:commit-localtime="2020-06-20 18:20:53 UTC" junos:commit-user="vrnetlab">
-    <interfaces>
+  <data>
+    <configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" junos:commit-seconds="1592677253" junos:commit-localtime="2020-06-20 18:20:53 UTC" junos:commit-user="vrnetlab">
+      <interfaces>
         <interface>
-            <name>fxp0</name>
-            <unit>
-                <name>0</name>
-                <family>
-                    <inet>
-                        <address>
-                            <name>10.0.0.15/24</name>
-                        </address>
-                    </inet>
-                </family>
-            </unit>
+          <name>fxp0</name>
+          <unit>
+            <name>0</name>
+            <family>
+              <inet>
+                <address>
+                  <name>10.0.0.15/24</name>
+                </address>
+              </inet>
+            </family>
+          </unit>
         </interface>
-    </interfaces>
-    <system>
+      </interfaces>
+      <system>
         <services>
-            <ssh>
-                <protocol-version>v2</protocol-version>
-            </ssh>
+          <ssh>
+            <protocol-version>v2</protocol-version>
+          </ssh>
         </services>
-    </system>
-</configuration>
-<database-status-information>
+      </system>
+    </configuration>
+    <database-status-information>
 </database-status-information>
-</data>
-
-</rpc-reply>"""
+  </data>
+</rpc-reply>
+"""
 RESULT_1_0 = RESPONSE_1_0
 RESULT_1_0_STRIP = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" message-id="101">
-<data>
-<configuration junos:commit-seconds="1592677253" junos:commit-localtime="2020-06-20 18:20:53 UTC" junos:commit-user="vrnetlab">
-    <interfaces>
+  <data>
+    <configuration junos:commit-seconds="1592677253" junos:commit-localtime="2020-06-20 18:20:53 UTC" junos:commit-user="vrnetlab">
+      <interfaces>
         <interface>
-            <name>fxp0</name>
-            <unit>
-                <name>0</name>
-                <family>
-                    <inet>
-                        <address>
-                            <name>10.0.0.15/24</name>
-                        </address>
-                    </inet>
-                </family>
-            </unit>
+          <name>fxp0</name>
+          <unit>
+            <name>0</name>
+            <family>
+              <inet>
+                <address>
+                  <name>10.0.0.15/24</name>
+                </address>
+              </inet>
+            </family>
+          </unit>
         </interface>
-    </interfaces>
-    <system>
+      </interfaces>
+      <system>
         <services>
-            <ssh>
-                <protocol-version>v2</protocol-version>
-            </ssh>
+          <ssh>
+            <protocol-version>v2</protocol-version>
+          </ssh>
         </services>
-    </system>
-</configuration>
-<database-status-information>
+      </system>
+    </configuration>
+    <database-status-information>
 </database-status-information>
-</data>
-
-</rpc-reply>"""
+  </data>
+</rpc-reply>
+"""
 XML_ELEMENTS_1_0 = ["configuration", "database-status-information"]
 
 RESPONSE_1_1 = """#520
@@ -92,35 +92,37 @@ RESPONSE_1_1 = """#520
 
 ##"""
 RESULT_1_1 = """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
- <data>
-  <components xmlns="http://openconfig.net/yang/platform">
-   <component>
-    <name>0/0-Virtual-Motherboard</name>
-    <state>
-     <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
-     <name>0/0-Virtual-Motherboard</name>
-     <type xmlns:idx="http://openconfig.net/yang/platform-types">idx:MODULE</type>
-     <id>65538</id>
-    </state>
-   </component>
-  </components>
- </data>
-</rpc-reply>"""
+  <data>
+    <components xmlns="http://openconfig.net/yang/platform">
+      <component>
+        <name>0/0-Virtual-Motherboard</name>
+        <state>
+          <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
+          <name>0/0-Virtual-Motherboard</name>
+          <type xmlns:idx="http://openconfig.net/yang/platform-types">idx:MODULE</type>
+          <id>65538</id>
+        </state>
+      </component>
+    </components>
+  </data>
+</rpc-reply>
+"""
 RESULT_1_1_STRIP = """<rpc-reply message-id="101">
- <data>
-  <components>
-   <component>
-    <name>0/0-Virtual-Motherboard</name>
-    <state>
-     <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
-     <name>0/0-Virtual-Motherboard</name>
-     <type>idx:MODULE</type>
-     <id>65538</id>
-    </state>
-   </component>
-  </components>
- </data>
-</rpc-reply>"""
+  <data>
+    <components>
+      <component>
+        <name>0/0-Virtual-Motherboard</name>
+        <state>
+          <description>Cisco IOS-XRv 9000 Virtual LC Motherboard</description>
+          <name>0/0-Virtual-Motherboard</name>
+          <type>idx:MODULE</type>
+          <id>65538</id>
+        </state>
+      </component>
+    </components>
+  </data>
+</rpc-reply>
+"""
 XML_ELEMENTS_1_1 = ["components"]
 
 

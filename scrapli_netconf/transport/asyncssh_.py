@@ -27,7 +27,6 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             self.logger.debug(f"Attempting to validate {self.host} public key is in known hosts")
             self._verify_key()
 
-        self.session_lock.acquire()
         await self._authenticate()
 
         if self.auth_strict_key:
@@ -36,7 +35,6 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             )
             self._verify_key_value()
 
-        self.session_lock.release()
         # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
         # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
         # set encoding to None so we get bytes for consistency w/ other scrapli transports

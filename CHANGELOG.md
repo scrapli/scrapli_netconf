@@ -1,6 +1,9 @@
 CHANGELOG
 =========
 
+# XXXX.XX.XX
+
+
 # 2020.10.10
 - Handle netconf 1.1 devices that have chunk sizes of 1
 - Ensure results are "pretty printed"

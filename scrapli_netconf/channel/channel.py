@@ -35,7 +35,7 @@ class NetconfChannel(Channel, NetconfChannelBase):
             N/A
 
         """
-        with self.transport.session_lock:
+        with self.session_lock:
             output = login_bytes
             while b"]]>]]>" not in output:
                 output += self.transport.read()
@@ -62,12 +62,13 @@ class NetconfChannel(Channel, NetconfChannelBase):
             N/A
 
         """
-        bytes_client_capabilities = self._pre_send_client_capabilities(
-            client_capabilities=client_capabilities
-        )
-        self._read_until_input(bytes_client_capabilities)
-        self._send_return()
-        self._post_send_client_capabilities(capabilities_version=capabilities_version)
+        with self.session_lock:
+            bytes_client_capabilities = self._pre_send_client_capabilities(
+                client_capabilities=client_capabilities
+            )
+            self._read_until_input(bytes_client_capabilities)
+            self._send_return()
+            self._post_send_client_capabilities(capabilities_version=capabilities_version)
 
     def send_input_netconf(self, channel_input: str) -> bytes:
         """

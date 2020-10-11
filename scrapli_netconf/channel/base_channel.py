@@ -67,7 +67,6 @@ class NetconfChannelBase(ChannelBase):
 
         """
         self.logger.info("Sending client capabilities")
-        self.transport.session_lock.acquire()
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
         self.transport.write(client_capabilities.value)
@@ -93,5 +92,3 @@ class NetconfChannelBase(ChannelBase):
         if capabilities_version == NetconfVersion.VERSION_1_1:
             self.netconf_version = NetconfVersion.VERSION_1_1
             self.comms_prompt_pattern = r"^##$"
-
-        self.transport.session_lock.release()

@@ -33,10 +33,6 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
 
         """
         login_bytes = self._open_netconf_pty()
-
-        if self.keepalive:
-            self._session_keepalive()
-
         return login_bytes
 
     def _open_netconf_pty(self) -> bytes:
@@ -79,71 +75,36 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         output = b""
         password_count = 0
 
-        with self.session_lock:
-            while True:
-                try:
-                    new_output = self.session.read()
-                    output += new_output
-                    self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
-                except EOFError as exc:
-                    self._ssh_message_handler(output=output)
-                    # if _ssh_message_handler didn't raise any exception, we can raise the standard
-                    # -- did you disable strict key message/exception
-                    msg = (
-                        f"Failed to open connection to host {self.host}. Do you need to disable "
-                        "`auth_strict_key`?"
-                    )
-                    self.logger.critical(msg)
-                    raise ScrapliAuthenticationFailed(msg) from exc
-                if b"password:" in output.lower():
-                    # if password is seen in the output, reset output and enter the password
-                    # count the times password occurs to have a decent idea if auth failed
-                    password_count += 1
-                    output = b""
-                    self.logger.info("Found password prompt, sending password")
-                    self.session.write(self.auth_password.encode())
-                    self.session.write(self._comms_return_char.encode())
-                if password_count > 1:
-                    msg = (
-                        "`password` seen multiple times during session establishment, "
-                        "likely failed authentication"
-                    )
-                    raise ScrapliAuthenticationFailed(msg)
-                if b"<hello" in output.lower():
-                    self.logger.info(
-                        "Found start of server capabilities, authentication successful"
-                    )
-                    self._isauthenticated = True
-                    return output
-
-    def _keepalive_network(self) -> None:
-        """
-        Override _keepalive_network from scrapli; not supported with netconf
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        """
-        raise NotImplementedError("`network` style keepalives not supported with netconf")
-
-    def _keepalive_standard(self) -> None:
-        """
-        Send "out of band" (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        """
-        raise NotImplementedError("keepalives not yet implemented")
+        while True:
+            try:
+                new_output = self.session.read()
+                output += new_output
+                self.logger.debug(f"Attempting to authenticate. Read: {repr(new_output)}")
+            except EOFError as exc:
+                self._ssh_message_handler(output=output)
+                # if _ssh_message_handler didn't raise any exception, we can raise the standard
+                # -- did you disable strict key message/exception
+                msg = (
+                    f"Failed to open connection to host {self.host}. Do you need to disable "
+                    "`auth_strict_key`?"
+                )
+                self.logger.critical(msg)
+                raise ScrapliAuthenticationFailed(msg) from exc
+            if b"password:" in output.lower():
+                # if password is seen in the output, reset output and enter the password
+                # count the times password occurs to have a decent idea if auth failed
+                password_count += 1
+                output = b""
+                self.logger.info("Found password prompt, sending password")
+                self.session.write(self.auth_password.encode())
+                self.session.write(self._comms_return_char.encode())
+            if password_count > 1:
+                msg = (
+                    "`password` seen multiple times during session establishment, "
+                    "likely failed authentication"
+                )
+                raise ScrapliAuthenticationFailed(msg)
+            if b"<hello" in output.lower():
+                self.logger.info("Found start of server capabilities, authentication successful")
+                self._isauthenticated = True
+                return output

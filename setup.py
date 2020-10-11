@@ -2,14 +2,19 @@
 """scrapli_netconf - netconf driver built on scrapli"""
 import setuptools
 
+from scrapli_netconf import __version__
+
 __author__ = "Carl Montanari"
 
 with open("README.md", "r") as f:
     README = f.read()
 
+with open("requirements.txt", "r") as f:
+    INSTALL_REQUIRES = f.read().splitlines()
+
 setuptools.setup(
     name="scrapli_netconf",
-    version="2020.09.23",
+    version=__version__,
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",
@@ -17,7 +22,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/scrapli/scrapli_netconf",
     packages=setuptools.find_packages(),
-    install_requires=["scrapli>=2020.07.26", "scrapli-asyncssh>=2020.07.04", "lxml>=4.5.1,<5.0.0"],
+    install_requires=INSTALL_REQUIRES,
     extras_require={},
     classifiers=[
         "License :: OSI Approved :: MIT License",

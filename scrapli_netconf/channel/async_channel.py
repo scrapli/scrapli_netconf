@@ -77,7 +77,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         """
-        with self.transport.session_lock:
+        with self.session_lock:
             output = login_bytes
             while b"]]>]]>" not in output:
                 output += await self.transport.read()
@@ -104,9 +104,10 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         """
-        _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
-        self._send_return()
-        self._post_send_client_capabilities(capabilities_version=capabilities_version)
+        with self.session_lock:
+            _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
+            self._send_return()
+            self._post_send_client_capabilities(capabilities_version=capabilities_version)
 
     async def _read_until_input(
         self, channel_input: bytes, auto_expand: Optional[bool] = None

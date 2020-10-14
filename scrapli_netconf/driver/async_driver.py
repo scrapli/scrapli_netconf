@@ -1,6 +1,6 @@
 """scrapli_netconf.driver.driver"""
 import asyncio
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from scrapli import AsyncScrape
 from scrapli.exceptions import TransportPluginError
@@ -27,7 +27,7 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
             raise TransportPluginError(msg)
 
         self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
-        self.transport = self.transport_class(**self.transport_args)  # type: ignore
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces

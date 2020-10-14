@@ -2,6 +2,15 @@ CHANGELOG
 =========
 
 # XXXX.XX.XX
+- Improve the "echo" checker -- and add this for sync as well, because...
+- SSH2 and Paramiko are now supported transports!
+- As part of the "improved echo checker" sync channel now also overrides the read_until_input method like the async
+ channel does -- again, for the same reasons.
+- All transports minus system are now optional extras -- this means that asyncssh is no longer an install requirement
+- As expected with above point -- added optional extras install options in setup.py as well as a "full" option just
+ like scrapli core
+- MAYBE BREAKING CHANGE: shouldn't be an issue for 99.9999% of people, however, the asyncssh transport is no longer
+ imported and available in the transport package
 
 
 # 2020.10.10

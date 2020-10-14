@@ -97,6 +97,7 @@ def test_get_config_filtered_multi_filter_subtree(sync_conn_1_1):
     # only testing the "multi" filter on 1.1 devices
     conn = sync_conn_1_1[0]
     device_type = sync_conn_1_1[1]
+
     conn.open()
 
     config_replacer = CONFIG_REPLACER[device_type]
@@ -152,7 +153,7 @@ def test_edit_config_and_discard(sync_conn):
     expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
 
     conn.open()
-
+    conn.get_config()
     target = "candidate"
     response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
@@ -174,7 +175,10 @@ def test_edit_config_and_discard(sync_conn):
     assert discard_response.failed is False
 
 
-def test_edit_config_and_commit(sync_conn):
+def test_edit_config_and_commit(sync_conn, caplog):
+    import logging
+
+    caplog.set_level(logging.DEBUG, logger="scrapli")
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -190,7 +194,10 @@ def test_edit_config_and_commit(sync_conn):
     if device_type not in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
         target = "candidate"
 
-    response = conn.edit_config(config=config, target=target)
+    try:
+        response = conn.edit_config(config=config, target=target)
+    except Exception:
+        assert 0
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
     assert not xmldiffs(

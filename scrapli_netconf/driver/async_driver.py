@@ -7,8 +7,8 @@ from scrapli.exceptions import TransportPluginError
 from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
 from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.driver.base_driver import NetconfScrapeBase
+from scrapli_netconf.helper import _find_netconf_transport_plugin
 from scrapli_netconf.response import NetconfResponse
-from scrapli_netconf.transport.asyncssh_ import NetconfAsyncSSHTransport
 
 
 class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
@@ -26,8 +26,8 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfAsyncSSHTransport
-        self.transport = NetconfAsyncSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces

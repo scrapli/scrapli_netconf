@@ -26,14 +26,14 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
         input commands back to the client. In the case of "normal" scrapli netconf with the system
         transport this happens anyway because we combine the stdin and stdout fds into a single pty,
-        however for asyncssh we have an actual stdin and stdout fd to read/write. It seems that at
-        the very least Juniper seems to want to echo inputs back onto to the stdout for the channel.
-        This is totally ok and we can deal with it, we just need to *know* that it is happening and
-        that gives us somewhat of a dilemma... we want to give the device time to echo this data
-        back to us, but we also dont want to just arbitrarily wait (especially in the more common
-        case where the device is *not* echoing anything back). So we take 1/20th of the transport
-        timeout and we wait that long to see -- if we get echo, we return immediately of course,
-        otherwise there is an unfortunate slight delay here :(
+        however for other transports we have an actual stdin and stdout fd to read/write. It seems
+        that at the very least IOSXE with NETCONF 1.1 seems to want to echo inputs back onto to the
+        stdout for the channel. This is totally ok and we can deal with it, we just need to *know*
+        that it is happening and that gives us somewhat of a dilemma... we want to give the device
+        time to echo this data back to us, but we also dont want to just arbitrarily wait
+        (especially in the more common case where the device is *not* echoing anything back). So we
+        take 1/20th of the transport timeout and we wait that long to see -- if we get echo, we
+        return immediately of course, otherwise there is an unfortunate slight delay here :(
 
         See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
 

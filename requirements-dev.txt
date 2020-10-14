@@ -1,6 +1,6 @@
 nox==2020.8.22
 black==20.8b1
-isort==5.6.3
+isort==5.6.4
 mypy==0.790
 pytest==6.1.1
 pytest-cov==2.10.1
@@ -13,3 +13,6 @@ darglint==1.5.5
 pdoc3==0.9.1 ; sys_platform != "win32"
 -e git+https://github.com/scrapli/scrapli_stubs@master#egg=scrapli_stubs
 -r requirements.txt
+-r requirements-paramiko.txt
+-r requirements-ssh2.txt
+-r requirements-asyncssh.txt

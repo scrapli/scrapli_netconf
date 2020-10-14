@@ -1,6 +1,6 @@
 """scrapli_netconf.driver.driver"""
 import asyncio
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from scrapli import AsyncScrape
 from scrapli.exceptions import TransportPluginError

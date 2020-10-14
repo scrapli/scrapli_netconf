@@ -35,7 +35,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         if self.transport_class is None:
             self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
 
-        self.transport = self.transport_class(**self.transport_args)
+        self.transport = self.transport_class(**self.transport_args)  # type: ignore
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces

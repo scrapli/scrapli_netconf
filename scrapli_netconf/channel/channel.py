@@ -38,10 +38,11 @@ class NetconfChannel(Channel, NetconfChannelBase):
             N/A
 
         """
+        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
         start = datetime.now().timestamp()
         while True:
-            fd_ready, _, _ = select([self.transport.socket.sock], [], [], 0)
-            if self.transport.socket.sock in fd_ready:
+            fd_ready, _, _ = select([channel_fd], [], [], 0)
+            if channel_fd in fd_ready:
                 self._server_echo = True
                 break
             interval_end = datetime.now().timestamp()
@@ -140,8 +141,8 @@ class NetconfChannel(Channel, NetconfChannelBase):
             self._send_return()
             self._post_send_client_capabilities(capabilities_version=capabilities_version)
 
-        while self._server_echo is None:
-            pass
+            while self._server_echo is None:
+                pass
 
     def send_input_netconf(self, channel_input: str) -> bytes:
         """

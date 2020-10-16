@@ -46,3 +46,19 @@ class NetconfMikoTransport(MikoTransport):  # type: ignore
         # we *do* still want it to be a pty though!
         self.channel.get_pty()
         self.channel.invoke_subsystem("netconf")
+
+    def _get_channel_fd(self) -> int:
+        """
+        Function to get the fd to check for "echo" with
+
+        Args:
+             N/A
+
+        Returns:
+            int: fd of the channel
+
+        Raises:
+            N/A
+
+        """
+        return self.channel.fileno()

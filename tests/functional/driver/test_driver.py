@@ -175,10 +175,7 @@ def test_edit_config_and_discard(sync_conn):
     assert discard_response.failed is False
 
 
-def test_edit_config_and_commit(sync_conn, caplog):
-    import logging
-
-    caplog.set_level(logging.DEBUG, logger="scrapli")
+def test_edit_config_and_commit(sync_conn):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -194,10 +191,7 @@ def test_edit_config_and_commit(sync_conn, caplog):
     if device_type not in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
         target = "candidate"
 
-    try:
-        response = conn.edit_config(config=config, target=target)
-    except Exception:
-        assert 0
+    response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
     assert not xmldiffs(

@@ -61,4 +61,5 @@ class NetconfSSH2Transport(SSH2Transport):  # type: ignore
             N/A
 
         """
-        return self.socket.sock.fileno()
+        channel_fd: int = self.socket.sock.fileno()
+        return channel_fd

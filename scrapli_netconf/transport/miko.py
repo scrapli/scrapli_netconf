@@ -61,4 +61,5 @@ class NetconfMikoTransport(MikoTransport):  # type: ignore
             N/A
 
         """
-        return self.channel.fileno()
+        channel_fd: int = self.channel.fileno()
+        return channel_fd

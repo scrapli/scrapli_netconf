@@ -144,30 +144,6 @@ class NetconfChannel(Channel, NetconfChannelBase):
             while self._server_echo is None:
                 pass
 
-    def send_input_netconf(self, channel_input: str) -> bytes:
-        """
-        Send inputs to netconf server
-
-        Args:
-            channel_input: string of the base xml message to send to netconf server
-
-        Returns:
-            bytes: bytes result of message sent to netconf server
-
-        Raises:
-            N/A
-
-        """
-        final_channel_input = self._build_message(channel_input)
-
-        raw_result, _ = super().send_input(channel_input=final_channel_input, strip_prompt=False)
-
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
-            # netconf 1.1 with "chunking" style message format needs an extra return char here
-            self._send_return()
-
-        return raw_result
-
     def _read_until_input(self, channel_input: bytes, auto_expand: Optional[bool] = None) -> bytes:
         """
         Async read until all input has been entered.
@@ -212,3 +188,35 @@ class NetconfChannel(Channel, NetconfChannelBase):
 
         self.logger.info(f"Read: {repr(output)}")
         return output
+
+    def send_input_netconf(self, channel_input: str) -> bytes:
+        """
+        Send inputs to netconf server
+
+        Args:
+            channel_input: string of the base xml message to send to netconf server
+
+        Returns:
+            bytes: bytes result of message sent to netconf server
+
+        Raises:
+            N/A
+
+        """
+        final_channel_input = self._build_message(channel_input)
+        bytes_final_channel_input = final_channel_input.encode()
+
+        raw_result, _ = super().send_input(
+            channel_input=final_channel_input, strip_prompt=False, eager=True
+        )
+
+        if bytes_final_channel_input in raw_result:
+            raw_result = raw_result.split(bytes_final_channel_input)[1]
+
+        raw_result = self._read_until_prompt(output=raw_result)
+
+        if self.netconf_version == NetconfVersion.VERSION_1_1:
+            # netconf 1.1 with "chunking" style message format needs an extra return char here
+            self._send_return()
+
+        return raw_result

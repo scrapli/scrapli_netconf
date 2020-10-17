@@ -149,17 +149,42 @@ class NetconfResponse(Response):
         for result in result_sections:
             expected_len = int(result[0])
             result_value = result[1]
-            # account for trailing newline char
-            actual_len = len(result_value) - 1
+
+            actual_len = len(result_value)
+            rstripped_len = len(result_value.rstrip())
+
+            trailing_newline_count = actual_len - rstripped_len
+            if trailing_newline_count > 1:
+                extraneous_trailing_newline_count = trailing_newline_count - 1
+            else:
+                extraneous_trailing_newline_count = 1
+            trimmed_newline_len = actual_len - extraneous_trailing_newline_count
+
             if expected_len == 1:
                 # at least nokia tends to have itty bitty chunks of one element, deal w/ that
                 actual_len = 1
-            if expected_len != actual_len:
-                LOG.critical(
-                    f"Return element length invalid, expected {expected_len} got {actual_len} for "
-                    f"element: {repr(result_value)}"
-                )
-                self.failed = True
+
+            # iosxe does things differently than iosxr... because of course (and/or we are picking
+            # up extra newlines... but either way) -- so we will just compare the expected length
+            # to the actual length, the completely rstripped length, and the length of stripping all
+            # but one trailing new line character off -- if one of those match, we are like 99%
+            # positive this is good... this is crazy but it seems to me that the platforms are
+            # behaving slightly differently (iosxe to iosxr) and also iosxe seems to decide to count
+            # the newlines sometimes and other times to ignore it... there is also a strong
+            # possibility that extra newlines come in via scrapli, but its more fun to blame
+            # somebody not me! :shrug:
+            if expected_len == actual_len:
+                continue
+            if expected_len == rstripped_len:
+                continue
+            if expected_len == trimmed_newline_len:
+                continue
+
+            LOG.critical(
+                f"Return element length invalid, expected {expected_len} got {actual_len} for "
+                f"element: {repr(result_value)}"
+            )
+            self.failed = True
 
         self.xml_result = etree.fromstring(
             b"\n".join(

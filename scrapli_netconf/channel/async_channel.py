@@ -171,10 +171,16 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
 
         """
         final_channel_input = self._build_message(channel_input)
+        bytes_final_channel_input = final_channel_input.encode()
 
         raw_result, _ = await super().send_input(
-            channel_input=final_channel_input, strip_prompt=False
+            channel_input=final_channel_input, strip_prompt=False, eager=True
         )
+
+        if bytes_final_channel_input in raw_result:
+            raw_result = raw_result.split(bytes_final_channel_input)[1]
+
+        raw_result = await self._read_until_prompt(output=raw_result)
 
         if self.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here

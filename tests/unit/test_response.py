@@ -255,3 +255,41 @@ def test_response_not_implemented_exceptions(method_to_test):
     with pytest.raises(NotImplementedError) as exc:
         method()
     assert str(exc.value) == f"No {method_to_test} parsing for netconf output!"
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (("2", b"aa"), True),
+        (("2", b"aa    "), True),
+        (("3", b"aa    "), True),
+        (("2", b"a"), False),
+        (("2", b"aaa   "), False),
+        (("3", b"a        "), False),
+    ],
+    ids=[
+        "exact_size_match",
+        "rstripped_size_match",
+        "single_trailing_newline_size_match",
+        "wrong_size",
+        "wrong_size_rstripped",
+        "wrong_size_single_trailing_newline",
+    ],
+)
+def test__validate_chunk_size_netconf_1_1(response_data):
+    chunk_input = response_data[0]
+    response_success = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_1,
+        failed_when_contains=[b"<rpc-error>"],
+    )
+    # set response.failed because we are skipping "record_response"
+    response.failed = False
+    response._validate_chunk_size_netconf_1_1(result=chunk_input)
+    assert response.failed is not response_success

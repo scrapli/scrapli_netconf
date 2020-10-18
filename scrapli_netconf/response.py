@@ -2,7 +2,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -124,6 +124,83 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
+    def _validate_chunk_size_netconf_1_1(self, result: Tuple[str, bytes]) -> None:
+        """
+        Validate individual chunk size; handle parsing trailing new lines for chunk sizes
+
+        It seems that some platforms behave slightly differently than others (looking at you IOSXE)
+        in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
+        RFC, the response for a netconf 1.1 response should look like this:
+
+        ```
+        ##XYZ
+        <somexml>
+        ##
+        ```
+
+        Where "XYZ" is an integer number of the count of chars in the following chunk (the chars up
+        to the next "##" symbols), then the actual XML response, then a new line(!!!!) and a pair of
+        hash symbols to indicate the chunk is complete.
+
+        IOSXE seems to *not* want to see the newline between the XML payload and the double hash
+        symbols... instead when it sees that newline it immediately returns the response. This
+        breaks the core behavior of scrapli in that scrapli always writes the input, then reads the
+        written inputs off the channel *before* sending a return character. This ensures that we
+        never have to deal with stripping out the inputs and such because it has already been read.
+        With IOSXE Behaving this way, we have to instead use `send_input` with the `eager` flag set
+        -- this means that we do *not* read the inputs, we simply send a return. We then have to do
+        a little extra parsing to strip out the inputs, but thats no big deal...
+
+        Where this finally gets to "spacing" -- IOSXE seems to include trailing newlines *sometimes*
+        but not other times, whereas IOSXR (for example) *always* counts a single trailing newline
+        (after the XML). SO.... long story long... (the above chunk stuff doesn't necessarily matter
+        for this, but felt like as good a place to document it as any...) this method deals w/
+        newline counts -- we check the expected chunk length against the actual char count, the char
+        count with all trailing whitespace stripped, and the count of the chunk + a *single*
+        trailing newline character...
+
+        FIN
+
+        Args:
+            result: Tuple from re.findall parsing the full response object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        expected_len = int(result[0])
+        result_value = result[1]
+
+        actual_len = len(result_value)
+        rstripped_len = len(result_value.rstrip())
+
+        trailing_newline_count = actual_len - rstripped_len
+        if trailing_newline_count > 1:
+            extraneous_trailing_newline_count = trailing_newline_count - 1
+        else:
+            extraneous_trailing_newline_count = 1
+        trimmed_newline_len = actual_len - extraneous_trailing_newline_count
+
+        if expected_len == 1:
+            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
+            actual_len = 1
+
+        if expected_len == actual_len:
+            return
+        if expected_len == rstripped_len:
+            return
+        if expected_len == trimmed_newline_len:
+            return
+
+        LOG.critical(
+            f"Return element length invalid, expected {expected_len} got {actual_len} for "
+            f"element: {repr(result_value)}"
+        )
+        self.failed = True
+
     def _record_response_netconf_1_1(self) -> None:
         """
         Record response for netconf version 1.1
@@ -147,44 +224,7 @@ class NetconfResponse(Response):
 
         # validate all received data
         for result in result_sections:
-            expected_len = int(result[0])
-            result_value = result[1]
-
-            actual_len = len(result_value)
-            rstripped_len = len(result_value.rstrip())
-
-            trailing_newline_count = actual_len - rstripped_len
-            if trailing_newline_count > 1:
-                extraneous_trailing_newline_count = trailing_newline_count - 1
-            else:
-                extraneous_trailing_newline_count = 1
-            trimmed_newline_len = actual_len - extraneous_trailing_newline_count
-
-            if expected_len == 1:
-                # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-                actual_len = 1
-
-            # iosxe does things differently than iosxr... because of course (and/or we are picking
-            # up extra newlines... but either way) -- so we will just compare the expected length
-            # to the actual length, the completely rstripped length, and the length of stripping all
-            # but one trailing new line character off -- if one of those match, we are like 99%
-            # positive this is good... this is crazy but it seems to me that the platforms are
-            # behaving slightly differently (iosxe to iosxr) and also iosxe seems to decide to count
-            # the newlines sometimes and other times to ignore it... there is also a strong
-            # possibility that extra newlines come in via scrapli, but its more fun to blame
-            # somebody not me! :shrug:
-            if expected_len == actual_len:
-                continue
-            if expected_len == rstripped_len:
-                continue
-            if expected_len == trimmed_newline_len:
-                continue
-
-            LOG.critical(
-                f"Return element length invalid, expected {expected_len} got {actual_len} for "
-                f"element: {repr(result_value)}"
-            )
-            self.failed = True
+            self._validate_chunk_size_netconf_1_1(result=result)
 
         self.xml_result = etree.fromstring(
             b"\n".join(

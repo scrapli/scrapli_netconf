@@ -27,7 +27,7 @@ class NetconfResponse(Response):
         netconf_version: NetconfVersion,
         xml_input: Element,
         strip_namespaces: bool = True,
-        failed_when_contains: Optional[Union[bytes, List[bytes]]] = b"<rpc-error>",
+        failed_when_contains: Optional[Union[bytes, List[bytes]]] = None,
         **kwargs: Any,
     ):
         """
@@ -63,6 +63,15 @@ class NetconfResponse(Response):
 
         super().__init__(**kwargs)
 
+        if failed_when_contains is None:
+            # match on both opening and closing tags too so we never have to think about/compare
+            # things with namespaces (the closing tags wont have namespaces)
+            failed_when_contains = [
+                b"</rpc-error>",
+                b"</rpc-errors>",
+                b"<rpc-error>",
+                b"<rpc-errors>",
+            ]
         if isinstance(failed_when_contains, bytes):
             failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
@@ -85,6 +94,11 @@ class NetconfResponse(Response):
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.raw_result = result
 
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
+
         if self.netconf_version == NetconfVersion.VERSION_1_0:
             self._record_response_netconf_1_0()
         else:
@@ -104,11 +118,6 @@ class NetconfResponse(Response):
             N/A
 
         """
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         # remove the message end characters and xml document header see:
         # https://github.com/scrapli/scrapli_netconf/issues/1
         self.xml_result = etree.fromstring(
@@ -215,11 +224,6 @@ class NetconfResponse(Response):
             N/A
 
         """
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
         # validate all received data

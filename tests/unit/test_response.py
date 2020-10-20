@@ -293,3 +293,36 @@ def test__validate_chunk_size_netconf_1_1(response_data):
     response.failed = False
     response._validate_chunk_size_netconf_1_1(result=chunk_input)
     assert response.failed is not response_success
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (b"<rpc-error xmlns='urn:ietf:params:xml:ns:netconf:base:1.0'>ERROR</rpc-error>", False),
+        (b"<rpc-error>ERROR</rpc-error>", False),
+        (b"<rpc-errors xmlns='urn:ietf:params:xml:ns:netconf:base:1.0'>ERROR</rpc-errors>", False),
+        (b"<rpc-errors>ERROR</rpc-errors>", False),
+        (b"<sometag>Not Error!</sometag>", True),
+    ],
+    ids=[
+        "rpc_error_with_namespace",
+        "rpc_error_no_namespace",
+        "rpc_errors_with_namespace",
+        "rpc_errors_no_namespace",
+        "no_errror",
+    ],
+)
+def test_failed_when_contains_default_values(response_data):
+    response_output = response_data[0]
+    response_success = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_0,
+    )
+    response._record_response(result=response_output)
+    assert response.failed is not response_success

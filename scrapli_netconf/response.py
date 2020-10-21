@@ -76,6 +76,8 @@ class NetconfResponse(Response):
             failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
 
+        self.error_messages: List[str] = []
+
     def _record_response(self, result: bytes) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
@@ -103,6 +105,9 @@ class NetconfResponse(Response):
             self._record_response_netconf_1_0()
         else:
             self._record_response_netconf_1_1()
+
+        if self.failed:
+            self._fetch_error_messages()
 
     def _record_response_netconf_1_0(self) -> None:
         """
@@ -247,6 +252,27 @@ class NetconfResponse(Response):
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
+
+    def _fetch_error_messages(self):
+        """
+        Fetch all error messages (if any)
+
+        RFC states that there MAY be more than one rpc-error so we just xpath for all
+        "error-message" tags and pull out the text of those elements. The strip is just to remove
+        leading/trailing white space to make things look a bit nicer.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        """
+        err_messages = self.xml_result.xpath("//rpc-error/error-message")
+        self.error_messages = [err.text.strip() for err in err_messages]
 
     def get_xml_elements(self) -> Dict[str, Element]:
         """

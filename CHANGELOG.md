@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-# XXXX.XX.XX
+# 2020.XX.XX
 - Improve the "echo" checker -- and add this for sync as well, because...
 - SSH2 and Paramiko are now supported transports!
 - As part of the "improved echo checker" sync channel now also overrides the read_until_input method like the async
@@ -11,6 +11,8 @@ CHANGELOG
  like scrapli core
 - MAYBE BREAKING CHANGE: shouldn't be an issue for 99.9999% of people, however, the asyncssh transport is no longer
  imported and available in the transport package
+- Add `error_messages` attribute to response object -- initialized as an empty list and the text of any `rpc-error/error
+-message` fields are placed into this list if there are any in the response from the server
 
 
 # 2020.10.10

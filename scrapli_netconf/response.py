@@ -253,7 +253,7 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
-    def _fetch_error_messages(self):
+    def _fetch_error_messages(self) -> None:
         """
         Fetch all error messages (if any)
 

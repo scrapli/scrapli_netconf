@@ -15,8 +15,12 @@ LOG = logging.getLogger("response")
 
 # "chunk match" matches two groups per section returned from the netconf server, first the length of
 # the response, and second the response itself. we use the length of the response to validate the
-# response is in fact X length
-CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!#).)*)", flags=re.M | re.S)
+# response is in fact X length. this regex is basically "start at line feed, and match "#123" where
+# "123" is obviously any length of digits... then we don't capture zero or more newlines because we
+# dont care about them. Next we have the main capture group -- this starts with a negative lookahead
+# that says we want to stop matching as soon as we hit another "#123" *or* a "##" (end of message),
+# after that we match anything "." and that is the "body" of the response
+CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!#\d+\n+|##).)*)", flags=re.M | re.S)
 
 PARSER = etree.XMLParser(remove_blank_text=True)
 
@@ -234,7 +238,7 @@ class NetconfResponse(Response):
         # validate all received data
         for result in result_sections:
             self._validate_chunk_size_netconf_1_1(result=result)
-
+        # assert 0
         self.xml_result = etree.fromstring(
             b"\n".join(
                 [

@@ -13,6 +13,7 @@ CHANGELOG
  imported and available in the transport package
 - Add `error_messages` attribute to response object -- initialized as an empty list and the text of any `rpc-error/error
 -message` fields are placed into this list if there are any in the response from the server
+- Improve netconf 1.1 chunk matching regex to not ignore/chop off Nokia error messages that contained `#` symbols
 
 
 # 2020.10.10

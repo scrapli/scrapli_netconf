@@ -26,7 +26,7 @@ EXTRAS_REQUIRE["full"] = full_requirements
 
 setuptools.setup(
     name="scrapli_netconf",
-    version="2020.10.10",
+    version="2020.10.24",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",

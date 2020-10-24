@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-# 2020.XX.XX
+# 2020.10.24
 - Improve the "echo" checker -- and add this for sync as well, because...
 - SSH2 and Paramiko are now supported transports!
 - As part of the "improved echo checker" sync channel now also overrides the read_until_input method like the async

@@ -36,8 +36,8 @@ from scrapli.exceptions import TransportPluginError
 from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
 from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.driver.base_driver import NetconfScrapeBase
+from scrapli_netconf.helper import _find_netconf_transport_plugin
 from scrapli_netconf.response import NetconfResponse
-from scrapli_netconf.transport.asyncssh_ import NetconfAsyncSSHTransport
 
 
 class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
@@ -55,8 +55,8 @@ class AsyncNetconfScrape(AsyncScrape, NetconfScrapeBase):
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfAsyncSSHTransport
-        self.transport = NetconfAsyncSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
@@ -361,8 +361,8 @@ relies on, see Transport and Channel docs for details.</p>
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfAsyncSSHTransport
-        self.transport = NetconfAsyncSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
@@ -641,6 +641,10 @@ relies on, see Transport and Channel docs for details.</p>
 <div class="desc"></div>
 </dd>
 <dt id="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.transport_args"><code class="name">var <span class="ident">transport_args</span> : Dict[str, Any]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1166,6 +1170,7 @@ relies on, see Transport and Channel docs for details.</p>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.server_capabilities" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.server_capabilities">server_capabilities</a></code></li>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.strict_datastores" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.strict_datastores">strict_datastores</a></code></li>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.strip_namespaces" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.transport_args" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.transport_args">transport_args</a></code></li>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.unlock" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.unlock">unlock</a></code></li>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.validate" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.validate">validate</a></code></li>
 <li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape.writeable_datastores" href="#scrapli_netconf.driver.async_driver.AsyncNetconfScrape.writeable_datastores">writeable_datastores</a></code></li>

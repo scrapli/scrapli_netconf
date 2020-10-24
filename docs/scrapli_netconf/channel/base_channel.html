@@ -96,7 +96,6 @@ class NetconfChannelBase(ChannelBase):
 
         &#34;&#34;&#34;
         self.logger.info(&#34;Sending client capabilities&#34;)
-        self.transport.session_lock.acquire()
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f&#34;Attempting to send capabilities: {client_capabilities}&#34;)
         self.transport.write(client_capabilities.value)
@@ -121,9 +120,7 @@ class NetconfChannelBase(ChannelBase):
         &#34;&#34;&#34;
         if capabilities_version == NetconfVersion.VERSION_1_1:
             self.netconf_version = NetconfVersion.VERSION_1_1
-            self.comms_prompt_pattern = r&#34;^##$&#34;
-
-        self.transport.session_lock.release()</code></pre>
+            self.comms_prompt_pattern = r&#34;^##$&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -245,7 +242,6 @@ preferable to disable this type of behavior via the device itself if possible.</
 
         &#34;&#34;&#34;
         self.logger.info(&#34;Sending client capabilities&#34;)
-        self.transport.session_lock.acquire()
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f&#34;Attempting to send capabilities: {client_capabilities}&#34;)
         self.transport.write(client_capabilities.value)
@@ -270,9 +266,7 @@ preferable to disable this type of behavior via the device itself if possible.</
         &#34;&#34;&#34;
         if capabilities_version == NetconfVersion.VERSION_1_1:
             self.netconf_version = NetconfVersion.VERSION_1_1
-            self.comms_prompt_pattern = r&#34;^##$&#34;
-
-        self.transport.session_lock.release()</code></pre>
+            self.comms_prompt_pattern = r&#34;^##$&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

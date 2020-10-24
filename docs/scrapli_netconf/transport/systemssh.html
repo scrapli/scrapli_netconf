@@ -62,10 +62,6 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
 
         &#34;&#34;&#34;
         login_bytes = self._open_netconf_pty()
-
-        if self.keepalive:
-            self._session_keepalive()
-
         return login_bytes
 
     def _open_netconf_pty(self) -&gt; bytes:
@@ -140,39 +136,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
             if b&#34;&lt;hello&#34; in output.lower():
                 self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
                 self._isauthenticated = True
-                return output
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Override _keepalive_network from scrapli; not supported with netconf
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
+                return output</code></pre>
 </details>
 </section>
 <section>
@@ -238,21 +202,6 @@ is completed.</dd>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented for
-system ssh</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; system ssh needs to know this to know how to decide if we are properly
@@ -328,10 +277,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         &#34;&#34;&#34;
         login_bytes = self._open_netconf_pty()
-
-        if self.keepalive:
-            self._session_keepalive()
-
         return login_bytes
 
     def _open_netconf_pty(self) -&gt; bytes:
@@ -406,39 +351,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             if b&#34;&lt;hello&#34; in output.lower():
                 self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
                 self._isauthenticated = True
-                return output
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Override _keepalive_network from scrapli; not supported with netconf
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
+                return output</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -487,10 +400,6 @@ of server capabilities that must be parsed.</p>
 
     &#34;&#34;&#34;
     login_bytes = self._open_netconf_pty()
-
-    if self.keepalive:
-        self._session_keepalive()
-
     return login_bytes</code></pre>
 </details>
 </dd>

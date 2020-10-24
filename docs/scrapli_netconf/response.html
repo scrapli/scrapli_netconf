@@ -31,7 +31,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -44,8 +44,12 @@ LOG = logging.getLogger(&#34;response&#34;)
 
 # &#34;chunk match&#34; matches two groups per section returned from the netconf server, first the length of
 # the response, and second the response itself. we use the length of the response to validate the
-# response is in fact X length
-CHUNK_MATCH_1_1 = re.compile(pattern=rb&#34;^#(\d+)(?:\n*)(((?!#).)*)&#34;, flags=re.M | re.S)
+# response is in fact X length. this regex is basically &#34;start at line feed, and match &#34;#123&#34; where
+# &#34;123&#34; is obviously any length of digits... then we don&#39;t capture zero or more newlines because we
+# dont care about them. Next we have the main capture group -- this starts with a negative lookahead
+# that says we want to stop matching as soon as we hit another &#34;#123&#34; *or* a &#34;##&#34; (end of message),
+# after that we match anything &#34;.&#34; and that is the &#34;body&#34; of the response
+CHUNK_MATCH_1_1 = re.compile(pattern=rb&#34;^#(\d+)(?:\n*)(((?!#\d+\n+|##).)*)&#34;, flags=re.M | re.S)
 
 PARSER = etree.XMLParser(remove_blank_text=True)
 
@@ -56,7 +60,7 @@ class NetconfResponse(Response):
         netconf_version: NetconfVersion,
         xml_input: Element,
         strip_namespaces: bool = True,
-        failed_when_contains: Optional[Union[bytes, List[bytes]]] = b&#34;&lt;rpc-error&gt;&#34;,
+        failed_when_contains: Optional[Union[bytes, List[bytes]]] = None,
         **kwargs: Any,
     ):
         &#34;&#34;&#34;
@@ -92,9 +96,20 @@ class NetconfResponse(Response):
 
         super().__init__(**kwargs)
 
+        if failed_when_contains is None:
+            # match on both opening and closing tags too so we never have to think about/compare
+            # things with namespaces (the closing tags wont have namespaces)
+            failed_when_contains = [
+                b&#34;&lt;/rpc-error&gt;&#34;,
+                b&#34;&lt;/rpc-errors&gt;&#34;,
+                b&#34;&lt;rpc-error&gt;&#34;,
+                b&#34;&lt;rpc-errors&gt;&#34;,
+            ]
         if isinstance(failed_when_contains, bytes):
             failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
+
+        self.error_messages: List[str] = []
 
     def _record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
@@ -114,10 +129,18 @@ class NetconfResponse(Response):
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.raw_result = result
 
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
+
         if self.netconf_version == NetconfVersion.VERSION_1_0:
             self._record_response_netconf_1_0()
         else:
             self._record_response_netconf_1_1()
+
+        if self.failed:
+            self._fetch_error_messages()
 
     def _record_response_netconf_1_0(self) -&gt; None:
         &#34;&#34;&#34;
@@ -133,11 +156,6 @@ class NetconfResponse(Response):
             N/A
 
         &#34;&#34;&#34;
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         # remove the message end characters and xml document header see:
         # https://github.com/scrapli/scrapli_netconf/issues/1
         self.xml_result = etree.fromstring(
@@ -153,6 +171,83 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
+    def _validate_chunk_size_netconf_1_1(self, result: Tuple[str, bytes]) -&gt; None:
+        &#34;&#34;&#34;
+        Validate individual chunk size; handle parsing trailing new lines for chunk sizes
+
+        It seems that some platforms behave slightly differently than others (looking at you IOSXE)
+        in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
+        RFC, the response for a netconf 1.1 response should look like this:
+
+        ```
+        ##XYZ
+        &lt;somexml&gt;
+        ##
+        ```
+
+        Where &#34;XYZ&#34; is an integer number of the count of chars in the following chunk (the chars up
+        to the next &#34;##&#34; symbols), then the actual XML response, then a new line(!!!!) and a pair of
+        hash symbols to indicate the chunk is complete.
+
+        IOSXE seems to *not* want to see the newline between the XML payload and the double hash
+        symbols... instead when it sees that newline it immediately returns the response. This
+        breaks the core behavior of scrapli in that scrapli always writes the input, then reads the
+        written inputs off the channel *before* sending a return character. This ensures that we
+        never have to deal with stripping out the inputs and such because it has already been read.
+        With IOSXE Behaving this way, we have to instead use `send_input` with the `eager` flag set
+        -- this means that we do *not* read the inputs, we simply send a return. We then have to do
+        a little extra parsing to strip out the inputs, but thats no big deal...
+
+        Where this finally gets to &#34;spacing&#34; -- IOSXE seems to include trailing newlines *sometimes*
+        but not other times, whereas IOSXR (for example) *always* counts a single trailing newline
+        (after the XML). SO.... long story long... (the above chunk stuff doesn&#39;t necessarily matter
+        for this, but felt like as good a place to document it as any...) this method deals w/
+        newline counts -- we check the expected chunk length against the actual char count, the char
+        count with all trailing whitespace stripped, and the count of the chunk + a *single*
+        trailing newline character...
+
+        FIN
+
+        Args:
+            result: Tuple from re.findall parsing the full response object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        expected_len = int(result[0])
+        result_value = result[1]
+
+        actual_len = len(result_value)
+        rstripped_len = len(result_value.rstrip())
+
+        trailing_newline_count = actual_len - rstripped_len
+        if trailing_newline_count &gt; 1:
+            extraneous_trailing_newline_count = trailing_newline_count - 1
+        else:
+            extraneous_trailing_newline_count = 1
+        trimmed_newline_len = actual_len - extraneous_trailing_newline_count
+
+        if expected_len == 1:
+            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
+            actual_len = 1
+
+        if expected_len == actual_len:
+            return
+        if expected_len == rstripped_len:
+            return
+        if expected_len == trimmed_newline_len:
+            return
+
+        LOG.critical(
+            f&#34;Return element length invalid, expected {expected_len} got {actual_len} for &#34;
+            f&#34;element: {repr(result_value)}&#34;
+        )
+        self.failed = True
+
     def _record_response_netconf_1_1(self) -&gt; None:
         &#34;&#34;&#34;
         Record response for netconf version 1.1
@@ -167,29 +262,12 @@ class NetconfResponse(Response):
             N/A
 
         &#34;&#34;&#34;
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
         # validate all received data
         for result in result_sections:
-            expected_len = int(result[0])
-            result_value = result[1]
-            # account for trailing newline char
-            actual_len = len(result_value) - 1
-            if expected_len == 1:
-                # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-                actual_len = 1
-            if expected_len != actual_len:
-                LOG.critical(
-                    f&#34;Return element length invalid, expected {expected_len} got {actual_len} for &#34;
-                    f&#34;element: {repr(result_value)}&#34;
-                )
-                self.failed = True
-
+            self._validate_chunk_size_netconf_1_1(result=result)
+        # assert 0
         self.xml_result = etree.fromstring(
             b&#34;\n&#34;.join(
                 [
@@ -207,6 +285,27 @@ class NetconfResponse(Response):
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
+
+    def _fetch_error_messages(self) -&gt; None:
+        &#34;&#34;&#34;
+        Fetch all error messages (if any)
+
+        RFC states that there MAY be more than one rpc-error so we just xpath for all
+        &#34;error-message&#34; tags and pull out the text of those elements. The strip is just to remove
+        leading/trailing white space to make things look a bit nicer.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        err_messages = self.xml_result.xpath(&#34;//rpc-error/error-message&#34;)
+        self.error_messages = [err.text.strip() for err in err_messages]
 
     def get_xml_elements(self) -&gt; Dict[str, Element]:
         &#34;&#34;&#34;
@@ -277,7 +376,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7f9e6825c520>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = b&#x27;&lt;rpc-error&gt;&#x27;, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fe1981832b0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -317,7 +416,7 @@ for these strings in raw byte strings we get back from the device</dd>
         netconf_version: NetconfVersion,
         xml_input: Element,
         strip_namespaces: bool = True,
-        failed_when_contains: Optional[Union[bytes, List[bytes]]] = b&#34;&lt;rpc-error&gt;&#34;,
+        failed_when_contains: Optional[Union[bytes, List[bytes]]] = None,
         **kwargs: Any,
     ):
         &#34;&#34;&#34;
@@ -353,9 +452,20 @@ for these strings in raw byte strings we get back from the device</dd>
 
         super().__init__(**kwargs)
 
+        if failed_when_contains is None:
+            # match on both opening and closing tags too so we never have to think about/compare
+            # things with namespaces (the closing tags wont have namespaces)
+            failed_when_contains = [
+                b&#34;&lt;/rpc-error&gt;&#34;,
+                b&#34;&lt;/rpc-errors&gt;&#34;,
+                b&#34;&lt;rpc-error&gt;&#34;,
+                b&#34;&lt;rpc-errors&gt;&#34;,
+            ]
         if isinstance(failed_when_contains, bytes):
             failed_when_contains = [failed_when_contains]
         self.failed_when_contains = failed_when_contains
+
+        self.error_messages: List[str] = []
 
     def _record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
@@ -375,10 +485,18 @@ for these strings in raw byte strings we get back from the device</dd>
         self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
         self.raw_result = result
 
+        if not self.failed_when_contains:
+            self.failed = False
+        elif not any(err in self.raw_result for err in self.failed_when_contains):
+            self.failed = False
+
         if self.netconf_version == NetconfVersion.VERSION_1_0:
             self._record_response_netconf_1_0()
         else:
             self._record_response_netconf_1_1()
+
+        if self.failed:
+            self._fetch_error_messages()
 
     def _record_response_netconf_1_0(self) -&gt; None:
         &#34;&#34;&#34;
@@ -394,11 +512,6 @@ for these strings in raw byte strings we get back from the device</dd>
             N/A
 
         &#34;&#34;&#34;
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         # remove the message end characters and xml document header see:
         # https://github.com/scrapli/scrapli_netconf/issues/1
         self.xml_result = etree.fromstring(
@@ -414,6 +527,83 @@ for these strings in raw byte strings we get back from the device</dd>
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
+    def _validate_chunk_size_netconf_1_1(self, result: Tuple[str, bytes]) -&gt; None:
+        &#34;&#34;&#34;
+        Validate individual chunk size; handle parsing trailing new lines for chunk sizes
+
+        It seems that some platforms behave slightly differently than others (looking at you IOSXE)
+        in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
+        RFC, the response for a netconf 1.1 response should look like this:
+
+        ```
+        ##XYZ
+        &lt;somexml&gt;
+        ##
+        ```
+
+        Where &#34;XYZ&#34; is an integer number of the count of chars in the following chunk (the chars up
+        to the next &#34;##&#34; symbols), then the actual XML response, then a new line(!!!!) and a pair of
+        hash symbols to indicate the chunk is complete.
+
+        IOSXE seems to *not* want to see the newline between the XML payload and the double hash
+        symbols... instead when it sees that newline it immediately returns the response. This
+        breaks the core behavior of scrapli in that scrapli always writes the input, then reads the
+        written inputs off the channel *before* sending a return character. This ensures that we
+        never have to deal with stripping out the inputs and such because it has already been read.
+        With IOSXE Behaving this way, we have to instead use `send_input` with the `eager` flag set
+        -- this means that we do *not* read the inputs, we simply send a return. We then have to do
+        a little extra parsing to strip out the inputs, but thats no big deal...
+
+        Where this finally gets to &#34;spacing&#34; -- IOSXE seems to include trailing newlines *sometimes*
+        but not other times, whereas IOSXR (for example) *always* counts a single trailing newline
+        (after the XML). SO.... long story long... (the above chunk stuff doesn&#39;t necessarily matter
+        for this, but felt like as good a place to document it as any...) this method deals w/
+        newline counts -- we check the expected chunk length against the actual char count, the char
+        count with all trailing whitespace stripped, and the count of the chunk + a *single*
+        trailing newline character...
+
+        FIN
+
+        Args:
+            result: Tuple from re.findall parsing the full response object
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        expected_len = int(result[0])
+        result_value = result[1]
+
+        actual_len = len(result_value)
+        rstripped_len = len(result_value.rstrip())
+
+        trailing_newline_count = actual_len - rstripped_len
+        if trailing_newline_count &gt; 1:
+            extraneous_trailing_newline_count = trailing_newline_count - 1
+        else:
+            extraneous_trailing_newline_count = 1
+        trimmed_newline_len = actual_len - extraneous_trailing_newline_count
+
+        if expected_len == 1:
+            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
+            actual_len = 1
+
+        if expected_len == actual_len:
+            return
+        if expected_len == rstripped_len:
+            return
+        if expected_len == trimmed_newline_len:
+            return
+
+        LOG.critical(
+            f&#34;Return element length invalid, expected {expected_len} got {actual_len} for &#34;
+            f&#34;element: {repr(result_value)}&#34;
+        )
+        self.failed = True
+
     def _record_response_netconf_1_1(self) -&gt; None:
         &#34;&#34;&#34;
         Record response for netconf version 1.1
@@ -428,29 +618,12 @@ for these strings in raw byte strings we get back from the device</dd>
             N/A
 
         &#34;&#34;&#34;
-        if not self.failed_when_contains:
-            self.failed = False
-        elif not any(err in self.raw_result for err in self.failed_when_contains):
-            self.failed = False
-
         result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
         # validate all received data
         for result in result_sections:
-            expected_len = int(result[0])
-            result_value = result[1]
-            # account for trailing newline char
-            actual_len = len(result_value) - 1
-            if expected_len == 1:
-                # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-                actual_len = 1
-            if expected_len != actual_len:
-                LOG.critical(
-                    f&#34;Return element length invalid, expected {expected_len} got {actual_len} for &#34;
-                    f&#34;element: {repr(result_value)}&#34;
-                )
-                self.failed = True
-
+            self._validate_chunk_size_netconf_1_1(result=result)
+        # assert 0
         self.xml_result = etree.fromstring(
             b&#34;\n&#34;.join(
                 [
@@ -468,6 +641,27 @@ for these strings in raw byte strings we get back from the device</dd>
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
+
+    def _fetch_error_messages(self) -&gt; None:
+        &#34;&#34;&#34;
+        Fetch all error messages (if any)
+
+        RFC states that there MAY be more than one rpc-error so we just xpath for all
+        &#34;error-message&#34; tags and pull out the text of those elements. The strip is just to remove
+        leading/trailing white space to make things look a bit nicer.
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        err_messages = self.xml_result.xpath(&#34;//rpc-error/error-message&#34;)
+        self.error_messages = [err.text.strip() for err in err_messages]
 
     def get_xml_elements(self) -&gt; Dict[str, Element]:
         &#34;&#34;&#34;
@@ -569,7 +763,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7f9e6825c520>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fe1981832b0>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>

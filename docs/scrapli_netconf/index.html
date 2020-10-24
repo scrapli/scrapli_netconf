@@ -30,7 +30,7 @@
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf scrapli netconf plugin&#34;&#34;&#34;
 from scrapli_netconf.driver import AsyncNetconfScrape, NetconfScrape
 
-__version__ = &#34;2020.10.10&#34;
+__version__ = &#34;2020.10.24&#34;
 __all__ = (&#34;NetconfScrape&#34;, &#34;AsyncNetconfScrape&#34;)</code></pre>
 </details>
 </section>
@@ -119,8 +119,8 @@ relies on, see Transport and Channel docs for details.</p>
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfAsyncSSHTransport
-        self.transport = NetconfAsyncSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = AsyncNetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
@@ -399,6 +399,10 @@ relies on, see Transport and Channel docs for details.</p>
 <div class="desc"></div>
 </dd>
 <dt id="scrapli_netconf.AsyncNetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.AsyncNetconfScrape.transport_args"><code class="name">var <span class="ident">transport_args</span> : Dict[str, Any]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -929,13 +933,16 @@ relies on, see Transport and Channel docs for details.</p>
     ) -&gt; None:
         super().__init__(port=port, **kwargs)
 
-        if self._transport != &#34;system&#34;:
-            msg = &#34;`NetconfScrape` is only supported using the `system` transport plugin&#34;
+        if self._transport == &#34;telnet&#34;:
+            msg = &#34;NETCONF does not support telnet!&#34;
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfSystemSSHTransport
-        self.transport = NetconfSystemSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = TRANSPORT_CLASS.get(self._transport, None)
+        if self.transport_class is None:
+            self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
@@ -968,9 +975,14 @@ relies on, see Transport and Channel docs for details.</p>
 
         client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
+        self.channel._check_echo(  # pylint: disable=W0212
+            timeout_transport=self.transport.timeout_transport
+        )
+
         self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
+
         self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)
 
     def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
@@ -1204,6 +1216,10 @@ relies on, see Transport and Channel docs for details.</p>
 <div class="desc"></div>
 </dd>
 <dt id="scrapli_netconf.NetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.NetconfScrape.transport_args"><code class="name">var <span class="ident">transport_args</span> : Dict[str, Any]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1551,9 +1567,14 @@ relies on, see Transport and Channel docs for details.</p>
 
     client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
+    self.channel._check_echo(  # pylint: disable=W0212
+        timeout_transport=self.transport.timeout_transport
+    )
+
     self.channel._send_client_capabilities(  # pylint: disable=W0212
         client_capabilities=client_capabilities, capabilities_version=self.netconf_version
     )
+
     self.logger.info(f&#34;Connection to {self._initialization_args[&#39;host&#39;]} opened successfully&#34;)</code></pre>
 </details>
 </dd>
@@ -1725,6 +1746,7 @@ relies on, see Transport and Channel docs for details.</p>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.server_capabilities" href="#scrapli_netconf.AsyncNetconfScrape.server_capabilities">server_capabilities</a></code></li>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.strict_datastores" href="#scrapli_netconf.AsyncNetconfScrape.strict_datastores">strict_datastores</a></code></li>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.strip_namespaces" href="#scrapli_netconf.AsyncNetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.AsyncNetconfScrape.transport_args" href="#scrapli_netconf.AsyncNetconfScrape.transport_args">transport_args</a></code></li>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.unlock" href="#scrapli_netconf.AsyncNetconfScrape.unlock">unlock</a></code></li>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.validate" href="#scrapli_netconf.AsyncNetconfScrape.validate">validate</a></code></li>
 <li><code><a title="scrapli_netconf.AsyncNetconfScrape.writeable_datastores" href="#scrapli_netconf.AsyncNetconfScrape.writeable_datastores">writeable_datastores</a></code></li>
@@ -1748,6 +1770,7 @@ relies on, see Transport and Channel docs for details.</p>
 <li><code><a title="scrapli_netconf.NetconfScrape.server_capabilities" href="#scrapli_netconf.NetconfScrape.server_capabilities">server_capabilities</a></code></li>
 <li><code><a title="scrapli_netconf.NetconfScrape.strict_datastores" href="#scrapli_netconf.NetconfScrape.strict_datastores">strict_datastores</a></code></li>
 <li><code><a title="scrapli_netconf.NetconfScrape.strip_namespaces" href="#scrapli_netconf.NetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.NetconfScrape.transport_args" href="#scrapli_netconf.NetconfScrape.transport_args">transport_args</a></code></li>
 <li><code><a title="scrapli_netconf.NetconfScrape.unlock" href="#scrapli_netconf.NetconfScrape.unlock">unlock</a></code></li>
 <li><code><a title="scrapli_netconf.NetconfScrape.validate" href="#scrapli_netconf.NetconfScrape.validate">validate</a></code></li>
 <li><code><a title="scrapli_netconf.NetconfScrape.writeable_datastores" href="#scrapli_netconf.NetconfScrape.writeable_datastores">writeable_datastores</a></code></li>

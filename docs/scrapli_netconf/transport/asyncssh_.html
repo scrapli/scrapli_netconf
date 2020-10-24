@@ -32,6 +32,8 @@ from typing import Any
 
 from scrapli_asyncssh.transport.asyncssh_ import AsyncSSHTransport
 
+from scrapli.exceptions import ConnectionNotOpened
+
 
 # no stubs for scrapli_asyncssh for now, ignore strict typing complains
 class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
@@ -52,6 +54,8 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             N/A
 
         &#34;&#34;&#34;
+        from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415
+
         if self.auth_strict_key:
             self.logger.debug(f&#34;Attempting to validate {self.host} public key is in known hosts&#34;)
             self._verify_key()
@@ -67,9 +71,20 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
         # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
         # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
         # set encoding to None so we get bytes for consistency w/ other scrapli transports
-        self.stdin, self.stdout, self.stderr = await self.session.open_session(
-            term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;
-        )
+        # request_pty seems to be safe to set to &#34;false&#34; but leaving it at auto which seems closer
+        # to the default behavior. With this omitted (as was previously) connecting to junos devices
+        # on port 830 worked w/ system transport but *not* asyncssh because the pty request failed
+        try:
+            self.stdin, self.stdout, self.stderr = await self.session.open_session(
+                term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;, request_pty=&#34;auto&#34;
+            )
+        except ChannelOpenError as exc:
+            msg = (
+                &#34;Failed to open Channel -- do you have the right port? Most often the netconf &#34;
+                &#34;port is 22 or 830!&#34;
+            )
+            self.logger.critical(msg)
+            raise ConnectionNotOpened(msg) from exc
 
         return b&#34;&#34;
 
@@ -123,8 +138,7 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
 inheritance.</p>
 <p>AsyncSSHTransport Object</p>
-<p>Inherit from Transport ABC
-AsyncSSHTransport &lt;- Transport (ABC)</p>
+<p>AsyncSSHTransport &lt;- AsyncTransport &lt;- Transport (ABC)</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>host</code></strong></dt>
@@ -144,23 +158,7 @@ AsyncSSHTransport &lt;- Transport (ABC)</p>
 <dt><strong><code>timeout_transport</code></strong></dt>
 <dd>timeout for ssh transport in seconds</dd>
 <dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented w/ asyncssh</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
+<dd>True/False close transport if timeout encountered</dd>
 <dt><strong><code>ssh_config_file</code></strong></dt>
 <dd>string to path for ssh config file</dd>
 <dt><strong><code>ssh_known_hosts_file</code></strong></dt>
@@ -193,6 +191,8 @@ type is 'network'</dd>
             N/A
 
         &#34;&#34;&#34;
+        from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415
+
         if self.auth_strict_key:
             self.logger.debug(f&#34;Attempting to validate {self.host} public key is in known hosts&#34;)
             self._verify_key()
@@ -208,9 +208,20 @@ type is 'network'</dd>
         # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
         # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
         # set encoding to None so we get bytes for consistency w/ other scrapli transports
-        self.stdin, self.stdout, self.stderr = await self.session.open_session(
-            term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;
-        )
+        # request_pty seems to be safe to set to &#34;false&#34; but leaving it at auto which seems closer
+        # to the default behavior. With this omitted (as was previously) connecting to junos devices
+        # on port 830 worked w/ system transport but *not* asyncssh because the pty request failed
+        try:
+            self.stdin, self.stdout, self.stderr = await self.session.open_session(
+                term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;, request_pty=&#34;auto&#34;
+            )
+        except ChannelOpenError as exc:
+            msg = (
+                &#34;Failed to open Channel -- do you have the right port? Most often the netconf &#34;
+                &#34;port is 22 or 830!&#34;
+            )
+            self.logger.critical(msg)
+            raise ConnectionNotOpened(msg) from exc
 
         return b&#34;&#34;
 
@@ -287,6 +298,8 @@ type is 'network'</dd>
         N/A
 
     &#34;&#34;&#34;
+    from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415
+
     if self.auth_strict_key:
         self.logger.debug(f&#34;Attempting to validate {self.host} public key is in known hosts&#34;)
         self._verify_key()
@@ -302,9 +315,20 @@ type is 'network'</dd>
     # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
     # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
     # set encoding to None so we get bytes for consistency w/ other scrapli transports
-    self.stdin, self.stdout, self.stderr = await self.session.open_session(
-        term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;
-    )
+    # request_pty seems to be safe to set to &#34;false&#34; but leaving it at auto which seems closer
+    # to the default behavior. With this omitted (as was previously) connecting to junos devices
+    # on port 830 worked w/ system transport but *not* asyncssh because the pty request failed
+    try:
+        self.stdin, self.stdout, self.stderr = await self.session.open_session(
+            term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;, request_pty=&#34;auto&#34;
+        )
+    except ChannelOpenError as exc:
+        msg = (
+            &#34;Failed to open Channel -- do you have the right port? Most often the netconf &#34;
+            &#34;port is 22 or 830!&#34;
+        )
+        self.logger.critical(msg)
+        raise ConnectionNotOpened(msg) from exc
 
     return b&#34;&#34;</code></pre>
 </details>

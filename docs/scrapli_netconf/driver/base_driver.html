@@ -31,7 +31,7 @@
 import re
 import warnings
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -75,6 +75,7 @@ class NetconfBaseOperations(Enum):
 
 
 class NetconfScrapeBase(ScrapeBase):
+    transport_args: Dict[str, Any]
     server_capabilities: List[str]
     readable_datastores: List[str]
     writeable_datastores: List[str]
@@ -901,7 +902,7 @@ class NetconfScrapeBase(ScrapeBase):
 </dd>
 <dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase"><code class="flex name class">
 <span>class <span class="ident">NetconfScrapeBase</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: float = 30, timeout_exit: bool = True, keepalive: bool = False, keepalive_interval: int = 30, keepalive_type: str = 'network', keepalive_pattern: str = '\x05', comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
+<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 5, timeout_transport: int = 10, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrape Object</p>
@@ -941,23 +942,6 @@ system transport; ignored on other transports</dd>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' attempts to use whatever 'standard'
-keepalive mechanisms are available in the selected transport mechanism. Check the
-transport documentation for details on what is supported and/or how it is
-implemented for any given transport driver</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
 this is the single most important attribute here! if this does not match a prompt,
@@ -1024,6 +1008,7 @@ docs for given transport class for details of what to pass here</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NetconfScrapeBase(ScrapeBase):
+    transport_args: Dict[str, Any]
     server_capabilities: List[str]
     readable_datastores: List[str]
     writeable_datastores: List[str]
@@ -1751,6 +1736,10 @@ docs for given transport class for details of what to pass here</dd>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args"><code class="name">var <span class="ident">transport_args</span> : Dict[str, Any]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
@@ -1806,6 +1795,7 @@ docs for given transport class for details of what to pass here</dd>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.server_capabilities" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.server_capabilities">server_capabilities</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strict_datastores" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.strict_datastores">strict_datastores</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strip_namespaces" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args">transport_args</a></code></li>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores">writeable_datastores</a></code></li>
 </ul>
 </li>

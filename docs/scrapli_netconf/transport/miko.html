@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>scrapli_netconf.helper API documentation</title>
-<meta name="description" content="scrapli_netconf.helper" />
+<title>scrapli_netconf.transport.miko API documentation</title>
+<meta name="description" content="scrapli_netconf.transport.miko" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,100 +19,79 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli_netconf.helper</code></h1>
+<h1 class="title">Module <code>scrapli_netconf.transport.miko</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli_netconf.helper</p>
+<p>scrapli_netconf.transport.miko</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.helper&#34;&#34;&#34;
-import importlib
-import re
-from logging import getLogger
+<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport.miko&#34;&#34;&#34;
 from typing import Any
 
-from lxml import objectify
-from lxml.etree import Element
-
-from scrapli.exceptions import TransportPluginError
-
-LOG = getLogger(&#34;scrapli_netconf.helper&#34;)
+from scrapli_paramiko.transport.miko import MikoTransport
 
 
-def remove_namespaces(tree: Element) -&gt; Element:
-    &#34;&#34;&#34;
-    Remove all namespace tags from Element object
+# no stubs for scrapli_paramiko for now, ignore strict typing complains
+class NetconfMikoTransport(MikoTransport):  # type: ignore
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
 
-    Replace element tags like: {http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state
-    With: connection-state
+    def open_netconf(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        TODO
 
-    Args:
-        tree: lxml Element
+        Args:
+            N/A
 
-    Returns:
-        Element: lxml Element with namespaces stripped out
+        Returns:
+            N/A  # noqa: DAR202
 
-    Raises:
-        N/A
+        Raises:
+            X
 
-    &#34;&#34;&#34;
-    for el in tree.getiterator():
-        if not hasattr(el.tag, &#34;find&#34;):
-            continue
-        el.tag = re.sub(r&#34;^{.*}&#34;, &#34;&#34;, el.tag)
-    objectify.deannotate(tree, cleanup_namespaces=True)
-    return tree
+        &#34;&#34;&#34;
+        super().open()
 
+        return b&#34;&#34;
 
-def _find_netconf_transport_plugin(transport: str) -&gt; Any:
-    &#34;&#34;&#34;
-    Find non-core transport plugins and required plugin arguments
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        TODO
 
-    Args:
-        transport: string name of the desired transport, i.e.: paramiko or ssh2
+        Args:
+            N/A
 
-    Returns:
-        Any: class representing the given transport
+        Returns:
+            N/A  # noqa: DAR202
 
-    Raises:
-        ModuleNotFoundError: if unable to  find scrapli transport module
-        TransportPluginError: if unable to load `Transport` and `TRANSPORT_ARGS` from given
-            transport module
+        Raises:
+            X
 
-    &#34;&#34;&#34;
-    try:
-        importlib.import_module(f&#34;scrapli_{transport}.transport&#34;)
-    except ModuleNotFoundError as exc:
-        err = f&#34;Module &#39;{exc.name}&#39; not found!&#34;
-        msg = f&#34;***** {err} {&#39;*&#39; * (80 - len(err))}&#34;
-        fix = (
-            &#34;To resolve this issue, ensure you are referencing a valid transport plugin. Transport&#34;
-            &#34; plugins should be named similar to `scrapli_paramiko` or `scrapli_ssh2`, and can be &#34;
-            &#34;selected by passing simply `paramiko` or `ssh2` into the scrapli driver. You can &#34;
-            &#34;install most plugins with pip: `pip install scrapli-ssh2` for example.&#34;
-        )
-        warning = &#34;\n&#34; + msg + &#34;\n&#34; + fix + &#34;\n&#34; + msg
-        LOG.warning(warning)
-        raise ModuleNotFoundError(warning) from exc
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        # unlike &#34;normal&#34; paramiko -- we do *not* need to enable the &#34;shell&#34; on the channel...
+        # we *do* still want it to be a pty though!
+        self.channel.get_pty()
+        self.channel.invoke_subsystem(&#34;netconf&#34;)
 
-    transport_package_names = {&#34;ssh2&#34;: &#34;cssh2&#34;, &#34;paramiko&#34;: &#34;miko&#34;, &#34;asyncssh&#34;: &#34;asyncssh_&#34;}
-    transport_class_names = {
-        &#34;ssh2&#34;: &#34;NetconfSSH2Transport&#34;,
-        &#34;paramiko&#34;: &#34;NetconfMikoTransport&#34;,
-        &#34;asyncssh&#34;: &#34;NetconfAsyncSSHTransport&#34;,
-    }
-    netconf_transport_module = importlib.import_module(
-        f&#34;scrapli_netconf.transport.{transport_package_names.get(transport)}&#34;
-    )
-    transport_class = getattr(netconf_transport_module, transport_class_names[transport], None)
+    def _get_channel_fd(self) -&gt; int:
+        &#34;&#34;&#34;
+        Function to get the fd to check for &#34;echo&#34; with
 
-    if not transport_class:
-        msg = f&#34;Failed to load transport plugin `{transport}` transport class&#34;
-        raise TransportPluginError(msg)
+        Args:
+             N/A
 
-    return transport_class</code></pre>
+        Returns:
+            int: fd of the channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_fd: int = self.channel.fileno()
+        return channel_fd</code></pre>
 </details>
 </section>
 <section>
@@ -120,59 +99,160 @@ def _find_netconf_transport_plugin(transport: str) -&gt; Any:
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.helper.remove_namespaces"><code class="name flex">
-<span>def <span class="ident">remove_namespaces</span></span>(<span>tree: <cyfunction Element at 0x7fe1981832b0>) ‑> <cyfunction Element at 0x7fe1981832b0></span>
+<dt id="scrapli_netconf.transport.miko.NetconfMikoTransport"><code class="flex name class">
+<span>class <span class="ident">NetconfMikoTransport</span></span>
+<span>(</span><span>**kwargs: Any)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Remove all namespace tags from Element object</p>
-<p>Replace element tags like: {<a href="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state">http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state</a>
-With: connection-state</p>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>MikoTransport Object</p>
+<p>Inherit from Transport ABC
+MikoTransport &lt;- Transport (ABC)</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>tree</code></strong></dt>
-<dd>lxml Element</dd>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>auth_strict_key</code></strong></dt>
+<dd>True/False to enforce strict key checking (default is True)</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket in seconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh transport in seconds</dd>
+<dt><strong><code>timeout_exit</code></strong></dt>
+<dd>True/False close transport if timeout encountered</dd>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string to path for ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Element</code></dt>
-<dd>lxml Element with namespaces stripped out</dd>
-</dl>
+<p>N/A
+# noqa: DAR202</p>
 <h2 id="raises">Raises</h2>
 <p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def remove_namespaces(tree: Element) -&gt; Element:
-    &#34;&#34;&#34;
-    Remove all namespace tags from Element object
+<pre><code class="python">class NetconfMikoTransport(MikoTransport):  # type: ignore
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
 
-    Replace element tags like: {http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state
-    With: connection-state
+    def open_netconf(self) -&gt; bytes:
+        &#34;&#34;&#34;
+        TODO
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            X
+
+        &#34;&#34;&#34;
+        super().open()
+
+        return b&#34;&#34;
+
+    def _open_channel(self) -&gt; None:
+        &#34;&#34;&#34;
+        TODO
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            X
+
+        &#34;&#34;&#34;
+        self.channel = self.session.open_session()
+        # unlike &#34;normal&#34; paramiko -- we do *not* need to enable the &#34;shell&#34; on the channel...
+        # we *do* still want it to be a pty though!
+        self.channel.get_pty()
+        self.channel.invoke_subsystem(&#34;netconf&#34;)
+
+    def _get_channel_fd(self) -&gt; int:
+        &#34;&#34;&#34;
+        Function to get the fd to check for &#34;echo&#34; with
+
+        Args:
+             N/A
+
+        Returns:
+            int: fd of the channel
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_fd: int = self.channel.fileno()
+        return channel_fd</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>scrapli_paramiko.transport.miko.MikoTransport</li>
+<li>scrapli.transport.transport.Transport</li>
+<li>scrapli.transport.base_transport.TransportBase</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="scrapli_netconf.transport.miko.NetconfMikoTransport.open_netconf"><code class="name flex">
+<span>def <span class="ident">open_netconf</span></span>(<span>self) ‑> bytes</span>
+</code></dt>
+<dd>
+<div class="desc"><p>TODO</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<p>N/A
+# noqa: DAR202</p>
+<h2 id="raises">Raises</h2>
+<p>X</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_netconf(self) -&gt; bytes:
+    &#34;&#34;&#34;
+    TODO
 
     Args:
-        tree: lxml Element
-
-    Returns:
-        Element: lxml Element with namespaces stripped out
-
-    Raises:
         N/A
 
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        X
+
     &#34;&#34;&#34;
-    for el in tree.getiterator():
-        if not hasattr(el.tag, &#34;find&#34;):
-            continue
-        el.tag = re.sub(r&#34;^{.*}&#34;, &#34;&#34;, el.tag)
-    objectify.deannotate(tree, cleanup_namespaces=True)
-    return tree</code></pre>
+    super().open()
+
+    return b&#34;&#34;</code></pre>
 </details>
 </dd>
 </dl>
-</section>
-<section>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -183,12 +263,17 @@ With: connection-state</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="scrapli_netconf" href="index.html">scrapli_netconf</a></code></li>
+<li><code><a title="scrapli_netconf.transport" href="index.html">scrapli_netconf.transport</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="scrapli_netconf.transport.miko.NetconfMikoTransport" href="#scrapli_netconf.transport.miko.NetconfMikoTransport">NetconfMikoTransport</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.helper.remove_namespaces" href="#scrapli_netconf.helper.remove_namespaces">remove_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.transport.miko.NetconfMikoTransport.open_netconf" href="#scrapli_netconf.transport.miko.NetconfMikoTransport.open_netconf">open_netconf</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

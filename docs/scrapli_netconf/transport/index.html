@@ -28,13 +28,9 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport&#34;&#34;&#34;
-from scrapli_netconf.transport.asyncssh_ import NetconfAsyncSSHTransport
 from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
 
-__all__ = (
-    &#34;NetconfSystemSSHTransport&#34;,
-    &#34;NetconfAsyncSSHTransport&#34;,
-)</code></pre>
+__all__ = (&#34;NetconfSystemSSHTransport&#34;,)</code></pre>
 </details>
 </section>
 <section>
@@ -43,6 +39,14 @@ __all__ = (
 <dt><code class="name"><a title="scrapli_netconf.transport.asyncssh_" href="asyncssh_.html">scrapli_netconf.transport.asyncssh_</a></code></dt>
 <dd>
 <div class="desc"><p>scrapli_netconf.transport.asyncssh_</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli_netconf.transport.cssh2" href="cssh2.html">scrapli_netconf.transport.cssh2</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli_netconf.transport.cssh2</p></div>
+</dd>
+<dt><code class="name"><a title="scrapli_netconf.transport.miko" href="miko.html">scrapli_netconf.transport.miko</a></code></dt>
+<dd>
+<div class="desc"><p>scrapli_netconf.transport.miko</p></div>
 </dd>
 <dt><code class="name"><a title="scrapli_netconf.transport.systemssh" href="systemssh.html">scrapli_netconf.transport.systemssh</a></code></dt>
 <dd>
@@ -57,202 +61,6 @@ __all__ = (
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.transport.NetconfAsyncSSHTransport"><code class="flex name class">
-<span>class <span class="ident">NetconfAsyncSSHTransport</span></span>
-<span>(</span><span>**kwargs: Any)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>AsyncSSHTransport Object</p>
-<p>Inherit from Transport ABC
-AsyncSSHTransport &lt;- Transport (ABC)</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>True/False to enforce strict key checking (default is True)</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh transport in seconds</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented w/ asyncssh</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
-    def __init__(self, **kwargs: Any):
-        super().__init__(**kwargs)
-
-    async def open_netconf(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Netconf open method
-
-        Args:
-            N/A
-
-        Returns:
-            bytes: bytes output from server captured while opening the connection
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if self.auth_strict_key:
-            self.logger.debug(f&#34;Attempting to validate {self.host} public key is in known hosts&#34;)
-            self._verify_key()
-
-        await self._authenticate()
-
-        if self.auth_strict_key:
-            self.logger.debug(
-                f&#34;Attempting to validate {self.host} public key is in known hosts and is valid&#34;
-            )
-            self._verify_key_value()
-
-        # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
-        # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
-        # set encoding to None so we get bytes for consistency w/ other scrapli transports
-        self.stdin, self.stdout, self.stderr = await self.session.open_session(
-            term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;
-        )
-
-        return b&#34;&#34;
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Override _keepalive_network from scrapli; not supported with netconf
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>scrapli_asyncssh.transport.asyncssh_.AsyncSSHTransport</li>
-<li>scrapli.transport.async_transport.AsyncTransport</li>
-<li>scrapli.transport.base_transport.TransportBase</li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="scrapli_netconf.transport.NetconfAsyncSSHTransport.open_netconf"><code class="name flex">
-<span>async def <span class="ident">open_netconf</span></span>(<span>self) ‑> bytes</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf open method</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bytes</code></dt>
-<dd>bytes output from server captured while opening the connection</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def open_netconf(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Netconf open method
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output from server captured while opening the connection
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    if self.auth_strict_key:
-        self.logger.debug(f&#34;Attempting to validate {self.host} public key is in known hosts&#34;)
-        self._verify_key()
-
-    await self._authenticate()
-
-    if self.auth_strict_key:
-        self.logger.debug(
-            f&#34;Attempting to validate {self.host} public key is in known hosts and is valid&#34;
-        )
-        self._verify_key_value()
-
-    # it seems we must pass a terminal type to force a pty(?) which i think we want in like...
-    # every case?? https://invisible-island.net/ncurses/ncurses.faq.html#xterm_color
-    # set encoding to None so we get bytes for consistency w/ other scrapli transports
-    self.stdin, self.stdout, self.stderr = await self.session.open_session(
-        term_type=&#34;xterm&#34;, encoding=None, subsystem=&#34;netconf&#34;
-    )
-
-    return b&#34;&#34;</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
 <dt id="scrapli_netconf.transport.NetconfSystemSSHTransport"><code class="flex name class">
 <span>class <span class="ident">NetconfSystemSSHTransport</span></span>
 <span>(</span><span>**kwargs: Any)</span>
@@ -307,21 +115,6 @@ is completed.</dd>
 <dd>True/False close transport if timeout encountered. If False and keepalives
 are in use, keepalives will prevent program from exiting so you should be sure to
 catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>keepalive</code></strong></dt>
-<dd>whether or not to try to keep session alive</dd>
-<dt><strong><code>keepalive_interval</code></strong></dt>
-<dd>interval to use for session keepalives</dd>
-<dt><strong><code>keepalive_type</code></strong></dt>
-<dd>network|standard &ndash; 'network' sends actual characters over the
-transport channel. This is useful for network-y type devices that may not support
-'standard' keepalive mechanisms. 'standard' is not currently implemented for
-system ssh</dd>
-<dt><strong><code>keepalive_pattern</code></strong></dt>
-<dd>pattern to send to keep network channel alive. Default is
-u'\005' which is equivalent to 'ctrl+e'. This pattern moves cursor to end of the
-line which should be an innocuous pattern. This will only be entered <em>if</em> a lock
-can be acquired. This is only applicable if using keepalives and if the keepalive
-type is 'network'</dd>
 <dt><strong><code>comms_prompt_pattern</code></strong></dt>
 <dd>prompt pattern expected for device, same as the one provided to
 channel &ndash; system ssh needs to know this to know how to decide if we are properly
@@ -397,10 +190,6 @@ terminal "normally", passing some bad arguments can break things!</dd>
 
         &#34;&#34;&#34;
         login_bytes = self._open_netconf_pty()
-
-        if self.keepalive:
-            self._session_keepalive()
-
         return login_bytes
 
     def _open_netconf_pty(self) -&gt; bytes:
@@ -475,39 +264,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
             if b&#34;&lt;hello&#34; in output.lower():
                 self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
                 self._isauthenticated = True
-                return output
-
-    def _keepalive_network(self) -&gt; None:
-        &#34;&#34;&#34;
-        Override _keepalive_network from scrapli; not supported with netconf
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;`network` style keepalives not supported with netconf&#34;)
-
-    def _keepalive_standard(self) -&gt; None:
-        &#34;&#34;&#34;
-        Send &#34;out of band&#34; (protocol level) keepalives to devices.
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            NotImplementedError: always for now...
-
-        &#34;&#34;&#34;
-        raise NotImplementedError(&#34;keepalives not yet implemented&#34;)</code></pre>
+                return output</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -556,10 +313,6 @@ of server capabilities that must be parsed.</p>
 
     &#34;&#34;&#34;
     login_bytes = self._open_netconf_pty()
-
-    if self.keepalive:
-        self._session_keepalive()
-
     return login_bytes</code></pre>
 </details>
 </dd>
@@ -582,17 +335,13 @@ of server capabilities that must be parsed.</p>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="scrapli_netconf.transport.asyncssh_" href="asyncssh_.html">scrapli_netconf.transport.asyncssh_</a></code></li>
+<li><code><a title="scrapli_netconf.transport.cssh2" href="cssh2.html">scrapli_netconf.transport.cssh2</a></code></li>
+<li><code><a title="scrapli_netconf.transport.miko" href="miko.html">scrapli_netconf.transport.miko</a></code></li>
 <li><code><a title="scrapli_netconf.transport.systemssh" href="systemssh.html">scrapli_netconf.transport.systemssh</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li>
-<h4><code><a title="scrapli_netconf.transport.NetconfAsyncSSHTransport" href="#scrapli_netconf.transport.NetconfAsyncSSHTransport">NetconfAsyncSSHTransport</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.transport.NetconfAsyncSSHTransport.open_netconf" href="#scrapli_netconf.transport.NetconfAsyncSSHTransport.open_netconf">open_netconf</a></code></li>
-</ul>
-</li>
 <li>
 <h4><code><a title="scrapli_netconf.transport.NetconfSystemSSHTransport" href="#scrapli_netconf.transport.NetconfSystemSSHTransport">NetconfSystemSSHTransport</a></code></h4>
 <ul class="">

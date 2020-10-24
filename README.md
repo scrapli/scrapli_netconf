@@ -43,6 +43,7 @@ scrapli_netconf aims to be fully RFC compliant at some point, but at the moment 
 - [Advanced Usage](#advanced-usage)
   - [Capabilities](#capabilities)
   - [Datastores](#datastores)
+  - [Using a Different Transport](#using-a-different-transport)
 - [FAQ](#faq)
 - [Linting and Testing](#linting-and-testing)
 
@@ -208,14 +209,30 @@ python setup.py install
 ```
 
 scrapli_netconf has made an effort to have as few dependencies as possible -- at this time only requiring scrapli (of
- course) and lxml. That is a bit of a lie, as right now scrapli_asyncssh (and of course asyncssh) are also required
-  -- in future releases this will likely change to allow you to use scrapli_netconf with only scrapli and lxml
-   installed.
+ course) and lxml.
+ 
+As with scrapli core, optional extras are available -- in this case just for the transport plugins:
+
+```
+pip install scrapli[paramiko]
+```
+
+The available optional installation extras options are:
+
+- paramiko (paramiko and the scrapli_paramiko transport)
+- ssh2 (ssh2-python and the scrapli_ssh2 transport)
+- asynchssh (asyncssh and the scrapli_asyncssh transport)
+
+If you would like to install all of the optional extras, you can do so with the `full` option:
+
+```
+pip install scrapli[full]
+``` 
 
 As for platforms to *run* scrapli_netconf on -- it has and will be tested on MacOS and Ubuntu regularly and should
- work on any POSIX system. At this time scrapli_netconf will not run on Windows as it requires the `system` transport
-  or `asyncssh` transport flavors of scrapli which are not supported on Windows. If you are on Windows and wish to try
-   out scrapli_netconf you can fire up WSL, or this likely works in Cygwin as well.
+ work on any POSIX system. While scrapli should work on windows when using the paramiko or
+   ssh2-python transport drivers, it is not "officially" supported. It is *strongly* recommended/preferred for folks
+    to use WSL/Cygwin instead of Windows.
 
 
 # Basic Usage
@@ -534,6 +551,39 @@ scrapli_netconf drives contain an option `strict_datastores` which defaults to `
  `True` scrapli will raise a `ValueError` when attempting to perform an operation against a datastore that has not
   been advertised as a capability by the server. With this option left to the default value of `False
   `, scrapli_netconf will simply issue a user warning.
+
+
+## Using a Different Transport
+
+Just like scrapli "core" -- scrapli-netconf supports using different libraries for "transport" -- or the actual SSH
+ communication piece. By default, and like scrapli "core", scrapli-netconf uses the "system" transport. This "system
+ " transport means that scrapli-netconf has no external dependencies (other than `lxml`!) as it just relies on what is
+  available on the machine running the scrapli script. If you wish to swap this out, scrapli-netconf also supports
+   the `paramiko`, `ssh2`, and `asyncssh` scrapli transport plugins.
+    
+Like scrapli "core", transport selection can be made when instantiating the scrapli connection object by passing in
+ `paramiko`, `ssh2`, `asyncssh`" to force scrapli to use the corresponding transport mechanism. If you are using the
+  `asyncssh` transport you must use the `AsyncNetconfScrape` driver!
+  
+While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
+ scrapli development will be on the "system" SSH transport.
+ 
+Example using `ssh2` as the transport:
+
+```python
+from scrapli_netconf import NetconfScrape
+
+my_device = {
+    "host": "172.18.0.11",
+    "auth_username": "vrnetlab",
+    "auth_password": "VR-netlab9",
+    "auth_strict_key": False,
+    "transport": "ssh2"
+}
+
+with NetconfScrape(**my_device) as conn:
+    print(conn.get_config())
+```
 
 
 # FAQ

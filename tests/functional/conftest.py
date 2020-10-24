@@ -36,18 +36,23 @@ def device_type(request):
     yield request.param
 
 
+@pytest.fixture(scope="class", params=["system", "ssh2", "paramiko"])
+def transport(request):
+    yield request.param
+
+
 @pytest.fixture(scope="session", params=["password"])
 def auth_type(request):
     yield request.param
 
 
 @pytest.fixture(scope="function")
-def sync_conn_1_0(device_type_1_0, auth_type):
+def sync_conn_1_0(device_type_1_0, auth_type, transport):
     device = DEVICES[device_type_1_0].copy()
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device)
+    conn = NetconfScrape(**device, transport=transport)
     yield conn, device_type_1_0
     if conn.isalive():
         conn.close()
@@ -73,12 +78,12 @@ async def async_conn_1_0(device_type_1_0, auth_type):
 
 
 @pytest.fixture(scope="function")
-def sync_conn_1_1(device_type_1_1, auth_type):
+def sync_conn_1_1(device_type_1_1, auth_type, transport):
     device = DEVICES[device_type_1_1].copy()
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device)
+    conn = NetconfScrape(**device, transport=transport)
     yield conn, device_type_1_1
     if conn.isalive():
         conn.close()
@@ -104,12 +109,12 @@ async def async_conn_1_1(device_type_1_1, auth_type):
 
 
 @pytest.fixture(scope="function")
-def sync_conn(device_type, auth_type):
+def sync_conn(device_type, auth_type, transport):
     device = DEVICES[device_type].copy()
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device)
+    conn = NetconfScrape(**device, transport=transport)
     yield conn, device_type
     if conn.isalive():
         conn.close()

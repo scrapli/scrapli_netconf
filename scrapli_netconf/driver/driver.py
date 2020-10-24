@@ -1,13 +1,19 @@
 """scrapli_netconf.driver.driver"""
-from typing import Any, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from scrapli import Scrape
 from scrapli.exceptions import TransportPluginError
+from scrapli.transport import Transport
 from scrapli_netconf.channel.channel import NetconfChannel
 from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.driver.base_driver import NetconfScrapeBase
+from scrapli_netconf.helper import _find_netconf_transport_plugin
 from scrapli_netconf.response import NetconfResponse
 from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
+
+TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
+    "system": NetconfSystemSSHTransport,
+}
 
 
 class NetconfScrape(Scrape, NetconfScrapeBase):
@@ -20,13 +26,16 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
     ) -> None:
         super().__init__(port=port, **kwargs)
 
-        if self._transport != "system":
-            msg = "`NetconfScrape` is only supported using the `system` transport plugin"
+        if self._transport == "telnet":
+            msg = "NETCONF does not support telnet!"
             self.logger.exception(msg)
             raise TransportPluginError(msg)
 
-        self.transport_class = NetconfSystemSSHTransport
-        self.transport = NetconfSystemSSHTransport(**self.transport_args)  # type: ignore
+        self.transport_class = TRANSPORT_CLASS.get(self._transport, None)
+        if self.transport_class is None:
+            self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
+
+        self.transport = self.transport_class(**self.transport_args)
         self.channel = NetconfChannel(self.transport, **self.channel_args)
 
         self.strip_namespaces = strip_namespaces
@@ -59,9 +68,14 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
 
         client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
 
+        self.channel._check_echo(  # pylint: disable=W0212
+            timeout_transport=self.transport.timeout_transport
+        )
+
         self.channel._send_client_capabilities(  # pylint: disable=W0212
             client_capabilities=client_capabilities, capabilities_version=self.netconf_version
         )
+
         self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
 
     def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:

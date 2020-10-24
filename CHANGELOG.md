@@ -1,6 +1,21 @@
 CHANGELOG
 =========
 
+# 2020.XX.XX
+- Improve the "echo" checker -- and add this for sync as well, because...
+- SSH2 and Paramiko are now supported transports!
+- As part of the "improved echo checker" sync channel now also overrides the read_until_input method like the async
+ channel does -- again, for the same reasons.
+- All transports minus system are now optional extras -- this means that asyncssh is no longer an install requirement
+- As expected with above point -- added optional extras install options in setup.py as well as a "full" option just
+ like scrapli core
+- MAYBE BREAKING CHANGE: shouldn't be an issue for 99.9999% of people, however, the asyncssh transport is no longer
+ imported and available in the transport package
+- Add `error_messages` attribute to response object -- initialized as an empty list and the text of any `rpc-error/error
+-message` fields are placed into this list if there are any in the response from the server
+- Improve netconf 1.1 chunk matching regex to not ignore/chop off Nokia error messages that contained `#` symbols
+
+
 # 2020.10.10
 - Handle netconf 1.1 devices that have chunk sizes of 1
 - Ensure results are "pretty printed"

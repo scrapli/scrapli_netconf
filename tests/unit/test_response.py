@@ -125,6 +125,50 @@ RESULT_1_1_STRIP = """<rpc-reply message-id="101">
 """
 XML_ELEMENTS_1_1 = ["components"]
 
+SINGLE_ERROR = """#567
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <rpc-error>
+        <error-type>application</error-type>
+        <error-tag>operation-failed</error-tag>
+        <error-severity>error</error-severity>
+        <error-message>
+            error message 1
+        </error-message>
+        <error-info>
+            <err-element>edit-config</err-element>
+        </error-info>
+    </rpc-error>
+</rpc-reply>
+##
+"""
+MULTIPLE_ERRORS = """#567
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <rpc-error>
+        <error-type>application</error-type>
+        <error-tag>operation-failed</error-tag>
+        <error-severity>error</error-severity>
+        <error-message>
+            error message 1
+        </error-message>
+        <error-info>
+            <err-element>edit-config</err-element>
+        </error-info>
+    </rpc-error>
+    <rpc-error>
+        <error-type>application</error-type>
+        <error-tag>operation-failed</error-tag>
+        <error-severity>error</error-severity>
+        <error-message>
+            error message 2
+        </error-message>
+        <error-info>
+            <err-element>edit-config</err-element>
+        </error-info>
+    </rpc-error>    
+</rpc-reply>
+##
+"""
+
 
 def test_response_init_exception():
     netconf_version = "blah"
@@ -255,3 +299,103 @@ def test_response_not_implemented_exceptions(method_to_test):
     with pytest.raises(NotImplementedError) as exc:
         method()
     assert str(exc.value) == f"No {method_to_test} parsing for netconf output!"
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (("2", b"aa"), True),
+        (("2", b"aa    "), True),
+        (("3", b"aa    "), True),
+        (("2", b"a"), False),
+        (("2", b"aaa   "), False),
+        (("3", b"a        "), False),
+    ],
+    ids=[
+        "exact_size_match",
+        "rstripped_size_match",
+        "single_trailing_newline_size_match",
+        "wrong_size",
+        "wrong_size_rstripped",
+        "wrong_size_single_trailing_newline",
+    ],
+)
+def test__validate_chunk_size_netconf_1_1(response_data):
+    chunk_input = response_data[0]
+    response_success = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_1,
+        failed_when_contains=[b"<rpc-error>"],
+    )
+    # set response.failed because we are skipping "record_response"
+    response.failed = False
+    response._validate_chunk_size_netconf_1_1(result=chunk_input)
+    assert response.failed is not response_success
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (b"<rpc-error xmlns='urn:ietf:params:xml:ns:netconf:base:1.0'>ERROR</rpc-error>", False),
+        (b"<rpc-error>ERROR</rpc-error>", False),
+        (b"<rpc-errors xmlns='urn:ietf:params:xml:ns:netconf:base:1.0'>ERROR</rpc-errors>", False),
+        (b"<rpc-errors>ERROR</rpc-errors>", False),
+        (b"<sometag>Not Error!</sometag>", True),
+    ],
+    ids=[
+        "rpc_error_with_namespace",
+        "rpc_error_no_namespace",
+        "rpc_errors_with_namespace",
+        "rpc_errors_no_namespace",
+        "no_error",
+    ],
+)
+def test_failed_when_contains_default_values(response_data):
+    response_output = response_data[0]
+    response_success = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_0,
+    )
+    response._record_response(result=response_output)
+    assert response.failed is not response_success
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (SINGLE_ERROR, ["error message 1"]),
+        (MULTIPLE_ERRORS, ["error message 1", "error message 2"]),
+        (RESPONSE_1_1, []),
+    ],
+    ids=[
+        "single_error",
+        "multiple_errors",
+        "no_errors",
+    ],
+)
+def test_parse_error_messages(response_data):
+    response_output = response_data[0]
+    expected_errors = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_1,
+    )
+    response._record_response(result=response_output.encode())
+    assert response.error_messages == expected_errors

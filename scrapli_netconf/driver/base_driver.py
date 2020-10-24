@@ -2,7 +2,7 @@
 import re
 import warnings
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -46,6 +46,7 @@ class NetconfBaseOperations(Enum):
 
 
 class NetconfScrapeBase(ScrapeBase):
+    transport_args: Dict[str, Any]
     server_capabilities: List[str]
     readable_datastores: List[str]
     writeable_datastores: List[str]

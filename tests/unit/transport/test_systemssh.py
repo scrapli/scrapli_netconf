@@ -8,7 +8,7 @@ from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
 def test_init_invalid_transport():
     with pytest.raises(TransportPluginError) as exc:
         NetconfScrape(host="localhost", transport="telnet")
-    assert str(exc.value) == "`NetconfScrape` is only supported using the `system` transport plugin"
+    assert str(exc.value) == "NETCONF does not support telnet!"
 
 
 def test_init():

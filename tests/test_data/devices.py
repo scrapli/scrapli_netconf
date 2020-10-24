@@ -43,6 +43,7 @@ DEVICES = {
         "host": "172.18.0.13",
         "port": 830,
         "strip_namespaces": False,
+        "timeout_transport": 30,
     },
     "juniper_junos_1_0": {
         "auth_username": FUNCTIONAL_USERNAME,

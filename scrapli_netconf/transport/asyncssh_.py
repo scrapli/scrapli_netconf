@@ -22,7 +22,7 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             bytes: bytes output from server captured while opening the connection
 
         Raises:
-            N/A
+            ConnectionNotOpened: if unable to open connection (`ChannelOpenError` from asyncssh)
 
         """
         from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415

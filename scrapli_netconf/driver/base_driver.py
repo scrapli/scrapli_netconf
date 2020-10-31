@@ -697,7 +697,7 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            CapabilityNotSupported: if `validate` ca
+            CapabilityNotSupported: if `validate` capability does not exist
 
         """
         self.logger.debug("Building payload for `validate` operation.")

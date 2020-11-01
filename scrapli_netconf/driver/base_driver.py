@@ -92,8 +92,11 @@ class NetconfScrapeBase(ScrapeBase):
             CouldNotExchangeCapabilities: if server capabilities cannot be parsed
 
         """
+        # matches hello with or without namespace
         filtered_raw_server_capabilities = re.search(
-            pattern=rb"(<hello.*<\/hello>)", string=raw_server_capabilities, flags=re.I | re.S
+            pattern=rb"(<(\w+\:){0,1}hello.*<\/(\w+\:){0,1}hello>)",
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
         )
         if filtered_raw_server_capabilities is None:
             msg = f"Failed to parse server capabilities from host {self._host}"

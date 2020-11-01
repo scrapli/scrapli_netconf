@@ -41,6 +41,19 @@ SERVER_CAPABILITIES_1_1 = b"""<hello xmlns="urn:ietf:params:xml:ns:netconf:base:
  <session-id>3671877071</session-id>
 </hello>
 ]]>]]>"""
+SERVER_CAPABILITIES_1_1_NAMESPACE = b"""<nc:hello xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0">
+ <capabilities>
+  <capability>urn:ietf:params:netconf:base:1.1</capability>
+  <capability>urn:ietf:params:netconf:capability:candidate:1.0</capability>
+  <capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
+  <capability>urn:ietf:params:netconf:capability:validate:1.1</capability>
+  <capability>urn:ietf:params:netconf:capability:confirmed-commit:1.1</capability>
+  <capability>urn:ietf:params:netconf:capability:notification:1.0</capability>
+  <capability>urn:ietf:params:netconf:capability:interleave:1.0</capability>
+ </capabilities>
+ <session-id>3671877071</session-id>
+</nc:hello>
+]]>]]>"""
 PARSED_CAPABILITIES_1_1 = [
     "urn:ietf:params:netconf:base:1.1",
     "urn:ietf:params:netconf:capability:candidate:1.0",
@@ -104,8 +117,9 @@ def test_process_open(dummy_conn, capabilities):
     [
         (SERVER_CAPABILITIES_1_0, PARSED_CAPABILITIES_1_0),
         (SERVER_CAPABILITIES_1_1, PARSED_CAPABILITIES_1_1),
+        (SERVER_CAPABILITIES_1_1_NAMESPACE, PARSED_CAPABILITIES_1_1),
     ],
-    ids=["1.0", "1.1"],
+    ids=["1.0", "1.1", "1.1-namespace"],
 )
 def test_parse_server_capabilities(dummy_conn, capabilities):
     server_capabilities = capabilities[0]

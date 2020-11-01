@@ -1,10 +1,13 @@
 """scrapli_netconf.transport.systemssh"""
+import re
 from typing import Any
 
 from scrapli.decorators import OperationTimeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport import SystemSSHTransport
 from scrapli.transport.ptyprocess import PtyProcess
+
+HELLO_MATCH = re.compile(pattern=rb"<(\w+\:){0,1}hello", flags=re.I)
 
 
 class NetconfSystemSSHTransport(SystemSSHTransport):
@@ -56,6 +59,26 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         self.logger.debug(f"Authenticated to host {self.host} successfully")
         return login_bytes
 
+    @staticmethod
+    def _authenticate_check_hello(output) -> bool:
+        """
+        Check if "hello" message is in output
+
+        Args:
+            N/A
+
+        Returns:
+            bool: true if hello message is seen, otherwise false
+
+        Raises:
+            N/A
+
+        """
+        hello_match = re.search(pattern=HELLO_MATCH, string=output)
+        if hello_match:
+            return True
+        return False
+
     @OperationTimeout("_timeout_ops", "Timed out looking for SSH login password prompt")
     def _authenticate(self) -> bytes:
         """
@@ -104,7 +127,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
                     "likely failed authentication"
                 )
                 raise ScrapliAuthenticationFailed(msg)
-            if b"<hello" in output.lower():
+            if self._authenticate_check_hello(output=output):
                 self.logger.info("Found start of server capabilities, authentication successful")
                 self._isauthenticated = True
                 return output

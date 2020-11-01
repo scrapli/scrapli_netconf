@@ -60,7 +60,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         return login_bytes
 
     @staticmethod
-    def _authenticate_check_hello(output) -> bool:
+    def _authenticate_check_hello(output: bytes) -> bool:
         """
         Check if "hello" message is in output
 

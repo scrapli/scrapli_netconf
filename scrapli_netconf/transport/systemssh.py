@@ -65,7 +65,7 @@ class NetconfSystemSSHTransport(SystemSSHTransport):
         Check if "hello" message is in output
 
         Args:
-            N/A
+            output: bytes output from the channel
 
         Returns:
             bool: true if hello message is seen, otherwise false

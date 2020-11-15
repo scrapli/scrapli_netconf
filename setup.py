@@ -2,8 +2,6 @@
 """scrapli_netconf - netconf driver built on scrapli"""
 import setuptools
 
-from scrapli_netconf import __version__
-
 __author__ = "Carl Montanari"
 
 with open("README.md", "r") as f:
@@ -28,7 +26,7 @@ EXTRAS_REQUIRE["full"] = full_requirements
 
 setuptools.setup(
     name="scrapli_netconf",
-    version=__version__,
+    version="2020.11.15",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",

@@ -231,9 +231,11 @@ class NetconfResponse(Response):
             extraneous_trailing_newline_count = 1
         trimmed_newline_len = actual_len - extraneous_trailing_newline_count
 
-        if expected_len == 1:
-            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-            actual_len = 1
+        if rstripped_len == 0:
+            # at least nokia tends to have itty bitty chunks of one element, and/or chunks that have
+            # *only* whitespace and our regex ignores this, so if there was/is nothing in the result
+            # section we can assume it was just whitespace and move on w/our lives
+            actual_len = expected_len
 
         if expected_len == actual_len:
             return
@@ -267,7 +269,7 @@ class NetconfResponse(Response):
         # validate all received data
         for result in result_sections:
             self._validate_chunk_size_netconf_1_1(result=result)
-        # assert 0
+
         self.xml_result = etree.fromstring(
             b&#34;\n&#34;.join(
                 [
@@ -376,7 +378,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7f852836a2b0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fd2882252b0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -587,9 +589,11 @@ for these strings in raw byte strings we get back from the device</dd>
             extraneous_trailing_newline_count = 1
         trimmed_newline_len = actual_len - extraneous_trailing_newline_count
 
-        if expected_len == 1:
-            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-            actual_len = 1
+        if rstripped_len == 0:
+            # at least nokia tends to have itty bitty chunks of one element, and/or chunks that have
+            # *only* whitespace and our regex ignores this, so if there was/is nothing in the result
+            # section we can assume it was just whitespace and move on w/our lives
+            actual_len = expected_len
 
         if expected_len == actual_len:
             return
@@ -623,7 +627,7 @@ for these strings in raw byte strings we get back from the device</dd>
         # validate all received data
         for result in result_sections:
             self._validate_chunk_size_netconf_1_1(result=result)
-        # assert 0
+
         self.xml_result = etree.fromstring(
             b&#34;\n&#34;.join(
                 [
@@ -763,7 +767,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7f852836a2b0>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fd2882252b0>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>

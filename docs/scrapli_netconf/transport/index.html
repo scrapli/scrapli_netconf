@@ -213,6 +213,26 @@ terminal "normally", passing some bad arguments can break things!</dd>
         self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
         return login_bytes
 
+    @staticmethod
+    def _authenticate_check_hello(output: bytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if &#34;hello&#34; message is in output
+
+        Args:
+            output: bytes output from the channel
+
+        Returns:
+            bool: true if hello message is seen, otherwise false
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        hello_match = re.search(pattern=HELLO_MATCH, string=output)
+        if hello_match:
+            return True
+        return False
+
     @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
     def _authenticate(self) -&gt; bytes:
         &#34;&#34;&#34;
@@ -261,7 +281,7 @@ terminal "normally", passing some bad arguments can break things!</dd>
                     &#34;likely failed authentication&#34;
                 )
                 raise ScrapliAuthenticationFailed(msg)
-            if b&#34;&lt;hello&#34; in output.lower():
+            if self._authenticate_check_hello(output=output):
                 self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
                 self._isauthenticated = True
                 return output</code></pre>

@@ -202,9 +202,11 @@ class NetconfResponse(Response):
             extraneous_trailing_newline_count = 1
         trimmed_newline_len = actual_len - extraneous_trailing_newline_count
 
-        if expected_len == 1:
-            # at least nokia tends to have itty bitty chunks of one element, deal w/ that
-            actual_len = 1
+        if rstripped_len == 0:
+            # at least nokia tends to have itty bitty chunks of one element, and/or chunks that have
+            # *only* whitespace and our regex ignores this, so if there was/is nothing in the result
+            # section we can assume it was just whitespace and move on w/our lives
+            actual_len = expected_len
 
         if expected_len == actual_len:
             return
@@ -238,7 +240,7 @@ class NetconfResponse(Response):
         # validate all received data
         for result in result_sections:
             self._validate_chunk_size_netconf_1_1(result=result)
-        # assert 0
+
         self.xml_result = etree.fromstring(
             b"\n".join(
                 [

@@ -26,25 +26,31 @@ EXTRAS_REQUIRE["full"] = full_requirements
 
 setuptools.setup(
     name="scrapli_netconf",
-    version="2020.10.24",
+    version="2020.11.15",
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/scrapli/scrapli_netconf",
+    project_urls={
+        "Changelog": "https://github.com/scrapli/scrapli_netconf/blob/master/CHANGELOG.md"
+    },
+    license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
+        "Programming Language :: Python",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     python_requires=">=3.6",
 )

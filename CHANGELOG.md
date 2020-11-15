@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+# 2020.11.15
+- Support namespaces in hello messages -- primarily to support "rfc-compliant" mode in JunOS -- thank you 
+ [Gary Napier](https://github.com/napierg) for finding this and coming up with the fix!
+- Another fixup to chunk checker -- think that the itty bitty chunk issues have now been solved :)
+
+
 # 2020.10.24
 - Improve the "echo" checker -- and add this for sync as well, because...
 - SSH2 and Paramiko are now supported transports!

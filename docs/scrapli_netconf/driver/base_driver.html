@@ -121,8 +121,11 @@ class NetconfScrapeBase(ScrapeBase):
             CouldNotExchangeCapabilities: if server capabilities cannot be parsed
 
         &#34;&#34;&#34;
+        # matches hello with or without namespace
         filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;hello.*&lt;\/hello&gt;)&#34;, string=raw_server_capabilities, flags=re.I | re.S
+            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
         )
         if filtered_raw_server_capabilities is None:
             msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
@@ -726,7 +729,7 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            CapabilityNotSupported: if `validate` ca
+            CapabilityNotSupported: if `validate` capability does not exist
 
         &#34;&#34;&#34;
         self.logger.debug(&#34;Building payload for `validate` operation.&#34;)
@@ -1054,8 +1057,11 @@ docs for given transport class for details of what to pass here</dd>
             CouldNotExchangeCapabilities: if server capabilities cannot be parsed
 
         &#34;&#34;&#34;
+        # matches hello with or without namespace
         filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;hello.*&lt;\/hello&gt;)&#34;, string=raw_server_capabilities, flags=re.I | re.S
+            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
         )
         if filtered_raw_server_capabilities is None:
             msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
@@ -1659,7 +1665,7 @@ docs for given transport class for details of what to pass here</dd>
                 channel inputs (string and xml)
 
         Raises:
-            CapabilityNotSupported: if `validate` ca
+            CapabilityNotSupported: if `validate` capability does not exist
 
         &#34;&#34;&#34;
         self.logger.debug(&#34;Building payload for `validate` operation.&#34;)

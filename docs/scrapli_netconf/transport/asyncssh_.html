@@ -51,7 +51,7 @@ class NetconfAsyncSSHTransport(AsyncSSHTransport):  # type: ignore
             bytes: bytes output from server captured while opening the connection
 
         Raises:
-            N/A
+            ConnectionNotOpened: if unable to open connection (`ChannelOpenError` from asyncssh)
 
         &#34;&#34;&#34;
         from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415
@@ -188,7 +188,7 @@ inheritance.</p>
             bytes: bytes output from server captured while opening the connection
 
         Raises:
-            N/A
+            ConnectionNotOpened: if unable to open connection (`ChannelOpenError` from asyncssh)
 
         &#34;&#34;&#34;
         from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415
@@ -279,7 +279,10 @@ inheritance.</p>
 <dd>bytes output from server captured while opening the connection</dd>
 </dl>
 <h2 id="raises">Raises</h2>
-<p>N/A</p></div>
+<dl>
+<dt><code>ConnectionNotOpened</code></dt>
+<dd>if unable to open connection (<code>ChannelOpenError</code> from asyncssh)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -295,7 +298,7 @@ inheritance.</p>
         bytes: bytes output from server captured while opening the connection
 
     Raises:
-        N/A
+        ConnectionNotOpened: if unable to open connection (`ChannelOpenError` from asyncssh)
 
     &#34;&#34;&#34;
     from asyncssh.misc import ChannelOpenError  # pylint: disable=C0415

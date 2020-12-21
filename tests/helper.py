@@ -105,6 +105,40 @@ def cisco_iosxe_replace_config_data(config):
         string=config,
         flags=re.M | re.I,
     )
+    # vrnetlab router seems to get this comment string but vrouter one does not. unclear why,
+    # but we'll just remove it just in case
+    crypto_pattern = re.compile(
+        r"(^.*$)\n^! Call-home is enabled by Smart-Licensing.$(\n^.*$)", flags=re.M | re.I
+    )
+    config = re.sub(crypto_pattern, r"\1\2", config)
+    # replace pki/certificate stuff and license all in one go -- this is always lumped together
+    # but in vrnetlab vs vrouter things are sometimes in different order (trustpoints are
+    # switched for example) so comparing strings obviously fails even though content is correct
+    crypto_pattern = re.compile(
+        r"^crypto pki .*\nlicense udi pid CSR1000V sn \w+$", flags=re.M | re.I | re.S
+    )
+    config = re.sub(crypto_pattern, "CERTIFICATES AND LICENSE", config)
+
+    # remove serial number in netconf 1.1 output
+    config = re.sub(
+        pattern=r"<sn>.*</sn>",
+        repl="<sn>SERIAL_NUMBER</sn>",
+        string=config,
+        flags=re.M | re.I,
+    )
+
+    # remove trustpoint/auto gen self signed cert numbers
+    config = re.sub(
+        pattern=r"TP-self-signed-\d+",
+        repl="TP-self-signed-XYZ",
+        string=config,
+    )
+    config = re.sub(
+        pattern=r"Self-Signed-Certificate-\d+",
+        repl="Self-Signed-Certificate-XYZ",
+        string=config,
+    )
+
     # iosxe does stupid stuff where there are a few single character trailing white spaces somehow?
     # that or i need to be doing this in the library like i do in scrapli core??
     config = "\n".join([line.rstrip() for line in config.splitlines()])

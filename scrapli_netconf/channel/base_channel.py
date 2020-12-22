@@ -39,16 +39,13 @@ class NetconfChannelBase(ChannelBase):
             N/A
 
         """
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
-            msg_template = "#{}\n{}\n##"
-            # format message for chunk message types
-            final_channel_input = msg_template.format(len(channel_input), channel_input)
-            return final_channel_input
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            return channel_input
 
-        # some (vMX for some reason?) devices seem to get carried away if there are *any* returns in
-        # the input... this causes the server to output the rpc result which breaks the normal
-        # scrapli "read_until_input" behavior, so we'll simply remove new lines in channel inputs
-        return channel_input.replace("\n", "")
+        # format message for chunk (netconf 1.1) style message
+        msg_template = "#{}\n{}\n##"
+        final_channel_input = msg_template.format(len(channel_input), channel_input)
+        return final_channel_input
 
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities

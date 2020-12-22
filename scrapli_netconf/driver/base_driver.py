@@ -12,6 +12,8 @@ from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 from scrapli_netconf.response import NetconfResponse
 
+PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
+
 
 class NetconfClientCapabilities(Enum):
     CAPABILITIES_1_0 = """
@@ -287,6 +289,19 @@ class NetconfScrapeBase(ScrapeBase):
         """
         Handle pre "get" tasks for consistency between sync/async versions
 
+        *NOTE*
+        The channel input (filter_) is loaded up as an lxml etree element here, this is done with a
+        parser that removes whitespace. This has a somewhat undesirable effect of making any
+        "pretty" input not pretty, however... after we load the xml object (which we do to validate
+        that it is valid xml) we dump that xml object back to a string to be used as the actual
+        raw payload we send down the channel, which means we are sending "flattened" (not pretty/
+        indented xml) to the device. This is important it seems! Some devices seme to not mind
+        having the "nicely" formatted input (pretty xml). But! On devices that "echo" the inputs
+        back -- sometimes the device will respond to our rpc without "finishing" echoing our inputs
+        to the device, this breaks the core "read until input" processing that scrapli always does.
+        For whatever reason if there are no line breaks this does not seem to happen? /shrug. Note
+        that this comment applies to all of the "pre" methods that we parse a filter/payload!
+
         Args:
             filter_: string filter to apply to the get
             filter_type: type of filter; subtree|xpath
@@ -305,7 +320,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         # build base request and insert the get element
         xml_request = self._build_base_elem()
-        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
+        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value, parser=PARSER)
         xml_request.insert(0, xml_get_element)
 
         xml_filter_elem = self._build_filters(filters=[filter_], filter_type=filter_type)
@@ -362,7 +377,7 @@ class NetconfScrapeBase(ScrapeBase):
         # build base request and insert the get-config element
         xml_request = self._build_base_elem()
         xml_get_config_element = etree.fromstring(
-            NetconfBaseOperations.GET_CONFIG.value.format(source=source)
+            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
         )
         xml_request.insert(0, xml_get_config_element)
 
@@ -413,12 +428,11 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         self.logger.debug(
-            f"Building payload for `get-config` operation. target: {target}, config: {config}"
+            f"Building payload for `edit-config` operation. target: {target}, config: {config}"
         )
         self._validate_edit_config_target(target=target)
 
-        # build config first to ensure valid xml
-        xml_config = etree.fromstring(config)
+        xml_config = etree.fromstring(config, parser=PARSER)
 
         # build base request and insert the edit-config element
         xml_request = self._build_base_elem()
@@ -471,7 +485,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         xml_request = self._build_base_elem()
         xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target)
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=PARSER
         )
         xml_request.insert(0, xml_validate_element)
         channel_input = etree.tostring(
@@ -510,7 +524,7 @@ class NetconfScrapeBase(ScrapeBase):
         """
         self.logger.debug("Building payload for `commit` operation")
         xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value)
+        xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value, parser=PARSER)
         xml_request.insert(0, xml_commit_element)
         channel_input = etree.tostring(xml_request)
 
@@ -546,7 +560,7 @@ class NetconfScrapeBase(ScrapeBase):
         """
         self.logger.debug("Building payload for `discard` operation.")
         xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value)
+        xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value, parser=PARSER)
         xml_request.insert(0, xml_commit_element)
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
@@ -586,7 +600,9 @@ class NetconfScrapeBase(ScrapeBase):
         self._validate_edit_config_target(target=target)
 
         xml_request = self._build_base_elem()
-        xml_lock_element = etree.fromstring(NetconfBaseOperations.LOCK.value.format(target=target))
+        xml_lock_element = etree.fromstring(
+            NetconfBaseOperations.LOCK.value.format(target=target), parser=PARSER
+        )
         xml_request.insert(0, xml_lock_element)
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
@@ -625,7 +641,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.UNLOCK.value.format(target=target)
+            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=PARSER)
         )
         xml_request.insert(0, xml_lock_element)
         channel_input = etree.tostring(
@@ -666,7 +682,7 @@ class NetconfScrapeBase(ScrapeBase):
         xml_request = self._build_base_elem()
 
         # build filter element
-        xml_filter_elem = etree.fromstring(filter_)
+        xml_filter_elem = etree.fromstring(filter_, parser=PARSER)
 
         # insert filter element
         xml_request.insert(0, xml_filter_elem)
@@ -720,7 +736,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         xml_request = self._build_base_elem()
         xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.VALIDATE.value.format(source=source)
+            NetconfBaseOperations.VALIDATE.value.format(source=source), parser=PARSER
         )
         xml_request.insert(0, xml_validate_element)
         channel_input = etree.tostring(

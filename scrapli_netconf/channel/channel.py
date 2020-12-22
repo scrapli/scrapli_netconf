@@ -164,6 +164,9 @@ class NetconfChannel(Channel, NetconfChannelBase):
             N/A
 
         """
+        # unnecessary for scrapli netconf
+        _ = auto_expand
+
         output = b""
 
         if self._server_echo is False:
@@ -173,17 +176,10 @@ class NetconfChannel(Channel, NetconfChannelBase):
             self.logger.info(f"Read: {repr(output)}")
             return output
 
-        if auto_expand is None:
-            auto_expand = self.comms_auto_expand
-
         while True:
             output += self._read_chunk()
-
-            if not auto_expand and channel_input in output:
-                break
-            if auto_expand and self._process_auto_expand(
-                output=output, channel_input=channel_input
-            ):
+            # if we have all the input *or* we see the closing rpc tag we know we are done here
+            if channel_input in output or b"rpc>" in output:
                 break
 
         self.logger.info(f"Read: {repr(output)}")
@@ -211,6 +207,8 @@ class NetconfChannel(Channel, NetconfChannelBase):
         )
 
         if bytes_final_channel_input in raw_result:
+            # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
+            # reply remaining
             raw_result = raw_result.split(bytes_final_channel_input)[1]
 
         raw_result = self._read_until_prompt(output=raw_result)

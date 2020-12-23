@@ -9,8 +9,8 @@ def test_init_invalid_transport():
     with pytest.raises(TransportPluginError) as exc:
         AsyncNetconfScrape(host="localhost")
     assert (
-        str(exc.value)
-        == "Attempting to use transport type system with an asyncio driver, must use one of ['asyncssh'] transports"
+        "Attempting to use transport type system with an asyncio driver, must use one of "
+        in str(exc.value)
     )
 
 

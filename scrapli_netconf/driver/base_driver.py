@@ -261,11 +261,11 @@ class NetconfScrapeBase(ScrapeBase):
         """
         if filter_type == "subtree":
             xml_filter_elem = etree.fromstring(
-                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type)
+                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
             )
             for filter_ in filters:
-                # "validate" subtree filter by forcing it into xml
-                xml_filter_element = etree.fromstring(filter_)
+                # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
+                xml_filter_element = etree.fromstring(filter_, parser=PARSER)
                 # insert the subtree filter into the parent filter element
                 xml_filter_elem.insert(1, xml_filter_element)
         elif filter_type == "xpath":
@@ -279,7 +279,8 @@ class NetconfScrapeBase(ScrapeBase):
             xml_filter_elem = etree.fromstring(
                 NetconfBaseOperations.FILTER_XPATH.value.format(
                     filter_type=filter_type, xpath=filter_
-                )
+                ),
+                parser=PARSER,
             )
         else:
             raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
@@ -320,7 +321,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         # build base request and insert the get element
         xml_request = self._build_base_elem()
-        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value, parser=PARSER)
+        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
         xml_request.insert(0, xml_get_element)
 
         xml_filter_elem = self._build_filters(filters=[filter_], filter_type=filter_type)

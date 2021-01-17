@@ -68,16 +68,13 @@ class NetconfChannelBase(ChannelBase):
             N/A
 
         &#34;&#34;&#34;
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
-            msg_template = &#34;#{}\n{}\n##&#34;
-            # format message for chunk message types
-            final_channel_input = msg_template.format(len(channel_input), channel_input)
-            return final_channel_input
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            return channel_input
 
-        # some (vMX for some reason?) devices seem to get carried away if there are *any* returns in
-        # the input... this causes the server to output the rpc result which breaks the normal
-        # scrapli &#34;read_until_input&#34; behavior, so we&#39;ll simply remove new lines in channel inputs
-        return channel_input.replace(&#34;\n&#34;, &#34;&#34;)
+        # format message for chunk (netconf 1.1) style message
+        msg_template = &#34;#{}\n{}\n##&#34;
+        final_channel_input = msg_template.format(len(channel_input), channel_input)
+        return final_channel_input
 
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
@@ -214,16 +211,13 @@ preferable to disable this type of behavior via the device itself if possible.</
             N/A
 
         &#34;&#34;&#34;
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
-            msg_template = &#34;#{}\n{}\n##&#34;
-            # format message for chunk message types
-            final_channel_input = msg_template.format(len(channel_input), channel_input)
-            return final_channel_input
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            return channel_input
 
-        # some (vMX for some reason?) devices seem to get carried away if there are *any* returns in
-        # the input... this causes the server to output the rpc result which breaks the normal
-        # scrapli &#34;read_until_input&#34; behavior, so we&#39;ll simply remove new lines in channel inputs
-        return channel_input.replace(&#34;\n&#34;, &#34;&#34;)
+        # format message for chunk (netconf 1.1) style message
+        msg_template = &#34;#{}\n{}\n##&#34;
+        final_channel_input = msg_template.format(len(channel_input), channel_input)
+        return final_channel_input
 
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities

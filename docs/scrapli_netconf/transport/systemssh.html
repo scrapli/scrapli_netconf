@@ -263,7 +263,12 @@ ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
 -l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 -F /dev/null
 You can pass any arguments that would be supported if you were ssh'ing on your
-terminal "normally", passing some bad arguments can break things!</dd>
+terminal "normally", passing some bad arguments can break things!
+- ptyprocess: in general you should <em>not</em> ever need/care about this! Right now the
+only use for this setting is for the huawei community platform. This dict
+currently supports two possible arguments: <code>rows</code> and <code>cols</code> &ndash; the values of
+which will be passed to the underlying <code>PtyProcess</code> spawn command, and used to
+set the window size of the pty process that is created.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>N/A

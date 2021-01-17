@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+# 2021.01.17
+- Support for future "vrouter" setup for testing
+- Flatten all channel inputs (no pretty printed xml) -- seems to behave much more nicely across the board!
+- Updated test to match some recent scrapli core updates (multipl easync transports)
+
+
 # 2020.11.15
 - Support namespaces in hello messages -- primarily to support "rfc-compliant" mode in JunOS -- thank you 
  [Gary Napier](https://github.com/napierg) for finding this and coming up with the fix!

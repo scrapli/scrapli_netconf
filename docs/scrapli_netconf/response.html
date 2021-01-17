@@ -51,7 +51,7 @@ LOG = logging.getLogger(&#34;response&#34;)
 # after that we match anything &#34;.&#34; and that is the &#34;body&#34; of the response
 CHUNK_MATCH_1_1 = re.compile(pattern=rb&#34;^#(\d+)(?:\n*)(((?!#\d+\n+|##).)*)&#34;, flags=re.M | re.S)
 
-PARSER = etree.XMLParser(remove_blank_text=True)
+PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
 class NetconfResponse(Response):
@@ -378,7 +378,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fd2882252b0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fe6b8128ee0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -767,7 +767,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fd2882252b0>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fe6b8128ee0>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>

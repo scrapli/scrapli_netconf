@@ -311,7 +311,7 @@ FULL_GET_CONFIG_RESULT = """<rpc-reply message-id="101" xmlns="urn:ietf:params:x
                             </certificate>
                         </chain>
                         <chain>
-                            <name>TP-self-signed-434383619</name>
+                            <name>TP-self-signed-XYZ</name>
                             <certificate>
                                 <serial>01</serial>
                                 <certtype>self-signed</certtype>
@@ -326,12 +326,12 @@ FULL_GET_CONFIG_RESULT = """<rpc-reply message-id="101" xmlns="urn:ietf:params:x
                         <revocation-check>crl</revocation-check>
                     </trustpoint>
                     <trustpoint>
-                        <id>TP-self-signed-434383619</id>
+                        <id>TP-self-signed-XYZ</id>
                         <enrollment>
                             <selfsigned/>
                         </enrollment>
                         <revocation-check>none</revocation-check>
-                        <subject-name>cn=IOS-Self-Signed-Certificate-434383619</subject-name>
+                        <subject-name>cn=IOS-Self-Signed-Certificate-XYZ</subject-name>
                     </trustpoint>
                 </pki>
             </crypto>
@@ -341,7 +341,7 @@ FULL_GET_CONFIG_RESULT = """<rpc-reply message-id="101" xmlns="urn:ietf:params:x
             <license>
                 <udi>
                     <pid>CSR1000V</pid>
-                    <sn>9UMWQBNX1KX</sn>
+                    <sn>SERIAL_NUMBER</sn>
                 </udi>
             </license>
             <line>

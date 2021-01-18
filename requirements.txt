@@ -1,2 +1,2 @@
-scrapli>=2021.01.18
+scrapli@git+https://github.com/carlmontanari/scrapli@overhaul#egg=scrapli
 lxml>=4.5.1,<5.0.0

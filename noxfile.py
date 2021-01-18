@@ -51,6 +51,11 @@ def unit_tests(session):
 
     """
     session.install("-r", "requirements-dev.txt")
+    # seems that pip thinks that it satisfies all extras when just installing scrapli, so it seems
+    # we need to install these individually
+    session.install("-r", "requirements-paramiko.txt")
+    session.install("-r", "requirements-asyncssh.txt")
+    session.install("-r", "requirements-ssh2.txt")
     session.run(
         "pytest",
         "--cov=scrapli_netconf",
@@ -119,6 +124,8 @@ def pylama(session):
     """
     session.install("-e", ".")
     session.install("-r", "requirements-dev.txt")
+    # pylama needs a few asyncssh exceptions imported to not fail
+    session.install("-r", "requirements-asyncssh.txt")
     session.run("pylama", ".")
 
 

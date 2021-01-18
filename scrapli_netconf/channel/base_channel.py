@@ -20,7 +20,7 @@ class NetconfBaseChannelArgs:
 class BaseNetconfChannel(BaseChannel):
     _netconf_base_channel_args: NetconfBaseChannelArgs
 
-    def _process_capabilities_exchange(self, raw_server_capabilities: bytes):
+    def _process_capabilities_exchange(self, raw_server_capabilities: bytes) -> None:
         """
         Process received capabilities; return client capabilities
 

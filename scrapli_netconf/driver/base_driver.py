@@ -34,6 +34,7 @@ class NetconfBaseOperations(Enum):
 
 
 class NetconfBaseDriver(BaseDriver):
+    host: str
     readable_datastores: List[str]
     writeable_datastores: List[str]
     strip_namespaces: bool
@@ -190,11 +191,7 @@ class NetconfBaseDriver(BaseDriver):
             field.name: getattr(self, field.name) for field in fields(plugin_transport_args_class)
         }
 
-        # ignore type as we are typing it as the base class to make life simple, because of this
-        # mypy thinks we are passing too many args
-        plugin_transport_args = plugin_transport_args_class(  # type: ignore
-            **_plugin_transport_args
-        )
+        plugin_transport_args = plugin_transport_args_class(**_plugin_transport_args)
 
         return transport_class, plugin_transport_args
 

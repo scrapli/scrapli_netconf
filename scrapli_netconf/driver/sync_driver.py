@@ -1,49 +1,82 @@
-"""scrapli_netconf.driver.driver"""
+"""scrapli_netconf.driver.sync_driver"""
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from scrapli import Scrape
-from scrapli.exceptions import TransportPluginError
-from scrapli.transport import Transport
-from scrapli_netconf.channel.channel import NetconfChannel
+from scrapli import Driver
+from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
+from scrapli_netconf.channel.sync_channel import NetconfChannel
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfScrapeBase
-from scrapli_netconf.helper import _find_netconf_transport_plugin
+from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
-from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
-
-TRANSPORT_CLASS: Dict[str, Callable[..., Transport]] = {
-    "system": NetconfSystemSSHTransport,
-}
 
 
-class NetconfScrape(Scrape, NetconfScrapeBase):
+class NetconfDriver(Driver, NetconfBaseDriver):
     def __init__(
         self,
+        host: str,
         port: int = 830,
         strip_namespaces: bool = False,
         strict_datastores: bool = False,
-        **kwargs: Any,
+        auth_username: str = "",
+        auth_password: str = "",
+        auth_private_key: str = "",
+        auth_private_key_passphrase: str = "",
+        auth_strict_key: bool = True,
+        auth_bypass: bool = False,
+        timeout_socket: float = 15.0,
+        timeout_transport: float = 30.0,
+        timeout_ops: float = 30.0,
+        comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
+        comms_return_char: str = "\n",
+        comms_ansi: bool = False,
+        ssh_config_file: Union[str, bool] = False,
+        ssh_known_hosts_file: Union[str, bool] = False,
+        on_init: Optional[Callable[..., Any]] = None,
+        on_open: Optional[Callable[..., Any]] = None,
+        on_close: Optional[Callable[..., Any]] = None,
+        transport: str = "system",
+        transport_options: Optional[Dict[str, Any]] = None,
+        channel_log: Union[str, bool] = False,
+        channel_lock: bool = False,
     ) -> None:
-        super().__init__(port=port, **kwargs)
-
-        if self._transport == "telnet":
-            msg = "NETCONF does not support telnet!"
-            self.logger.exception(msg)
-            raise TransportPluginError(msg)
-
-        self.transport_class = TRANSPORT_CLASS.get(self._transport, None)
-        if self.transport_class is None:
-            self.transport_class = _find_netconf_transport_plugin(transport=self._transport)
-
-        self.transport = self.transport_class(**self.transport_args)
-        self.channel = NetconfChannel(self.transport, **self.channel_args)
+        super().__init__(
+            host=host,
+            port=port,
+            auth_username=auth_username,
+            auth_password=auth_password,
+            auth_private_key=auth_private_key,
+            auth_private_key_passphrase=auth_private_key_passphrase,
+            auth_strict_key=auth_strict_key,
+            auth_bypass=auth_bypass,
+            timeout_socket=timeout_socket,
+            timeout_transport=timeout_transport,
+            timeout_ops=timeout_ops,
+            comms_prompt_pattern=comms_prompt_pattern,
+            comms_return_char=comms_return_char,
+            comms_ansi=comms_ansi,
+            ssh_config_file=ssh_config_file,
+            ssh_known_hosts_file=ssh_known_hosts_file,
+            on_init=on_init,
+            on_open=on_open,
+            on_close=on_close,
+            transport=transport,
+            transport_options=transport_options,
+            channel_log=channel_log,
+            channel_lock=channel_lock,
+        )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=NetconfVersion.UNKNOWN
+        )
+        self.channel = NetconfChannel(
+            transport=self.transport,
+            base_channel_args=self._base_channel_args,
+            netconf_base_channel_args=self._netconf_base_channel_args,
+        )
 
         self.strip_namespaces = strip_namespaces
         self.strict_datastores = strict_datastores
         self.server_capabilities: List[str] = []
         self.readable_datastores: List[str] = []
         self.writeable_datastores: List[str] = []
-        self.netconf_version = NetconfVersion.VERSION_1_0
         self.message_id = 101
 
     def open(self) -> None:
@@ -54,29 +87,31 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         """
-        self.logger.info(f"Opening connection to {self._initialization_args['host']}")
-        login_bytes = self.transport.open_netconf()
-        raw_server_capabilities = self.channel._get_server_capabilities(  # pylint: disable=W0212
-            login_bytes
-        )
+        self._pre_open_closing_log(closing=False)
 
-        client_capabilities = self._process_open(raw_server_capabilities=raw_server_capabilities)
+        self.transport.open_netconf()
 
-        self.channel._check_echo(  # pylint: disable=W0212
-            timeout_transport=self.transport.timeout_transport
-        )
+        # in the future this and scrapli core should just have a class attribute of the transports
+        # that require this "in channel" auth so we can dynamically figure that out rather than
+        # just look at the name of the transport
+        if "system" in self.transport_name:
+            self.channel.channel_authenticate_netconf(
+                auth_password=self.auth_password,
+                auth_private_key_passphrase=self.auth_private_key_passphrase,
+            )
 
-        self.channel._send_client_capabilities(  # pylint: disable=W0212
-            client_capabilities=client_capabilities, capabilities_version=self.netconf_version
-        )
+        self.channel.open_netconf()
 
-        self.logger.info(f"Connection to {self._initialization_args['host']} opened successfully")
+        self._build_readable_datastores()
+        self._build_writeable_datastores()
+
+        self._post_open_closing_log(closing=False)
 
     def get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
@@ -95,7 +130,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_get(filter_=filter_, filter_type=filter_type)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def get_config(
@@ -122,7 +157,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def edit_config(self, config: str, target: str = "running") -> NetconfResponse:
@@ -142,7 +177,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_edit_config(config=config, target=target)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def delete_config(self, target: str = "candidate") -> NetconfResponse:
@@ -161,7 +196,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_delete_config(target=target)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def commit(self) -> NetconfResponse:
@@ -180,7 +215,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_commit()
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def discard(self) -> NetconfResponse:
@@ -199,7 +234,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_discard()
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def lock(self, target: str) -> NetconfResponse:
@@ -218,7 +253,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_lock(target=target)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def unlock(self, target: str) -> NetconfResponse:
@@ -237,7 +272,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_unlock(target=target)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def rpc(self, filter_: str) -> NetconfResponse:
@@ -258,7 +293,7 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_rpc(filter_=filter_)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
 
     def validate(self, source: str) -> NetconfResponse:
@@ -277,5 +312,9 @@ class NetconfScrape(Scrape, NetconfScrapeBase):
         """
         response = self._pre_validate(source=source)
         raw_response = self.channel.send_input_netconf(response.channel_input)
-        response._record_response(raw_response)  # pylint: disable=W0212
+        response.record_response(raw_response)
         return response
+
+
+# remove in future releases, retaining this to not break end user scripts for now
+NetconfScrape = NetconfDriver

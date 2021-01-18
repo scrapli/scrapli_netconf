@@ -21,9 +21,9 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 class NetconfBaseOperations(Enum):
     FILTER_SUBTREE = "<filter type='{filter_type}'></filter>"
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
+    WITH_DEFAULTS_SUBTREE = '<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">{default_type}</with-defaults>'  # noqa: E501
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
-    GET_CONFIG_DEFAULT = '<get-config><source><{source}/></source><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">{default_type}</with-defaults></get-config>'
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
     DELETE_CONFIG = "<delete-config><target><{target}/></target></delete-config>"
     COMMIT = "<commit/>"
@@ -373,6 +373,33 @@ class NetconfBaseDriver(BaseDriver):
             raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         return xml_filter_elem
 
+    @staticmethod
+    def _build_with_defaults(default_type: str = "report-all") -> Element:
+        """
+        Create with-defaults element for a given operation
+
+        Args:
+            default_type: enumeration of with-defaults; report-all|trim|explicit|report-all-tagged
+
+        Returns:
+            Element: lxml with-defaults element to use for netconf operation
+
+        Raises:
+            ValueError: if default_type is not one of report-all|trim|explicit|report-all-tagged
+
+        """
+
+        if default_type in ["report-all", "trim", "explicit", "report-all-tagged"]:
+            xml_with_defaults_element = etree.fromstring(
+                NetconfBaseOperations.WITH_DEFAULTS_SUBTREE.value.format(default_type=default_type),
+                parser=PARSER,
+            )
+        else:
+            raise ValueError(
+                f"`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `{default_type}`"  # noqa: E501
+            )
+        return xml_with_defaults_element
+
     def _pre_get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
         Handle pre "get" tasks for consistency between sync/async versions
@@ -466,17 +493,9 @@ class NetconfBaseDriver(BaseDriver):
 
         # build base request and insert the get-config element
         xml_request = self._build_base_elem()
-        if default_type is not None:
-            xml_get_config_element = etree.fromstring(
-                NetconfBaseOperations.GET_CONFIG_DEFAULT.value.format(
-                    source=source, default_type=default_type
-                ),
-                parser=PARSER,
-            )
-        else:
-            xml_get_config_element = etree.fromstring(
-                NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
-            )
+        xml_get_config_element = etree.fromstring(
+            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
+        )
         xml_request.insert(0, xml_get_config_element)
 
         if filters is not None:
@@ -487,6 +506,11 @@ class NetconfBaseDriver(BaseDriver):
             get_element = xml_request.find("get-config")
             # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
             get_element.insert(1, xml_filter_elem)
+
+        if default_type is not None:
+            xml_with_defaults_elem = self._build_with_defaults(default_type=default_type)
+            get_element = xml_request.find("get-config")
+            get_element.insert(2, xml_with_defaults_elem)
 
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"

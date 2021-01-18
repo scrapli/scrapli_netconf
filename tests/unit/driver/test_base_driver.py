@@ -112,6 +112,38 @@ def test_build_filters():
     pass
 
 
+def test_build_with_defaults(dummy_conn):
+    report_all_elem = dummy_conn._build_with_defaults("report-all")
+    trim_elem = dummy_conn._build_with_defaults("trim")
+    explicit_elem = dummy_conn._build_with_defaults("explicit")
+    tagged_elem = dummy_conn._build_with_defaults("report-all-tagged")
+    assert (
+        etree.tostring(report_all_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults>"""
+    )
+    assert (
+        etree.tostring(trim_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">trim</with-defaults>"""
+    )
+    assert (
+        etree.tostring(explicit_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">explicit</with-defaults>"""
+    )
+    assert (
+        etree.tostring(tagged_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all-tagged</with-defaults>"""
+    )
+
+
+def test_build_with_defaults_exception_invalid_type(dummy_conn):
+    with pytest.raises(ValueError) as exc:
+        dummy_conn._build_with_defaults(default_type="sushicat")
+    assert (
+        str(exc.value)
+        == "`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `sushicat`"
+    )
+
+
 def test_build_filters_exception_invalid_type(dummy_conn):
     with pytest.raises(ValueError) as exc:
         dummy_conn._build_filters(filters=[], filter_type="tacocat")

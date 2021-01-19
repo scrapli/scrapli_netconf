@@ -106,7 +106,9 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         # reset this to empty to avoid any confusion now that we are moving on
         self._capabilities_buf = b""
 
-        async with self._channel_lock():
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
             while b"]]>]]>" not in capabilities_buf:
                 capabilities_buf += await self.read()
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
@@ -129,7 +131,9 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             N/A
 
         """
-        async with self._channel_lock():
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
             _ = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )

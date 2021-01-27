@@ -11,7 +11,7 @@ from scrapli.decorators import ChannelTimeout
 from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
-from scrapli_netconf.constants import NetconfVersion
+from scrapli_netconf.constants import NetconfVersion, NetconfClientCapabilities
 from scrapli_netconf.transport.plugins.system.transport import NetconfSystemTransport
 
 HELLO_MATCH = re.compile(pattern=rb"<(\w+\:){0,1}hello", flags=re.I)
@@ -48,8 +48,12 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 
         """
         raw_server_capabilities = self._get_server_capabilities()
-
-        self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+            self._netconf_base_channel_args.client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+        elif self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
+            self._netconf_base_channel_args.client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
+        else:
+            self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
 
         self._check_echo()
         self._send_client_capabilities()

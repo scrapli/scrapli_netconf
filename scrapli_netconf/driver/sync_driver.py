@@ -324,10 +324,10 @@ class NetconfScrape(NetconfDriver):
         "future releases!"
     )
 
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
         warn(cls.warning, DeprecationWarning, 2)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "NetconfDriver":
         warn(cls.warning, DeprecationWarning, 2)
         return NetconfDriver(*args, **kwargs)

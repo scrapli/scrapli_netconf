@@ -314,10 +314,10 @@ class AsyncNetconfScrape(AsyncNetconfDriver):
         "future releases!"
     )
 
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> None:
         """Deprecate AsyncNetconfScrape"""
         warn(cls.warning, DeprecationWarning, 2)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> "AsyncNetconfDriver":
         warn(cls.warning, DeprecationWarning, 2)
         return AsyncNetconfDriver(*args, **kwargs)

@@ -1,5 +1,6 @@
 """scrapli_netconf.driver.sync_driver"""
 from typing import Any, Callable, Dict, List, Optional, Union
+from warnings import warn
 
 from scrapli import Driver
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
@@ -317,4 +318,16 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
 
 # remove in future releases, retaining this to not break end user scripts for now
-NetconfScrape = NetconfDriver
+class NetconfScrape(NetconfDriver):
+    warning = (
+        "`NetconfScrape` has been renamed `NetconfDriver`, `NetconfScrape` will be deprecated in "
+        "future releases!"
+    )
+
+    def __init_subclass__(cls):
+        """Deprecate NetconfScrape"""
+        warn(cls.warning, DeprecationWarning, 2)
+
+    def __new__(cls, *args, **kwargs):
+        warn(cls.warning, DeprecationWarning, 2)
+        return NetconfDriver(*args, **kwargs)

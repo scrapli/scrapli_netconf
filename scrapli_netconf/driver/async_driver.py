@@ -1,5 +1,6 @@
 """scrapli_netconf.driver.async_driver"""
 from typing import Any, Callable, Dict, List, Optional, Union
+from warnings import warn
 
 from scrapli import AsyncDriver
 from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
@@ -307,4 +308,16 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
 
 
 # remove in future releases, retaining this to not break end user scripts for now
-AsyncNetconfScrape = AsyncNetconfDriver
+class AsyncNetconfScrape(AsyncNetconfDriver):
+    warning = (
+        "`NetconfScrape` has been renamed `NetconfDriver`, `NetconfScrape` will be deprecated in "
+        "future releases!"
+    )
+
+    def __init_subclass__(cls):
+        """Deprecate AsyncNetconfScrape"""
+        warn(cls.warning, DeprecationWarning, 2)
+
+    def __new__(cls, *args, **kwargs):
+        warn(cls.warning, DeprecationWarning, 2)
+        return AsyncNetconfDriver(*args, **kwargs)

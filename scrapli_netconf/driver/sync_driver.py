@@ -328,6 +328,6 @@ class NetconfScrape(NetconfDriver):
         """Deprecate NetconfScrape"""
         warn(cls.warning, DeprecationWarning, 2)
 
-    def __new__(cls, *args, **kwargs) -> "NetconfDriver":
+    def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
         warn(cls.warning, DeprecationWarning, 2)
         return NetconfDriver(*args, **kwargs)

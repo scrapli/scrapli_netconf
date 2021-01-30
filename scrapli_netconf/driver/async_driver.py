@@ -318,6 +318,6 @@ class AsyncNetconfScrape(AsyncNetconfDriver):
         """Deprecate AsyncNetconfScrape"""
         warn(cls.warning, DeprecationWarning, 2)
 
-    def __new__(cls, *args, **kwargs) -> "AsyncNetconfDriver":
+    def __new__(cls, *args, **kwargs) -> "AsyncNetconfDriver":  # type: ignore
         warn(cls.warning, DeprecationWarning, 2)
         return AsyncNetconfDriver(*args, **kwargs)

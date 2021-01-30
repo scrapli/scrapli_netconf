@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>scrapli_netconf.driver API documentation</title>
-<meta name="description" content="scrapli_netconf.driver" />
+<title>scrapli_netconf.driver.sync_driver API documentation</title>
+<meta name="description" content="scrapli_netconf.driver.sync_driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,156 +19,27 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli_netconf.driver</code></h1>
+<h1 class="title">Module <code>scrapli_netconf.driver.sync_driver</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli_netconf.driver</p>
+<p>scrapli_netconf.driver.sync_driver</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.driver&#34;&#34;&#34;
-from scrapli_netconf.driver.async_driver import AsyncNetconfDriver, AsyncNetconfScrape
-from scrapli_netconf.driver.sync_driver import NetconfDriver, NetconfScrape
+<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.driver.sync_driver&#34;&#34;&#34;
+from typing import Any, Callable, Dict, List, Optional, Union
+from warnings import warn
 
-__all__ = (&#34;AsyncNetconfDriver&#34;, &#34;AsyncNetconfScrape&#34;, &#34;NetconfDriver&#34;, &#34;NetconfScrape&#34;)</code></pre>
-</details>
-</section>
-<section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
-<dl>
-<dt><code class="name"><a title="scrapli_netconf.driver.async_driver" href="async_driver.html">scrapli_netconf.driver.async_driver</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.driver.async_driver</p></div>
-</dd>
-<dt><code class="name"><a title="scrapli_netconf.driver.base_driver" href="base_driver.html">scrapli_netconf.driver.base_driver</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.driver.base_driver</p></div>
-</dd>
-<dt><code class="name"><a title="scrapli_netconf.driver.sync_driver" href="sync_driver.html">scrapli_netconf.driver.sync_driver</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.driver.sync_driver</p></div>
-</dd>
-</dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver"><code class="flex name class">
-<span>class <span class="ident">AsyncNetconfDriver</span></span>
-<span>(</span><span>host: str, port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: float = 15.0, timeout_transport: float = 30.0, timeout_ops: float = 30.0, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None, channel_log: Union[str, bool] = False, channel_lock: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>BaseDriver Object</p>
-<p>BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
-base driver classes can be used to provide a semi-pexpect like experience over top of
-whatever transport a user prefers. Generally, however, the base driver classes should not be
-used directly. It is best to use the GenericDriver (or AsyncGenericDriver) or NetworkDriver
-(or AsyncNetworkDriver) sub-classes of the base drivers.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
-<dd>passphrase for decrypting ssh key if necessary</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass "in channel" authentication &ndash; only supported with telnet,
-asynctelnet, and system transport plugins</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket/initial connection in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output, generally the default
-value of False should be fine</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_init</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed as the last step of object instantiation &ndash; its purpose is
-primarily to provide a mechanism for scrapli community platforms to have an easy way
-to modify initialization arguments/object attributes without needing to create a
-class that extends the driver, instead allowing the community platforms to simply
-build from the GenericDriver or NetworkDriver classes, and pass this callable to do
-things such as appending to a username (looking at you RouterOS!!). Note that this
-is <em>always</em> a synchronous function (even for asyncio drivers)!</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>name of the transport plugin to use for the actual telnet/ssh/netconf
-connection. Available "core" transports are:
-- system
-- telnet
-- asynctelnet
-- ssh2
-- paramiko
-- asyncssh
-Please see relevant transport plugin section for details. Additionally third party
-transport plugins may be available.</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>dictionary of options to pass to selected transport class; see
-docs for given transport class for details of what to pass here</dd>
-<dt><strong><code>channel_lock</code></strong></dt>
-<dd>True/False to lock the channel (threading.Lock/asyncio.Lock) during
-any channel operations, defaults to False</dd>
-<dt><strong><code>channel_log</code></strong></dt>
-<dd>True/False or a string path to a file of where to write out channel logs &ndash;
-these are not "logs" in the normal logging module sense, but only the output that is
-read from the channel. In other words, the output of the channel log should look
-similar to what you would see as a human connecting to a device</dd>
-<dt><strong><code>logging_uid</code></strong></dt>
-<dd>unique identifier (string) to associate to log messages; useful if you have
-multiple connections to the same device (i.e. one console, one ssh, or one to each
-supervisor module, etc.)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
+from scrapli import Driver
+from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
+from scrapli_netconf.channel.sync_channel import NetconfChannel
+from scrapli_netconf.constants import NetconfVersion
+from scrapli_netconf.driver.base_driver import NetconfBaseDriver
+from scrapli_netconf.response import NetconfResponse
+
+
+class NetconfDriver(Driver, NetconfBaseDriver):
     def __init__(
         self,
         host: str,
@@ -225,7 +96,7 @@ supervisor module, etc.)</dd>
         self._netconf_base_channel_args = NetconfBaseChannelArgs(
             netconf_version=NetconfVersion.UNKNOWN
         )
-        self.channel = AsyncNetconfChannel(
+        self.channel = NetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,
             netconf_base_channel_args=self._netconf_base_channel_args,
@@ -238,7 +109,7 @@ supervisor module, etc.)</dd>
         self.writeable_datastores: List[str] = []
         self.message_id = 101
 
-    async def open(self) -&gt; None:
+    def open(self) -&gt; None:
         &#34;&#34;&#34;
         Open netconf connection to server
 
@@ -254,15 +125,25 @@ supervisor module, etc.)</dd>
         &#34;&#34;&#34;
         self._pre_open_closing_log(closing=False)
 
-        await self.transport.open_netconf()
-        await self.channel.open_netconf()
+        self.transport.open_netconf()
+
+        # in the future this and scrapli core should just have a class attribute of the transports
+        # that require this &#34;in channel&#34; auth so we can dynamically figure that out rather than
+        # just look at the name of the transport
+        if &#34;system&#34; in self.transport_name:
+            self.channel.channel_authenticate_netconf(
+                auth_password=self.auth_password,
+                auth_private_key_passphrase=self.auth_private_key_passphrase,
+            )
+
+        self.channel.open_netconf()
 
         self._build_readable_datastores()
         self._build_writeable_datastores()
 
         self._post_open_closing_log(closing=False)
 
-    async def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
+    def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf get operation
 
@@ -278,11 +159,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_get(filter_=filter_, filter_type=filter_type)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def get_config(
+    def get_config(
         self,
         source: str = &#34;running&#34;,
         filters: Optional[Union[str, List[str]]] = None,
@@ -304,12 +185,12 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
 
         response.record_response(raw_response)
         return response
 
-    async def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
+    def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf get-config operation
 
@@ -325,11 +206,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_edit_config(config=config, target=target)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
+    def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf delete-config operation
 
@@ -344,11 +225,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_delete_config(target=target)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def commit(self) -&gt; NetconfResponse:
+    def commit(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf commit config operation
 
@@ -363,11 +244,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_commit()
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def discard(self) -&gt; NetconfResponse:
+    def discard(self) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf discard config operation
 
@@ -382,11 +263,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_discard()
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def lock(self, target: str) -&gt; NetconfResponse:
+    def lock(self, target: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf lock operation
 
@@ -401,11 +282,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_lock(target=target)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def unlock(self, target: str) -&gt; NetconfResponse:
+    def unlock(self, target: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf unlock operation
 
@@ -420,11 +301,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_unlock(target=target)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def rpc(self, filter_: str) -&gt; NetconfResponse:
+    def rpc(self, filter_: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf &#34;rpc&#34; operation; typically only used with juniper devices
 
@@ -441,11 +322,11 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_rpc(filter_=filter_)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
 
-    async def validate(self, source: str) -&gt; NetconfResponse:
+    def validate(self, source: str) -&gt; NetconfResponse:
         &#34;&#34;&#34;
         Netconf &#34;validate&#34; operation
 
@@ -460,703 +341,37 @@ supervisor module, etc.)</dd>
 
         &#34;&#34;&#34;
         response = self._pre_validate(source=source)
-        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
-        return response</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>scrapli.driver.base.async_driver.AsyncDriver</li>
-<li><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver">NetconfBaseDriver</a></li>
-<li>scrapli.driver.base.base_driver.BaseDriver</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfScrape">AsyncNetconfScrape</a></li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.commit"><code class="name flex">
-<span>async def <span class="ident">commit</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf commit config operation</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def commit(self) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf commit config operation
+        return response
 
-    Args:
-        N/A
 
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_commit()
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.delete_config"><code class="name flex">
-<span>async def <span class="ident">delete_config</span></span>(<span>self, target: str = 'candidate') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf delete-config operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>target</code></strong></dt>
-<dd>configuration source to target; startup|candidate</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def delete_config(self, target: str = &#34;candidate&#34;) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf delete-config operation
-
-    Args:
-        target: configuration source to target; startup|candidate
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_delete_config(target=target)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.discard"><code class="name flex">
-<span>async def <span class="ident">discard</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf discard config operation</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def discard(self) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf discard config operation
-
-    Args:
-        N/A
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_discard()
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.edit_config"><code class="name flex">
-<span>async def <span class="ident">edit_config</span></span>(<span>self, config: str, target: str = 'running') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf get-config operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>config</code></strong></dt>
-<dd>configuration to send to device</dd>
-<dt><strong><code>target</code></strong></dt>
-<dd>configuration source to target; running|startup|candidate</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def edit_config(self, config: str, target: str = &#34;running&#34;) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf get-config operation
-
-    Args:
-        config: configuration to send to device
-        target: configuration source to target; running|startup|candidate
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_edit_config(config=config, target=target)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.get"><code class="name flex">
-<span>async def <span class="ident">get</span></span>(<span>self, filter_: str, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf get operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>filter_</code></strong></dt>
-<dd>string filter to apply to the get</dd>
-<dt><strong><code>filter_type</code></strong></dt>
-<dd>type of filter; subtree|xpath</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf get operation
-
-    Args:
-        filter_: string filter to apply to the get
-        filter_type: type of filter; subtree|xpath
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_get(filter_=filter_, filter_type=filter_type)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.get_config"><code class="name flex">
-<span>async def <span class="ident">get_config</span></span>(<span>self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf get-config operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>source</code></strong></dt>
-<dd>configuration source to get; typically one of running|startup|candidate</dd>
-<dt><strong><code>filters</code></strong></dt>
-<dd>string or list of strings of filters to apply to configuration</dd>
-<dt><strong><code>filter_type</code></strong></dt>
-<dd>type of filter; subtree|xpath</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def get_config(
-    self,
-    source: str = &#34;running&#34;,
-    filters: Optional[Union[str, List[str]]] = None,
-    filter_type: str = &#34;subtree&#34;,
-) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf get-config operation
-
-    Args:
-        source: configuration source to get; typically one of running|startup|candidate
-        filters: string or list of strings of filters to apply to configuration
-        filter_type: type of filter; subtree|xpath
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.lock"><code class="name flex">
-<span>async def <span class="ident">lock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf lock operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>target</code></strong></dt>
-<dd>configuration source to target; running|startup|candidate</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def lock(self, target: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf lock operation
-
-    Args:
-        target: configuration source to target; running|startup|candidate
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_lock(target=target)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.open"><code class="name flex">
-<span>async def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Open netconf connection to server</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<p>None</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def open(self) -&gt; None:
-    &#34;&#34;&#34;
-    Open netconf connection to server
-
-    Args:
-        N/A
-
-    Returns:
-        None
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    self._pre_open_closing_log(closing=False)
-
-    await self.transport.open_netconf()
-    await self.channel.open_netconf()
-
-    self._build_readable_datastores()
-    self._build_writeable_datastores()
-
-    self._post_open_closing_log(closing=False)</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.rpc"><code class="name flex">
-<span>async def <span class="ident">rpc</span></span>(<span>self, filter_: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf "rpc" operation; typically only used with juniper devices</p>
-<p>You can also use this to build send your own payload in a more manual fashion</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>filter_</code></strong></dt>
-<dd>filter/rpc to execute</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def rpc(self, filter_: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf &#34;rpc&#34; operation; typically only used with juniper devices
-
-    You can also use this to build send your own payload in a more manual fashion
-
-    Args:
-        filter_: filter/rpc to execute
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_rpc(filter_=filter_)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.unlock"><code class="name flex">
-<span>async def <span class="ident">unlock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf unlock operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>target</code></strong></dt>
-<dd>configuration source to target; running|startup|candidate</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def unlock(self, target: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf unlock operation
-
-    Args:
-        target: configuration source to target; running|startup|candidate
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_unlock(target=target)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfDriver.validate"><code class="name flex">
-<span>async def <span class="ident">validate</span></span>(<span>self, source: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf "validate" operation</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>source</code></strong></dt>
-<dd>configuration source to validate; typically one of running|startup|candidate</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>NetconfResponse</code></dt>
-<dd>scrapli_netconf NetconfResponse object</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">async def validate(self, source: str) -&gt; NetconfResponse:
-    &#34;&#34;&#34;
-    Netconf &#34;validate&#34; operation
-
-    Args:
-        source: configuration source to validate; typically one of running|startup|candidate
-
-    Returns:
-        NetconfResponse: scrapli_netconf NetconfResponse object
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    response = self._pre_validate(source=source)
-    raw_response = await self.channel.send_input_netconf(response.channel_input)
-    response.record_response(raw_response)
-    return response</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver">NetconfBaseDriver</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities">client_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version">netconf_version</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities">server_capabilities</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape"><code class="flex name class">
-<span>class <span class="ident">AsyncNetconfScrape</span></span>
-<span>(</span><span>host: str, port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: float = 15.0, timeout_transport: float = 30.0, timeout_ops: float = 30.0, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None, channel_log: Union[str, bool] = False, channel_lock: bool = False)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>BaseDriver Object</p>
-<p>BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
-base driver classes can be used to provide a semi-pexpect like experience over top of
-whatever transport a user prefers. Generally, however, the base driver classes should not be
-used directly. It is best to use the GenericDriver (or AsyncGenericDriver) or NetworkDriver
-(or AsyncNetworkDriver) sub-classes of the base drivers.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
-<dd>passphrase for decrypting ssh key if necessary</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass "in channel" authentication &ndash; only supported with telnet,
-asynctelnet, and system transport plugins</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket/initial connection in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output, generally the default
-value of False should be fine</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_init</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed as the last step of object instantiation &ndash; its purpose is
-primarily to provide a mechanism for scrapli community platforms to have an easy way
-to modify initialization arguments/object attributes without needing to create a
-class that extends the driver, instead allowing the community platforms to simply
-build from the GenericDriver or NetworkDriver classes, and pass this callable to do
-things such as appending to a username (looking at you RouterOS!!). Note that this
-is <em>always</em> a synchronous function (even for asyncio drivers)!</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>name of the transport plugin to use for the actual telnet/ssh/netconf
-connection. Available "core" transports are:
-- system
-- telnet
-- asynctelnet
-- ssh2
-- paramiko
-- asyncssh
-Please see relevant transport plugin section for details. Additionally third party
-transport plugins may be available.</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>dictionary of options to pass to selected transport class; see
-docs for given transport class for details of what to pass here</dd>
-<dt><strong><code>channel_lock</code></strong></dt>
-<dd>True/False to lock the channel (threading.Lock/asyncio.Lock) during
-any channel operations, defaults to False</dd>
-<dt><strong><code>channel_log</code></strong></dt>
-<dd>True/False or a string path to a file of where to write out channel logs &ndash;
-these are not "logs" in the normal logging module sense, but only the output that is
-read from the channel. In other words, the output of the channel log should look
-similar to what you would see as a human connecting to a device</dd>
-<dt><strong><code>logging_uid</code></strong></dt>
-<dd>unique identifier (string) to associate to log messages; useful if you have
-multiple connections to the same device (i.e. one console, one ssh, or one to each
-supervisor module, etc.)</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class AsyncNetconfScrape(AsyncNetconfDriver):
+# remove in future releases, retaining this to not break end user scripts for now
+class NetconfScrape(NetconfDriver):
     warning = (
         &#34;`NetconfScrape` has been renamed `NetconfDriver`, `NetconfScrape` will be deprecated in &#34;
         &#34;future releases!&#34;
     )
 
     def __init_subclass__(cls):
-        &#34;&#34;&#34;Deprecate AsyncNetconfScrape&#34;&#34;&#34;
+        &#34;&#34;&#34;Deprecate NetconfScrape&#34;&#34;&#34;
         warn(cls.warning, DeprecationWarning, 2)
 
     def __new__(cls, *args, **kwargs):
         warn(cls.warning, DeprecationWarning, 2)
-        return AsyncNetconfDriver(*args, **kwargs)</code></pre>
+        return NetconfDriver(*args, **kwargs)</code></pre>
 </details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver">AsyncNetconfDriver</a></li>
-<li>scrapli.driver.base.async_driver.AsyncDriver</li>
-<li><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver">NetconfBaseDriver</a></li>
-<li>scrapli.driver.base.base_driver.BaseDriver</li>
-</ul>
-<h3>Class variables</h3>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.warning"><code class="name">var <span class="ident">warning</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.AsyncNetconfScrape.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver">AsyncNetconfDriver</a></b></code>:
-<ul class="hlist">
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.client_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities">client_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.commit" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.commit">commit</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.delete_config" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.delete_config">delete_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.discard" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.discard">discard</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.edit_config" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.edit_config">edit_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.get" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.get">get</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.get_config" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.get_config">get_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.lock" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.lock">lock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.netconf_version" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version">netconf_version</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.open" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.open">open</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.rpc" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.rpc">rpc</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.server_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities">server_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.unlock" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.unlock">unlock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver.validate" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver.validate">validate</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="scrapli_netconf.driver.NetconfDriver"><code class="flex name class">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver"><code class="flex name class">
 <span>class <span class="ident">NetconfDriver</span></span>
 <span>(</span><span>host: str, port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: float = 15.0, timeout_transport: float = 30.0, timeout_ops: float = 30.0, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None, channel_log: Union[str, bool] = False, channel_lock: bool = False)</span>
 </code></dt>
@@ -1580,34 +795,34 @@ supervisor module, etc.)</dd>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="scrapli_netconf.driver.sync_driver.NetconfScrape" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfScrape">NetconfScrape</a></li>
+<li><a title="scrapli_netconf.driver.sync_driver.NetconfScrape" href="#scrapli_netconf.driver.sync_driver.NetconfScrape">NetconfScrape</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="scrapli_netconf.driver.NetconfDriver.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli_netconf.driver.NetconfDriver.commit"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.commit"><code class="name flex">
 <span>def <span class="ident">commit</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1645,7 +860,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.delete_config"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config"><code class="name flex">
 <span>def <span class="ident">delete_config</span></span>(<span>self, target: str = 'candidate') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1686,7 +901,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.discard"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.discard"><code class="name flex">
 <span>def <span class="ident">discard</span></span>(<span>self) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1724,7 +939,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.edit_config"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config"><code class="name flex">
 <span>def <span class="ident">edit_config</span></span>(<span>self, config: str, target: str = 'running') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1768,7 +983,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.get"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.get"><code class="name flex">
 <span>def <span class="ident">get</span></span>(<span>self, filter_: str, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1812,7 +1027,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.get_config"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.get_config"><code class="name flex">
 <span>def <span class="ident">get_config</span></span>(<span>self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree') ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1865,7 +1080,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.lock"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.lock"><code class="name flex">
 <span>def <span class="ident">lock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -1906,7 +1121,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.open"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.open"><code class="name flex">
 <span>def <span class="ident">open</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
@@ -1956,7 +1171,7 @@ supervisor module, etc.)</dd>
     self._post_open_closing_log(closing=False)</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.rpc"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.rpc"><code class="name flex">
 <span>def <span class="ident">rpc</span></span>(<span>self, filter_: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -2000,7 +1215,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.unlock"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.unlock"><code class="name flex">
 <span>def <span class="ident">unlock</span></span>(<span>self, target: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -2041,7 +1256,7 @@ supervisor module, etc.)</dd>
     return response</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfDriver.validate"><code class="name flex">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfDriver.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, source: str) ‑> <a title="scrapli_netconf.response.NetconfResponse" href="../response.html#scrapli_netconf.response.NetconfResponse">NetconfResponse</a></span>
 </code></dt>
 <dd>
@@ -2094,7 +1309,7 @@ supervisor module, etc.)</dd>
 </li>
 </ul>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape"><code class="flex name class">
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape"><code class="flex name class">
 <span>class <span class="ident">NetconfScrape</span></span>
 <span>(</span><span>host: str, port: int = 830, strip_namespaces: bool = False, strict_datastores: bool = False, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: float = 15.0, timeout_transport: float = 30.0, timeout_ops: float = 30.0, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None, channel_log: Union[str, bool] = False, channel_lock: bool = False)</span>
 </code></dt>
@@ -2220,56 +1435,56 @@ supervisor module, etc.)</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></li>
+<li><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></li>
 <li>scrapli.driver.base.sync_driver.Driver</li>
 <li><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver">NetconfBaseDriver</a></li>
 <li>scrapli.driver.base.base_driver.BaseDriver</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="scrapli_netconf.driver.NetconfScrape.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape.warning"><code class="name">var <span class="ident">warning</span></code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.warning"><code class="name">var <span class="ident">warning</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="scrapli_netconf.driver.NetconfScrape.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
+<dt id="scrapli_netconf.driver.sync_driver.NetconfScrape.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></b></code>:
+<li><code><b><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></b></code>:
 <ul class="hlist">
 <li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.client_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities">client_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.commit" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.commit">commit</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config">delete_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.discard" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.discard">discard</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config">edit_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.get">get</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get_config" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.get_config">get_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.lock" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.lock">lock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.commit" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.commit">commit</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config">delete_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.discard" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.discard">discard</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config">edit_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.get">get</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.get_config">get_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.lock" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.lock">lock</a></code></li>
 <li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.netconf_version" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version">netconf_version</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.open" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.open">open</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.rpc" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.rpc">rpc</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.open" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.open">open</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.rpc" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.rpc">rpc</a></code></li>
 <li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.server_capabilities" href="base_driver.html#scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities">server_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.unlock" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.unlock">unlock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.validate" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver.validate">validate</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.unlock" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.unlock">unlock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.validate" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2285,80 +1500,41 @@ supervisor module, etc.)</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="scrapli_netconf" href="../index.html">scrapli_netconf</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="scrapli_netconf.driver.async_driver" href="async_driver.html">scrapli_netconf.driver.async_driver</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver" href="base_driver.html">scrapli_netconf.driver.base_driver</a></code></li>
-<li><code><a title="scrapli_netconf.driver.sync_driver" href="sync_driver.html">scrapli_netconf.driver.sync_driver</a></code></li>
+<li><code><a title="scrapli_netconf.driver" href="index.html">scrapli_netconf.driver</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli_netconf.driver.AsyncNetconfDriver" href="#scrapli_netconf.driver.AsyncNetconfDriver">AsyncNetconfDriver</a></code></h4>
+<h4><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.commit" href="#scrapli_netconf.driver.AsyncNetconfDriver.commit">commit</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.delete_config" href="#scrapli_netconf.driver.AsyncNetconfDriver.delete_config">delete_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.discard" href="#scrapli_netconf.driver.AsyncNetconfDriver.discard">discard</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.edit_config" href="#scrapli_netconf.driver.AsyncNetconfDriver.edit_config">edit_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.get" href="#scrapli_netconf.driver.AsyncNetconfDriver.get">get</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.get_config" href="#scrapli_netconf.driver.AsyncNetconfDriver.get_config">get_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.host" href="#scrapli_netconf.driver.AsyncNetconfDriver.host">host</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.lock" href="#scrapli_netconf.driver.AsyncNetconfDriver.lock">lock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.open" href="#scrapli_netconf.driver.AsyncNetconfDriver.open">open</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.readable_datastores" href="#scrapli_netconf.driver.AsyncNetconfDriver.readable_datastores">readable_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.rpc" href="#scrapli_netconf.driver.AsyncNetconfDriver.rpc">rpc</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.strict_datastores" href="#scrapli_netconf.driver.AsyncNetconfDriver.strict_datastores">strict_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.strip_namespaces" href="#scrapli_netconf.driver.AsyncNetconfDriver.strip_namespaces">strip_namespaces</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.unlock" href="#scrapli_netconf.driver.AsyncNetconfDriver.unlock">unlock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.validate" href="#scrapli_netconf.driver.AsyncNetconfDriver.validate">validate</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfDriver.writeable_datastores" href="#scrapli_netconf.driver.AsyncNetconfDriver.writeable_datastores">writeable_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.commit" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.commit">commit</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.delete_config">delete_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.discard" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.discard">discard</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.edit_config">edit_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.get">get</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.get_config" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.get_config">get_config</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.host" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.host">host</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.lock" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.lock">lock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.open" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.open">open</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.readable_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.readable_datastores">readable_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.rpc" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.rpc">rpc</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.strict_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.strict_datastores">strict_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.strip_namespaces" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.unlock" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.unlock">unlock</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.validate" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.validate">validate</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfDriver.writeable_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfDriver.writeable_datastores">writeable_datastores</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="scrapli_netconf.driver.AsyncNetconfScrape" href="#scrapli_netconf.driver.AsyncNetconfScrape">AsyncNetconfScrape</a></code></h4>
+<h4><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape" href="#scrapli_netconf.driver.sync_driver.NetconfScrape">NetconfScrape</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.host" href="#scrapli_netconf.driver.AsyncNetconfScrape.host">host</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.readable_datastores" href="#scrapli_netconf.driver.AsyncNetconfScrape.readable_datastores">readable_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.strict_datastores" href="#scrapli_netconf.driver.AsyncNetconfScrape.strict_datastores">strict_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.strip_namespaces" href="#scrapli_netconf.driver.AsyncNetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.warning" href="#scrapli_netconf.driver.AsyncNetconfScrape.warning">warning</a></code></li>
-<li><code><a title="scrapli_netconf.driver.AsyncNetconfScrape.writeable_datastores" href="#scrapli_netconf.driver.AsyncNetconfScrape.writeable_datastores">writeable_datastores</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="scrapli_netconf.driver.NetconfDriver" href="#scrapli_netconf.driver.NetconfDriver">NetconfDriver</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.commit" href="#scrapli_netconf.driver.NetconfDriver.commit">commit</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.delete_config" href="#scrapli_netconf.driver.NetconfDriver.delete_config">delete_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.discard" href="#scrapli_netconf.driver.NetconfDriver.discard">discard</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.edit_config" href="#scrapli_netconf.driver.NetconfDriver.edit_config">edit_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.get" href="#scrapli_netconf.driver.NetconfDriver.get">get</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.get_config" href="#scrapli_netconf.driver.NetconfDriver.get_config">get_config</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.host" href="#scrapli_netconf.driver.NetconfDriver.host">host</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.lock" href="#scrapli_netconf.driver.NetconfDriver.lock">lock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.open" href="#scrapli_netconf.driver.NetconfDriver.open">open</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.readable_datastores" href="#scrapli_netconf.driver.NetconfDriver.readable_datastores">readable_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.rpc" href="#scrapli_netconf.driver.NetconfDriver.rpc">rpc</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.strict_datastores" href="#scrapli_netconf.driver.NetconfDriver.strict_datastores">strict_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.strip_namespaces" href="#scrapli_netconf.driver.NetconfDriver.strip_namespaces">strip_namespaces</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.unlock" href="#scrapli_netconf.driver.NetconfDriver.unlock">unlock</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.validate" href="#scrapli_netconf.driver.NetconfDriver.validate">validate</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfDriver.writeable_datastores" href="#scrapli_netconf.driver.NetconfDriver.writeable_datastores">writeable_datastores</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="scrapli_netconf.driver.NetconfScrape" href="#scrapli_netconf.driver.NetconfScrape">NetconfScrape</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.host" href="#scrapli_netconf.driver.NetconfScrape.host">host</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.readable_datastores" href="#scrapli_netconf.driver.NetconfScrape.readable_datastores">readable_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.strict_datastores" href="#scrapli_netconf.driver.NetconfScrape.strict_datastores">strict_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.strip_namespaces" href="#scrapli_netconf.driver.NetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.warning" href="#scrapli_netconf.driver.NetconfScrape.warning">warning</a></code></li>
-<li><code><a title="scrapli_netconf.driver.NetconfScrape.writeable_datastores" href="#scrapli_netconf.driver.NetconfScrape.writeable_datastores">writeable_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.host" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.host">host</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.readable_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.readable_datastores">readable_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.strict_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.strict_datastores">strict_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.strip_namespaces" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.warning" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.warning">warning</a></code></li>
+<li><code><a title="scrapli_netconf.driver.sync_driver.NetconfScrape.writeable_datastores" href="#scrapli_netconf.driver.sync_driver.NetconfScrape.writeable_datastores">writeable_datastores</a></code></li>
 </ul>
 </li>
 </ul>

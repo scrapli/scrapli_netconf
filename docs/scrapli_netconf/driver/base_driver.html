@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli_netconf.driver.base_driver API documentation</title>
 <meta name="description" content="scrapli_netconf.driver.base_driver" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,37 +28,23 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.driver.base_driver&#34;&#34;&#34;
-import re
+import importlib
 import warnings
+from dataclasses import fields
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from lxml import etree
 from lxml.etree import Element
 
-from scrapli.driver.base_driver import ScrapeBase
-from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
+from scrapli.driver.base.base_driver import BaseDriver
+from scrapli.exceptions import ScrapliTypeError
+from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
 PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
-
-
-class NetconfClientCapabilities(Enum):
-    CAPABILITIES_1_0 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.0&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;
-    CAPABILITIES_1_1 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.1&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;
 
 
 class NetconfBaseOperations(Enum):
@@ -76,70 +62,167 @@ class NetconfBaseOperations(Enum):
     VALIDATE = &#34;&lt;validate&gt;&lt;source&gt;&lt;{source}/&gt;&lt;/source&gt;&lt;/validate&gt;&#34;
 
 
-class NetconfScrapeBase(ScrapeBase):
-    transport_args: Dict[str, Any]
-    server_capabilities: List[str]
+class NetconfBaseDriver(BaseDriver):
+    host: str
     readable_datastores: List[str]
     writeable_datastores: List[str]
-    netconf_version: NetconfVersion
     strip_namespaces: bool
     strict_datastores: bool
-    message_id: int
+    _netconf_base_channel_args: NetconfBaseChannelArgs
 
-    def _process_open(self, raw_server_capabilities: bytes) -&gt; NetconfClientCapabilities:
+    @property
+    def netconf_version(self) -&gt; NetconfVersion:
         &#34;&#34;&#34;
-        Process received capabilities; return client capabilities
+        Getter for `netconf_version` attribute
 
         Args:
-            raw_server_capabilities: raw bytes containing server capabilities
+            N/A
 
         Returns:
-            NetconfClientCapabilities: NetconfClientCapabilities enum of appropriate type
+            NetconfVersion: netconf_version enum
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        self._parse_server_capabilities(raw_server_capabilities=raw_server_capabilities)
+        return self._netconf_base_channel_args.netconf_version
 
-        client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
-        if &#34;urn:ietf:params:netconf:base:1.1&#34; in self.server_capabilities:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
-            self.netconf_version = NetconfVersion.VERSION_1_1
-
-        return client_capabilities
-
-    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; None:
+    @netconf_version.setter
+    def netconf_version(self, value: NetconfVersion) -&gt; None:
         &#34;&#34;&#34;
-        Parse netconf server capabilities
+        Setter for `netconf_version` attribute
 
         Args:
-            raw_server_capabilities: raw bytes containing server capabilities
+            value: NetconfVersion
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
+            ScrapliTypeError: if value is not of type NetconfVersion
 
         &#34;&#34;&#34;
-        # matches hello with or without namespace
-        filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
-            string=raw_server_capabilities,
-            flags=re.I | re.S,
+        self.logger.debug(f&#34;setting &#39;netconf_version&#39; value to &#39;{value.value}&#39;&#34;)
+
+        if not isinstance(value, NetconfVersion):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.netconf_version = value
+
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+            self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
+        else:
+            self._base_channel_args.comms_prompt_pattern = r&#34;^##$&#34;
+
+    @property
+    def client_capabilities(self) -&gt; NetconfClientCapabilities:
+        &#34;&#34;&#34;
+        Getter for `client_capabilities` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfClientCapabilities: netconf client capabilities enum
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._netconf_base_channel_args.client_capabilities
+
+    @client_capabilities.setter
+    def client_capabilities(self, value: NetconfClientCapabilities) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for `client_capabilities` attribute
+
+        Args:
+            value: NetconfClientCapabilities value for client_capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type NetconfClientCapabilities
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;setting &#39;client_capabilities&#39; value to &#39;{value.value}&#39;&#34;)
+
+        if not isinstance(value, NetconfClientCapabilities):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.client_capabilities = value
+
+    @property
+    def server_capabilities(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Getter for `server_capabilities` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            list: list of strings of server capabilities
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._netconf_base_channel_args.server_capabilities or []
+
+    @server_capabilities.setter
+    def server_capabilities(self, value: NetconfClientCapabilities) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for `server_capabilities` attribute
+
+        Args:
+            value: list of strings of netconf server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type list
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;setting &#39;server_capabilities&#39; value to &#39;{value}&#39;&#34;)
+
+        if not isinstance(value, list):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.server_capabilities = value
+
+    def _transport_factory(self) -&gt; Tuple[Callable[..., Any], object]:
+        &#34;&#34;&#34;
+        Determine proper transport class and necessary arguments to initialize that class
+
+        Args:
+            N/A
+
+        Returns:
+            Tuple[Callable[..., Any], object]: tuple of transport class and dataclass of transport
+                class specific arguments
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        transport_plugin_module = importlib.import_module(
+            f&#34;scrapli_netconf.transport.plugins.{self.transport_name}.transport&#34;
         )
-        if filtered_raw_server_capabilities is None:
-            msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
-            raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
-        for elem in server_capabilities_xml.iter():
-            if &#34;capability&#34; not in elem.tag:
-                continue
-            self.server_capabilities.append(elem.text.strip())
-        self._build_readable_datastores()
-        self._build_writeable_datastores()
-        self.logger.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
+
+        transport_class = getattr(
+            transport_plugin_module, f&#34;Netconf{self.transport_name.capitalize()}Transport&#34;
+        )
+        plugin_transport_args_class = getattr(transport_plugin_module, &#34;PluginTransportArgs&#34;)
+
+        _plugin_transport_args = {
+            field.name: getattr(self, field.name) for field in fields(plugin_transport_args_class)
+        }
+
+        plugin_transport_args = plugin_transport_args_class(**_plugin_transport_args)
+
+        return transport_class, plugin_transport_args
 
     def _build_readable_datastores(self) -&gt; None:
         &#34;&#34;&#34;
@@ -266,6 +349,9 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         &#34;&#34;&#34;
+        # pylint did not seem to want to be ok with assigning this as a class attribute... and its
+        # only used here so... here we are
+        self.message_id: int  # pylint: disable=W0201
         self.logger.debug(f&#34;Building base element for message id {self.message_id}&#34;)
         base_xml_str = NetconfBaseOperations.RPC.value.format(message_id=self.message_id)
         self.message_id += 1
@@ -367,7 +453,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -428,7 +514,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -484,7 +570,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -526,7 +612,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -562,7 +648,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -600,7 +686,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -642,7 +728,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -682,7 +768,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -725,7 +811,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -777,7 +863,7 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
@@ -798,6 +884,1066 @@ class NetconfScrapeBase(ScrapeBase):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver"><code class="flex name class">
+<span>class <span class="ident">NetconfBaseDriver</span></span>
+<span>(</span><span>host: str, port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: float = 15.0, timeout_transport: float = 30.0, timeout_ops: float = 30.0, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None, channel_log: Union[str, bool, _io.BytesIO] = False, channel_lock: bool = False, logging_uid: str = '')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>BaseDriver Object</p>
+<p>BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
+base driver classes can be used to provide a semi-pexpect like experience over top of
+whatever transport a user prefers. Generally, however, the base driver classes should not be
+used directly. It is best to use the GenericDriver (or AsyncGenericDriver) or NetworkDriver
+(or AsyncNetworkDriver) sub-classes of the base drivers.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>host</code></strong></dt>
+<dd>host ip/name to connect to</dd>
+<dt><strong><code>port</code></strong></dt>
+<dd>port to connect to</dd>
+<dt><strong><code>auth_username</code></strong></dt>
+<dd>username for authentication</dd>
+<dt><strong><code>auth_private_key</code></strong></dt>
+<dd>path to private key for authentication</dd>
+<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
+<dd>passphrase for decrypting ssh key if necessary</dd>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password for authentication</dd>
+<dt><strong><code>auth_strict_key</code></strong></dt>
+<dd>strict host checking or not</dd>
+<dt><strong><code>auth_bypass</code></strong></dt>
+<dd>bypass "in channel" authentication &ndash; only supported with telnet,
+asynctelnet, and system transport plugins</dd>
+<dt><strong><code>timeout_socket</code></strong></dt>
+<dd>timeout for establishing socket/initial connection in seconds</dd>
+<dt><strong><code>timeout_transport</code></strong></dt>
+<dd>timeout for ssh|telnet transport in seconds</dd>
+<dt><strong><code>timeout_ops</code></strong></dt>
+<dd>timeout for ssh channel operations</dd>
+<dt><strong><code>comms_prompt_pattern</code></strong></dt>
+<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
+this is the single most important attribute here! if this does not match a prompt,
+scrapli will not work!
+IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
+for highly reliably matching for prompts however we do NOT strip trailing whitespace
+for each line, so be sure to add '\s?' or similar if your device needs that. This
+should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
+Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
+<dt><strong><code>comms_return_char</code></strong></dt>
+<dd>character to use to send returns to host</dd>
+<dt><strong><code>comms_ansi</code></strong></dt>
+<dd>True/False strip comms_ansi characters from output, generally the default
+value of False should be fine</dd>
+<dt><strong><code>ssh_config_file</code></strong></dt>
+<dd>string to path for ssh config file, True to use default ssh config file
+or False to ignore default ssh config file</dd>
+<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
+<dd>string to path for ssh known hosts file, True to use default known
+file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
+<dt><strong><code>on_init</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed as the last step of object instantiation &ndash; its purpose is
+primarily to provide a mechanism for scrapli community platforms to have an easy way
+to modify initialization arguments/object attributes without needing to create a
+class that extends the driver, instead allowing the community platforms to simply
+build from the GenericDriver or NetworkDriver classes, and pass this callable to do
+things such as appending to a username (looking at you RouterOS!!). Note that this
+is <em>always</em> a synchronous function (even for asyncio drivers)!</dd>
+<dt><strong><code>on_open</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately after authentication is completed. Common use
+cases for this callable would be to disable paging or accept any kind of banner
+message that prompts a user upon connection</dd>
+<dt><strong><code>on_close</code></strong></dt>
+<dd>callable that accepts the class instance as its only argument. this callable,
+if provided, is executed immediately prior to closing the underlying transport.
+Common use cases for this callable would be to save configurations prior to exiting,
+or to logout properly to free up vtys or similar</dd>
+<dt><strong><code>transport</code></strong></dt>
+<dd>name of the transport plugin to use for the actual telnet/ssh/netconf
+connection. Available "core" transports are:
+- system
+- telnet
+- asynctelnet
+- ssh2
+- paramiko
+- asyncssh
+Please see relevant transport plugin section for details. Additionally third party
+transport plugins may be available.</dd>
+<dt><strong><code>transport_options</code></strong></dt>
+<dd>dictionary of options to pass to selected transport class; see
+docs for given transport class for details of what to pass here</dd>
+<dt><strong><code>channel_lock</code></strong></dt>
+<dd>True/False to lock the channel (threading.Lock/asyncio.Lock) during
+any channel operations, defaults to False</dd>
+<dt><strong><code>channel_log</code></strong></dt>
+<dd>True/False or a string path to a file of where to write out channel logs &ndash;
+these are not "logs" in the normal logging module sense, but only the output that is
+read from the channel. In other words, the output of the channel log should look
+similar to what you would see as a human connecting to a device</dd>
+<dt><strong><code>logging_uid</code></strong></dt>
+<dd>unique identifier (string) to associate to log messages; useful if you have
+multiple connections to the same device (i.e. one console, one ssh, or one to each
+supervisor module, etc.)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NetconfBaseDriver(BaseDriver):
+    host: str
+    readable_datastores: List[str]
+    writeable_datastores: List[str]
+    strip_namespaces: bool
+    strict_datastores: bool
+    _netconf_base_channel_args: NetconfBaseChannelArgs
+
+    @property
+    def netconf_version(self) -&gt; NetconfVersion:
+        &#34;&#34;&#34;
+        Getter for `netconf_version` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfVersion: netconf_version enum
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._netconf_base_channel_args.netconf_version
+
+    @netconf_version.setter
+    def netconf_version(self, value: NetconfVersion) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for `netconf_version` attribute
+
+        Args:
+            value: NetconfVersion
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type NetconfVersion
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;setting &#39;netconf_version&#39; value to &#39;{value.value}&#39;&#34;)
+
+        if not isinstance(value, NetconfVersion):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.netconf_version = value
+
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+            self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
+        else:
+            self._base_channel_args.comms_prompt_pattern = r&#34;^##$&#34;
+
+    @property
+    def client_capabilities(self) -&gt; NetconfClientCapabilities:
+        &#34;&#34;&#34;
+        Getter for `client_capabilities` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfClientCapabilities: netconf client capabilities enum
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._netconf_base_channel_args.client_capabilities
+
+    @client_capabilities.setter
+    def client_capabilities(self, value: NetconfClientCapabilities) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for `client_capabilities` attribute
+
+        Args:
+            value: NetconfClientCapabilities value for client_capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type NetconfClientCapabilities
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;setting &#39;client_capabilities&#39; value to &#39;{value.value}&#39;&#34;)
+
+        if not isinstance(value, NetconfClientCapabilities):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.client_capabilities = value
+
+    @property
+    def server_capabilities(self) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Getter for `server_capabilities` attribute
+
+        Args:
+            N/A
+
+        Returns:
+            list: list of strings of server capabilities
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        return self._netconf_base_channel_args.server_capabilities or []
+
+    @server_capabilities.setter
+    def server_capabilities(self, value: NetconfClientCapabilities) -&gt; None:
+        &#34;&#34;&#34;
+        Setter for `server_capabilities` attribute
+
+        Args:
+            value: list of strings of netconf server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type list
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;setting &#39;server_capabilities&#39; value to &#39;{value}&#39;&#34;)
+
+        if not isinstance(value, list):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.server_capabilities = value
+
+    def _transport_factory(self) -&gt; Tuple[Callable[..., Any], object]:
+        &#34;&#34;&#34;
+        Determine proper transport class and necessary arguments to initialize that class
+
+        Args:
+            N/A
+
+        Returns:
+            Tuple[Callable[..., Any], object]: tuple of transport class and dataclass of transport
+                class specific arguments
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        transport_plugin_module = importlib.import_module(
+            f&#34;scrapli_netconf.transport.plugins.{self.transport_name}.transport&#34;
+        )
+
+        transport_class = getattr(
+            transport_plugin_module, f&#34;Netconf{self.transport_name.capitalize()}Transport&#34;
+        )
+        plugin_transport_args_class = getattr(transport_plugin_module, &#34;PluginTransportArgs&#34;)
+
+        _plugin_transport_args = {
+            field.name: getattr(self, field.name) for field in fields(plugin_transport_args_class)
+        }
+
+        plugin_transport_args = plugin_transport_args_class(**_plugin_transport_args)
+
+        return transport_class, plugin_transport_args
+
+    def _build_readable_datastores(self) -&gt; None:
+        &#34;&#34;&#34;
+        Build a list of readable datastores based on server&#39;s advertised capabilities
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.readable_datastores = []
+        self.readable_datastores.append(&#34;running&#34;)
+        if &#34;urn:ietf:params:netconf:capability:candidate:1.0&#34; in self.server_capabilities:
+            self.readable_datastores.append(&#34;candidate&#34;)
+        if &#34;urn:ietf:params:netconf:capability:startup:1.0&#34; in self.server_capabilities:
+            self.readable_datastores.append(&#34;startup&#34;)
+
+    def _build_writeable_datastores(self) -&gt; None:
+        &#34;&#34;&#34;
+        Build a list of writeable/editable datastores based on server&#39;s advertised capabilities
+
+        Args:
+            N/A
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.writeable_datastores = []
+        if &#34;urn:ietf:params:netconf:capability:writeable-running:1.0&#34; in self.server_capabilities:
+            self.writeable_datastores.append(&#34;running&#34;)
+        if &#34;urn:ietf:params:netconf:capability:writable-running:1.0&#34; in self.server_capabilities:
+            # NOTE: iosxe shows &#34;writable&#34; (as of 2020.07.01) despite RFC being &#34;writeable&#34;
+            self.writeable_datastores.append(&#34;running&#34;)
+        if &#34;urn:ietf:params:netconf:capability:candidate:1.0&#34; in self.server_capabilities:
+            self.writeable_datastores.append(&#34;candidate&#34;)
+        if &#34;urn:ietf:params:netconf:capability:startup:1.0&#34; in self.server_capabilities:
+            self.writeable_datastores.append(&#34;startup&#34;)
+
+    def _validate_get_config_target(self, source: str) -&gt; None:
+        &#34;&#34;&#34;
+        Validate get-config source is acceptable
+
+        Args:
+            source: configuration source to get; typically one of running|startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid source was selected and strict_datastores is True
+
+        &#34;&#34;&#34;
+        if source not in self.readable_datastores:
+            msg = f&#34;`source` should be one of {self.readable_datastores}, got `{source}`&#34;
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _validate_edit_config_target(self, target: str) -&gt; None:
+        &#34;&#34;&#34;
+        Validate edit-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to edit/lock; typically one of running|startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid source was selected
+
+        &#34;&#34;&#34;
+        if target not in self.writeable_datastores:
+            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _validate_delete_config_target(self, target: str) -&gt; None:
+        &#34;&#34;&#34;
+        Validate delete-config/lock/unlock target is acceptable
+
+        Args:
+            target: configuration source to delete; typically one of startup|candidate
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            ValueError: if an invalid target was selected
+
+        &#34;&#34;&#34;
+        if target == &#34;running&#34; or target not in self.writeable_datastores:
+            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
+            if target == &#34;running&#34;:
+                msg = &#34;delete-config `target` may not be `running`&#34;
+            self.logger.warning(msg)
+            if self.strict_datastores is True:
+                raise ValueError(msg)
+            warnings.warn(msg)
+
+    def _build_base_elem(self) -&gt; Element:
+        &#34;&#34;&#34;
+        Create base element for netconf operations
+
+        Args:
+            N/A
+
+        Returns:
+            Element: lxml base element to use for netconf operation
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        # pylint did not seem to want to be ok with assigning this as a class attribute... and its
+        # only used here so... here we are
+        self.message_id: int  # pylint: disable=W0201
+        self.logger.debug(f&#34;Building base element for message id {self.message_id}&#34;)
+        base_xml_str = NetconfBaseOperations.RPC.value.format(message_id=self.message_id)
+        self.message_id += 1
+        base_elem = etree.fromstring(text=base_xml_str)
+        return base_elem
+
+    def _build_filters(self, filters: List[str], filter_type: str = &#34;subtree&#34;) -&gt; Element:
+        &#34;&#34;&#34;
+        Create filter element for a given rpc
+
+        Args:
+            filters: list of strings of filters to build into a filter element
+            filter_type: type of filter; subtree|xpath
+
+        Returns:
+            Element: lxml filter element to use for netconf operation
+
+        Raises:
+            CapabilityNotSupported: if xpath selected and not supported on server
+            ValueError: if filter_type is not one of subtree|xpath
+
+        &#34;&#34;&#34;
+        if filter_type == &#34;subtree&#34;:
+            xml_filter_elem = etree.fromstring(
+                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
+            )
+            for filter_ in filters:
+                # &#34;validate&#34; subtree filter by forcing it into xml, parser &#34;flattens&#34; it as well
+                xml_filter_element = etree.fromstring(filter_, parser=PARSER)
+                # insert the subtree filter into the parent filter element
+                xml_filter_elem.insert(1, xml_filter_element)
+        elif filter_type == &#34;xpath&#34;:
+            if &#34;urn:ietf:params:netconf:capability:xpath:1.0&#34; not in self.server_capabilities:
+                msg = &#34;xpath filter requested, but is not supported by the server&#34;
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
+            # assuming for now that there will only ever be a single xpath string/filter... this may
+            # end up being a shitty assumption!
+            filter_ = filters[0]
+            xml_filter_elem = etree.fromstring(
+                NetconfBaseOperations.FILTER_XPATH.value.format(
+                    filter_type=filter_type, xpath=filter_
+                ),
+                parser=PARSER,
+            )
+        else:
+            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
+        return xml_filter_elem
+
+    def _pre_get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;get&#34; tasks for consistency between sync/async versions
+
+        *NOTE*
+        The channel input (filter_) is loaded up as an lxml etree element here, this is done with a
+        parser that removes whitespace. This has a somewhat undesirable effect of making any
+        &#34;pretty&#34; input not pretty, however... after we load the xml object (which we do to validate
+        that it is valid xml) we dump that xml object back to a string to be used as the actual
+        raw payload we send down the channel, which means we are sending &#34;flattened&#34; (not pretty/
+        indented xml) to the device. This is important it seems! Some devices seme to not mind
+        having the &#34;nicely&#34; formatted input (pretty xml). But! On devices that &#34;echo&#34; the inputs
+        back -- sometimes the device will respond to our rpc without &#34;finishing&#34; echoing our inputs
+        to the device, this breaks the core &#34;read until input&#34; processing that scrapli always does.
+        For whatever reason if there are no line breaks this does not seem to happen? /shrug. Note
+        that this comment applies to all of the &#34;pre&#34; methods that we parse a filter/payload!
+
+        Args:
+            filter_: string filter to apply to the get
+            filter_type: type of filter; subtree|xpath
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(
+            f&#34;Building payload for `get` operation. filter_type: {filter_type}, filter_: {filter_}&#34;
+        )
+
+        # build base request and insert the get element
+        xml_request = self._build_base_elem()
+        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
+        xml_request.insert(0, xml_get_element)
+
+        xml_filter_elem = self._build_filters(filters=[filter_], filter_type=filter_type)
+
+        # insert filter element into parent get element
+        get_element = xml_request.find(&#34;get&#34;)
+        get_element.insert(0, xml_filter_elem)
+
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(f&#34;Built payload for `get` operation. Payload: {channel_input.decode()}&#34;)
+        return response
+
+    def _pre_get_config(
+        self,
+        source: str = &#34;running&#34;,
+        filters: Optional[Union[str, List[str]]] = None,
+        filter_type: str = &#34;subtree&#34;,
+    ) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;get_config&#34; tasks for consistency between sync/async versions
+
+        Args:
+            source: configuration source to get; typically one of running|startup|candidate
+            filters: string or list of strings of filters to apply to configuration
+            filter_type: type of filter; subtree|xpath
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(
+            f&#34;Building payload for `get-config` operation. source: {source}, filter_type: &#34;
+            f&#34;{filter_type}, filters: {filters}&#34;
+        )
+        self._validate_get_config_target(source=source)
+
+        # build base request and insert the get-config element
+        xml_request = self._build_base_elem()
+        xml_get_config_element = etree.fromstring(
+            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
+        )
+        xml_request.insert(0, xml_get_config_element)
+
+        if filters is not None:
+            if isinstance(filters, str):
+                filters = [filters]
+            xml_filter_elem = self._build_filters(filters=filters, filter_type=filter_type)
+            # insert filter element into parent get element
+            get_element = xml_request.find(&#34;get-config&#34;)
+            # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
+            get_element.insert(1, xml_filter_elem)
+
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `get-config` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_edit_config(
+        self, config: Union[str, List[str]], target: str = &#34;running&#34;
+    ) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
+
+        Args:
+            config: configuration to send to device
+            target: configuration source to target; running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(
+            f&#34;Building payload for `edit-config` operation. target: {target}, config: {config}&#34;
+        )
+        self._validate_edit_config_target(target=target)
+
+        xml_config = etree.fromstring(config, parser=PARSER)
+
+        # build base request and insert the edit-config element
+        xml_request = self._build_base_elem()
+        xml_edit_config_element = etree.fromstring(
+            NetconfBaseOperations.EDIT_CONFIG.value.format(target=target)
+        )
+        xml_request.insert(0, xml_edit_config_element)
+
+        # insert parent filter element to first position so that target stays first just for nice
+        # output/readability
+        edit_config_element = xml_request.find(&#34;edit-config&#34;)
+        edit_config_element.insert(1, xml_config)
+
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `edit-config` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_delete_config(self, target: str = &#34;running&#34;) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(f&#34;Building payload for `delete-config` operation. target: {target}&#34;)
+        self._validate_delete_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=PARSER
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `delete-config` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_commit(self) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;commit&#34; tasks for consistency between sync/async versions
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `commit` operation&#34;)
+        xml_request = self._build_base_elem()
+        xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value, parser=PARSER)
+        xml_request.insert(0, xml_commit_element)
+        channel_input = etree.tostring(xml_request)
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `commit` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_discard(self) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;discard&#34; tasks for consistency between sync/async versions
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `discard` operation.&#34;)
+        xml_request = self._build_base_elem()
+        xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value, parser=PARSER)
+        xml_request.insert(0, xml_commit_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `discard` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_lock(self, target: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;lock&#34; tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `lock` operation.&#34;)
+        self._validate_edit_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_lock_element = etree.fromstring(
+            NetconfBaseOperations.LOCK.value.format(target=target), parser=PARSER
+        )
+        xml_request.insert(0, xml_lock_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(f&#34;Built payload for `lock` operation. Payload: {channel_input.decode()}&#34;)
+        return response
+
+    def _pre_unlock(self, target: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;unlock&#34; tasks for consistency between sync/async versions
+
+        Args:
+            target: configuration source to target; running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `unlock` operation.&#34;)
+        self._validate_edit_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_lock_element = etree.fromstring(
+            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=PARSER)
+        )
+        xml_request.insert(0, xml_lock_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `unlock` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response
+
+    def _pre_rpc(self, filter_: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;rpc&#34; tasks for consistency between sync/async versions
+
+        Args:
+            filter_: filter/rpc to execute
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `rpc` operation.&#34;)
+        xml_request = self._build_base_elem()
+
+        # build filter element
+        xml_filter_elem = etree.fromstring(filter_, parser=PARSER)
+
+        # insert filter element
+        xml_request.insert(0, xml_filter_elem)
+
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(f&#34;Built payload for `rpc` operation. Payload: {channel_input.decode()}&#34;)
+        return response
+
+    def _pre_validate(self, source: str) -&gt; NetconfResponse:
+        &#34;&#34;&#34;
+        Handle pre &#34;validate&#34; tasks for consistency between sync/async versions
+
+        Args:
+            source: configuration source to validate; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            CapabilityNotSupported: if `validate` capability does not exist
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;Building payload for `validate` operation.&#34;)
+
+        if not any(
+            cap in self.server_capabilities
+            for cap in (
+                &#34;urn:ietf:params:netconf:capability:validate:1.0&#34;,
+                &#34;urn:ietf:params:netconf:capability:validate:1.1&#34;,
+            )
+        ):
+            msg = &#34;validate requested, but is not supported by the server&#34;
+            self.logger.exception(msg)
+            raise CapabilityNotSupported(msg)
+
+        self._validate_edit_config_target(target=source)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.VALIDATE.value.format(source=source), parser=PARSER
+        )
+        xml_request.insert(0, xml_validate_element)
+        channel_input = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f&#34;Built payload for `validate` operation. Payload: {channel_input.decode()}&#34;
+        )
+        return response</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>scrapli.driver.base.base_driver.BaseDriver</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="scrapli_netconf.driver.async_driver.AsyncNetconfDriver" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfDriver">AsyncNetconfDriver</a></li>
+<li><a title="scrapli_netconf.driver.sync_driver.NetconfDriver" href="sync_driver.html#scrapli_netconf.driver.sync_driver.NetconfDriver">NetconfDriver</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.host"><code class="name">var <span class="ident">host</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities"><code class="name">var <span class="ident">client_capabilities</span> : <a title="scrapli_netconf.constants.NetconfClientCapabilities" href="../constants.html#scrapli_netconf.constants.NetconfClientCapabilities">NetconfClientCapabilities</a></code></dt>
+<dd>
+<div class="desc"><p>Getter for <code>client_capabilities</code> attribute</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfClientCapabilities</code></dt>
+<dd>netconf client capabilities enum</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def client_capabilities(self) -&gt; NetconfClientCapabilities:
+    &#34;&#34;&#34;
+    Getter for `client_capabilities` attribute
+
+    Args:
+        N/A
+
+    Returns:
+        NetconfClientCapabilities: netconf client capabilities enum
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self._netconf_base_channel_args.client_capabilities</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version"><code class="name">var <span class="ident">netconf_version</span> : <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a></code></dt>
+<dd>
+<div class="desc"><p>Getter for <code>netconf_version</code> attribute</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>NetconfVersion</code></dt>
+<dd>netconf_version enum</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def netconf_version(self) -&gt; NetconfVersion:
+    &#34;&#34;&#34;
+    Getter for `netconf_version` attribute
+
+    Args:
+        N/A
+
+    Returns:
+        NetconfVersion: netconf_version enum
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self._netconf_base_channel_args.netconf_version</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities"><code class="name">var <span class="ident">server_capabilities</span> : List[str]</code></dt>
+<dd>
+<div class="desc"><p>Getter for <code>server_capabilities</code> attribute</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>list of strings of server capabilities</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def server_capabilities(self) -&gt; List[str]:
+    &#34;&#34;&#34;
+    Getter for `server_capabilities` attribute
+
+    Args:
+        N/A
+
+    Returns:
+        list: list of strings of server capabilities
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    return self._netconf_base_channel_args.server_capabilities or []</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="scrapli_netconf.driver.base_driver.NetconfBaseOperations"><code class="flex name class">
 <span>class <span class="ident">NetconfBaseOperations</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -878,912 +2024,6 @@ class NetconfScrapeBase(ScrapeBase):
 </dd>
 </dl>
 </dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfClientCapabilities"><code class="flex name class">
-<span>class <span class="ident">NetconfClientCapabilities</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class NetconfClientCapabilities(Enum):
-    CAPABILITIES_1_0 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.0&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;
-    CAPABILITIES_1_1 = &#34;&#34;&#34;
-&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;
-    &lt;hello xmlns=&#34;urn:ietf:params:xml:ns:netconf:base:1.0&#34;&gt;
-        &lt;capabilities&gt;
-            &lt;capability&gt;urn:ietf:params:netconf:base:1.1&lt;/capability&gt;
-        &lt;/capabilities&gt;
-&lt;/hello&gt;]]&gt;]]&gt;&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_0"><code class="name">var <span class="ident">CAPABILITIES_1_0</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_1"><code class="name">var <span class="ident">CAPABILITIES_1_1</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase"><code class="flex name class">
-<span>class <span class="ident">NetconfScrapeBase</span></span>
-<span>(</span><span>host: str = '', port: int = 22, auth_username: str = '', auth_password: str = '', auth_private_key: str = '', auth_private_key_passphrase: str = '', auth_strict_key: bool = True, auth_bypass: bool = False, timeout_socket: int = 10, timeout_transport: int = 30, timeout_ops: float = 30, timeout_exit: bool = True, comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,48}[#&gt;$]\\s*$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, ssh_config_file: Union[str, bool] = False, ssh_known_hosts_file: Union[str, bool] = False, on_init: Union[Callable[..., Any], NoneType] = None, on_open: Union[Callable[..., Any], NoneType] = None, on_close: Union[Callable[..., Any], NoneType] = None, transport: str = 'system', transport_options: Union[Dict[str, Any], NoneType] = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Scrape Object</p>
-<p>Scrape is the base class for NetworkDriver, and subsequent platform specific drivers (i.e.
-IOSXEDriver). Scrape can be used on its own and offers a semi-pexpect like experience in
-that it doesn't know or care about privilege levels, platform types, and things like that.</p>
-<p><em>Note</em> most arguments passed to Scrape do not actually get assigned to the scrape object
-itself, but instead are used to construct the Transport and Channel classes that Scrape
-relies on, see Transport and Channel docs for details.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
-<dd>passphrase for decrypting ssh key if necessary</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>strict host checking or not &ndash; applicable for system ssh driver only</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass ssh key or password auth for devices without authentication, or that
-have auth prompts after ssh session establishment. Currently only supported on
-system transport; ignored on other transports</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for establishing socket in seconds</dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for ssh|telnet transport in seconds</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for ssh channel operations</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; preferably use <code>^</code> and <code>$</code> anchors!
-this is the single most important attribute here! if this does not match a prompt,
-scrapli will not work!
-IMPORTANT: regex search uses multi-line + case insensitive flags. multi-line allows
-for highly reliably matching for prompts however we do NOT strip trailing whitespace
-for each line, so be sure to add '\s?' or similar if your device needs that. This
-should be mostly sorted for you if using network drivers (i.e. <code>IOSXEDriver</code>).
-Lastly, the case insensitive is just a convenience factor so i can be lazy.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file, True to use default ssh config file
-or False to ignore default ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file, True to use default known
-file locations. Only applicable/needed if <code>auth_strict_key</code> is set to True</dd>
-<dt><strong><code>on_init</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed as the last step of object instantiation &ndash; its purpose is
-primarily to provide a mechanism for scrapli community platforms to have an easy way
-to modify initialization arguments/object attributes without needing to create a
-class that extends the driver, instead allowing the community platforms to simply
-build from the GenericDriver or NetworkDriver classes, and pass this callable to do
-things such as appending to a username (looking at you RouterOS!!). Note that this
-is <em>always</em> a synchronous function (even for asyncio drivers)!</dd>
-<dt><strong><code>on_open</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately after authentication is completed. Common use
-cases for this callable would be to disable paging or accept any kind of banner
-message that prompts a user upon connection</dd>
-<dt><strong><code>on_close</code></strong></dt>
-<dd>callable that accepts the class instance as its only argument. this callable,
-if provided, is executed immediately prior to closing the underlying transport.
-Common use cases for this callable would be to save configurations prior to exiting,
-or to logout properly to free up vtys or similar.</dd>
-<dt><strong><code>transport</code></strong></dt>
-<dd>system|telnet or a plugin &ndash; type of transport to use for connection
-system uses system available ssh (/usr/bin/ssh)
-ssh2 uses ssh2-python <em>has been migrated to a plugin
-paramiko uses&hellip; paramiko </em>has been migrated to a plugin
-telnet uses telnetlib
-choice of driver depends on the features you need. in general system is easiest as
-it will just 'auto-magically' use your ssh config file ('~/.ssh/config' or
-'/etc/ssh/config_file'). ssh2 is very very fast as it is a thin wrapper around
-libssh2 however it is slightly feature limited. paramiko is slower than ssh2, but
-has more features built in (though scrapli does not expose/support them all).</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>dictionary of options to pass to selected transport class; see
-docs for given transport class for details of what to pass here</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>UnsupportedPlatform</code></dt>
-<dd>if using windows with system transport</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class NetconfScrapeBase(ScrapeBase):
-    transport_args: Dict[str, Any]
-    server_capabilities: List[str]
-    readable_datastores: List[str]
-    writeable_datastores: List[str]
-    netconf_version: NetconfVersion
-    strip_namespaces: bool
-    strict_datastores: bool
-    message_id: int
-
-    def _process_open(self, raw_server_capabilities: bytes) -&gt; NetconfClientCapabilities:
-        &#34;&#34;&#34;
-        Process received capabilities; return client capabilities
-
-        Args:
-            raw_server_capabilities: raw bytes containing server capabilities
-
-        Returns:
-            NetconfClientCapabilities: NetconfClientCapabilities enum of appropriate type
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self._parse_server_capabilities(raw_server_capabilities=raw_server_capabilities)
-
-        client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
-        if &#34;urn:ietf:params:netconf:base:1.1&#34; in self.server_capabilities:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
-            self.netconf_version = NetconfVersion.VERSION_1_1
-
-        return client_capabilities
-
-    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; None:
-        &#34;&#34;&#34;
-        Parse netconf server capabilities
-
-        Args:
-            raw_server_capabilities: raw bytes containing server capabilities
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
-
-        &#34;&#34;&#34;
-        # matches hello with or without namespace
-        filtered_raw_server_capabilities = re.search(
-            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
-            string=raw_server_capabilities,
-            flags=re.I | re.S,
-        )
-        if filtered_raw_server_capabilities is None:
-            msg = f&#34;Failed to parse server capabilities from host {self._host}&#34;
-            raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
-        for elem in server_capabilities_xml.iter():
-            if &#34;capability&#34; not in elem.tag:
-                continue
-            self.server_capabilities.append(elem.text.strip())
-        self._build_readable_datastores()
-        self._build_writeable_datastores()
-        self.logger.info(f&#34;Server capabilities received and parsed: {self.server_capabilities}&#34;)
-
-    def _build_readable_datastores(self) -&gt; None:
-        &#34;&#34;&#34;
-        Build a list of readable datastores based on server&#39;s advertised capabilities
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.readable_datastores = []
-        self.readable_datastores.append(&#34;running&#34;)
-        if &#34;urn:ietf:params:netconf:capability:candidate:1.0&#34; in self.server_capabilities:
-            self.readable_datastores.append(&#34;candidate&#34;)
-        if &#34;urn:ietf:params:netconf:capability:startup:1.0&#34; in self.server_capabilities:
-            self.readable_datastores.append(&#34;startup&#34;)
-
-    def _build_writeable_datastores(self) -&gt; None:
-        &#34;&#34;&#34;
-        Build a list of writeable/editable datastores based on server&#39;s advertised capabilities
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.writeable_datastores = []
-        if &#34;urn:ietf:params:netconf:capability:writeable-running:1.0&#34; in self.server_capabilities:
-            self.writeable_datastores.append(&#34;running&#34;)
-        if &#34;urn:ietf:params:netconf:capability:writable-running:1.0&#34; in self.server_capabilities:
-            # NOTE: iosxe shows &#34;writable&#34; (as of 2020.07.01) despite RFC being &#34;writeable&#34;
-            self.writeable_datastores.append(&#34;running&#34;)
-        if &#34;urn:ietf:params:netconf:capability:candidate:1.0&#34; in self.server_capabilities:
-            self.writeable_datastores.append(&#34;candidate&#34;)
-        if &#34;urn:ietf:params:netconf:capability:startup:1.0&#34; in self.server_capabilities:
-            self.writeable_datastores.append(&#34;startup&#34;)
-
-    def _validate_get_config_target(self, source: str) -&gt; None:
-        &#34;&#34;&#34;
-        Validate get-config source is acceptable
-
-        Args:
-            source: configuration source to get; typically one of running|startup|candidate
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if an invalid source was selected and strict_datastores is True
-
-        &#34;&#34;&#34;
-        if source not in self.readable_datastores:
-            msg = f&#34;`source` should be one of {self.readable_datastores}, got `{source}`&#34;
-            self.logger.warning(msg)
-            if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
-
-    def _validate_edit_config_target(self, target: str) -&gt; None:
-        &#34;&#34;&#34;
-        Validate edit-config/lock/unlock target is acceptable
-
-        Args:
-            target: configuration source to edit/lock; typically one of running|startup|candidate
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if an invalid source was selected
-
-        &#34;&#34;&#34;
-        if target not in self.writeable_datastores:
-            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
-            self.logger.warning(msg)
-            if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
-
-    def _validate_delete_config_target(self, target: str) -&gt; None:
-        &#34;&#34;&#34;
-        Validate delete-config/lock/unlock target is acceptable
-
-        Args:
-            target: configuration source to delete; typically one of startup|candidate
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ValueError: if an invalid target was selected
-
-        &#34;&#34;&#34;
-        if target == &#34;running&#34; or target not in self.writeable_datastores:
-            msg = f&#34;`target` should be one of {self.writeable_datastores}, got `{target}`&#34;
-            if target == &#34;running&#34;:
-                msg = &#34;delete-config `target` may not be `running`&#34;
-            self.logger.warning(msg)
-            if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
-
-    def _build_base_elem(self) -&gt; Element:
-        &#34;&#34;&#34;
-        Create base element for netconf operations
-
-        Args:
-            N/A
-
-        Returns:
-            Element: lxml base element to use for netconf operation
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(f&#34;Building base element for message id {self.message_id}&#34;)
-        base_xml_str = NetconfBaseOperations.RPC.value.format(message_id=self.message_id)
-        self.message_id += 1
-        base_elem = etree.fromstring(text=base_xml_str)
-        return base_elem
-
-    def _build_filters(self, filters: List[str], filter_type: str = &#34;subtree&#34;) -&gt; Element:
-        &#34;&#34;&#34;
-        Create filter element for a given rpc
-
-        Args:
-            filters: list of strings of filters to build into a filter element
-            filter_type: type of filter; subtree|xpath
-
-        Returns:
-            Element: lxml filter element to use for netconf operation
-
-        Raises:
-            CapabilityNotSupported: if xpath selected and not supported on server
-            ValueError: if filter_type is not one of subtree|xpath
-
-        &#34;&#34;&#34;
-        if filter_type == &#34;subtree&#34;:
-            xml_filter_elem = etree.fromstring(
-                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
-            )
-            for filter_ in filters:
-                # &#34;validate&#34; subtree filter by forcing it into xml, parser &#34;flattens&#34; it as well
-                xml_filter_element = etree.fromstring(filter_, parser=PARSER)
-                # insert the subtree filter into the parent filter element
-                xml_filter_elem.insert(1, xml_filter_element)
-        elif filter_type == &#34;xpath&#34;:
-            if &#34;urn:ietf:params:netconf:capability:xpath:1.0&#34; not in self.server_capabilities:
-                msg = &#34;xpath filter requested, but is not supported by the server&#34;
-                self.logger.exception(msg)
-                raise CapabilityNotSupported(msg)
-            # assuming for now that there will only ever be a single xpath string/filter... this may
-            # end up being a shitty assumption!
-            filter_ = filters[0]
-            xml_filter_elem = etree.fromstring(
-                NetconfBaseOperations.FILTER_XPATH.value.format(
-                    filter_type=filter_type, xpath=filter_
-                ),
-                parser=PARSER,
-            )
-        else:
-            raise ValueError(f&#34;`filter_type` should be one of subtree|xpath, got `{filter_type}`&#34;)
-        return xml_filter_elem
-
-    def _pre_get(self, filter_: str, filter_type: str = &#34;subtree&#34;) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;get&#34; tasks for consistency between sync/async versions
-
-        *NOTE*
-        The channel input (filter_) is loaded up as an lxml etree element here, this is done with a
-        parser that removes whitespace. This has a somewhat undesirable effect of making any
-        &#34;pretty&#34; input not pretty, however... after we load the xml object (which we do to validate
-        that it is valid xml) we dump that xml object back to a string to be used as the actual
-        raw payload we send down the channel, which means we are sending &#34;flattened&#34; (not pretty/
-        indented xml) to the device. This is important it seems! Some devices seme to not mind
-        having the &#34;nicely&#34; formatted input (pretty xml). But! On devices that &#34;echo&#34; the inputs
-        back -- sometimes the device will respond to our rpc without &#34;finishing&#34; echoing our inputs
-        to the device, this breaks the core &#34;read until input&#34; processing that scrapli always does.
-        For whatever reason if there are no line breaks this does not seem to happen? /shrug. Note
-        that this comment applies to all of the &#34;pre&#34; methods that we parse a filter/payload!
-
-        Args:
-            filter_: string filter to apply to the get
-            filter_type: type of filter; subtree|xpath
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(
-            f&#34;Building payload for `get` operation. filter_type: {filter_type}, filter_: {filter_}&#34;
-        )
-
-        # build base request and insert the get element
-        xml_request = self._build_base_elem()
-        xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
-        xml_request.insert(0, xml_get_element)
-
-        xml_filter_elem = self._build_filters(filters=[filter_], filter_type=filter_type)
-
-        # insert filter element into parent get element
-        get_element = xml_request.find(&#34;get&#34;)
-        get_element.insert(0, xml_filter_elem)
-
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(f&#34;Built payload for `get` operation. Payload: {channel_input.decode()}&#34;)
-        return response
-
-    def _pre_get_config(
-        self,
-        source: str = &#34;running&#34;,
-        filters: Optional[Union[str, List[str]]] = None,
-        filter_type: str = &#34;subtree&#34;,
-    ) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;get_config&#34; tasks for consistency between sync/async versions
-
-        Args:
-            source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
-            filter_type: type of filter; subtree|xpath
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(
-            f&#34;Building payload for `get-config` operation. source: {source}, filter_type: &#34;
-            f&#34;{filter_type}, filters: {filters}&#34;
-        )
-        self._validate_get_config_target(source=source)
-
-        # build base request and insert the get-config element
-        xml_request = self._build_base_elem()
-        xml_get_config_element = etree.fromstring(
-            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
-        )
-        xml_request.insert(0, xml_get_config_element)
-
-        if filters is not None:
-            if isinstance(filters, str):
-                filters = [filters]
-            xml_filter_elem = self._build_filters(filters=filters, filter_type=filter_type)
-            # insert filter element into parent get element
-            get_element = xml_request.find(&#34;get-config&#34;)
-            # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
-            get_element.insert(1, xml_filter_elem)
-
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `get-config` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_edit_config(
-        self, config: Union[str, List[str]], target: str = &#34;running&#34;
-    ) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
-
-        Args:
-            config: configuration to send to device
-            target: configuration source to target; running|startup|candidate
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(
-            f&#34;Building payload for `edit-config` operation. target: {target}, config: {config}&#34;
-        )
-        self._validate_edit_config_target(target=target)
-
-        xml_config = etree.fromstring(config, parser=PARSER)
-
-        # build base request and insert the edit-config element
-        xml_request = self._build_base_elem()
-        xml_edit_config_element = etree.fromstring(
-            NetconfBaseOperations.EDIT_CONFIG.value.format(target=target)
-        )
-        xml_request.insert(0, xml_edit_config_element)
-
-        # insert parent filter element to first position so that target stays first just for nice
-        # output/readability
-        edit_config_element = xml_request.find(&#34;edit-config&#34;)
-        edit_config_element.insert(1, xml_config)
-
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `edit-config` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_delete_config(self, target: str = &#34;running&#34;) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;edit_config&#34; tasks for consistency between sync/async versions
-
-        Args:
-            target: configuration source to target; startup|candidate
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(f&#34;Building payload for `delete-config` operation. target: {target}&#34;)
-        self._validate_delete_config_target(target=target)
-
-        xml_request = self._build_base_elem()
-        xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=PARSER
-        )
-        xml_request.insert(0, xml_validate_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `delete-config` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_commit(self) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;commit&#34; tasks for consistency between sync/async versions
-
-        Args:
-            N/A
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `commit` operation&#34;)
-        xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value, parser=PARSER)
-        xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(xml_request)
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `commit` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_discard(self) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;discard&#34; tasks for consistency between sync/async versions
-
-        Args:
-            N/A
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `discard` operation.&#34;)
-        xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value, parser=PARSER)
-        xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `discard` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_lock(self, target: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;lock&#34; tasks for consistency between sync/async versions
-
-        Args:
-            target: configuration source to target; running|startup|candidate
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `lock` operation.&#34;)
-        self._validate_edit_config_target(target=target)
-
-        xml_request = self._build_base_elem()
-        xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.LOCK.value.format(target=target), parser=PARSER
-        )
-        xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(f&#34;Built payload for `lock` operation. Payload: {channel_input.decode()}&#34;)
-        return response
-
-    def _pre_unlock(self, target: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;unlock&#34; tasks for consistency between sync/async versions
-
-        Args:
-            target: configuration source to target; running|startup|candidate
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `unlock` operation.&#34;)
-        self._validate_edit_config_target(target=target)
-
-        xml_request = self._build_base_elem()
-        xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=PARSER)
-        )
-        xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `unlock` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response
-
-    def _pre_rpc(self, filter_: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;rpc&#34; tasks for consistency between sync/async versions
-
-        Args:
-            filter_: filter/rpc to execute
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `rpc` operation.&#34;)
-        xml_request = self._build_base_elem()
-
-        # build filter element
-        xml_filter_elem = etree.fromstring(filter_, parser=PARSER)
-
-        # insert filter element
-        xml_request.insert(0, xml_filter_elem)
-
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(f&#34;Built payload for `rpc` operation. Payload: {channel_input.decode()}&#34;)
-        return response
-
-    def _pre_validate(self, source: str) -&gt; NetconfResponse:
-        &#34;&#34;&#34;
-        Handle pre &#34;validate&#34; tasks for consistency between sync/async versions
-
-        Args:
-            source: configuration source to validate; typically one of running|startup|candidate
-
-        Returns:
-            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
-                channel inputs (string and xml)
-
-        Raises:
-            CapabilityNotSupported: if `validate` capability does not exist
-
-        &#34;&#34;&#34;
-        self.logger.debug(&#34;Building payload for `validate` operation.&#34;)
-
-        if not any(
-            cap in self.server_capabilities
-            for cap in (
-                &#34;urn:ietf:params:netconf:capability:validate:1.0&#34;,
-                &#34;urn:ietf:params:netconf:capability:validate:1.1&#34;,
-            )
-        ):
-            msg = &#34;validate requested, but is not supported by the server&#34;
-            self.logger.exception(msg)
-            raise CapabilityNotSupported(msg)
-
-        self._validate_edit_config_target(target=source)
-
-        xml_request = self._build_base_elem()
-        xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.VALIDATE.value.format(source=source), parser=PARSER
-        )
-        xml_request.insert(0, xml_validate_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding=&#34;utf-8&#34;
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b&#34;\n]]&gt;]]&gt;&#34;
-
-        response = NetconfResponse(
-            host=self.transport.host,
-            channel_input=channel_input.decode(),
-            xml_input=xml_request,
-            netconf_version=self.netconf_version,
-            strip_namespaces=self.strip_namespaces,
-        )
-        self.logger.debug(
-            f&#34;Built payload for `validate` operation. Payload: {channel_input.decode()}&#34;
-        )
-        return response</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>scrapli.driver.base_driver.ScrapeBase</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="scrapli_netconf.driver.async_driver.AsyncNetconfScrape" href="async_driver.html#scrapli_netconf.driver.async_driver.AsyncNetconfScrape">AsyncNetconfScrape</a></li>
-<li><a title="scrapli_netconf.driver.driver.NetconfScrape" href="driver.html#scrapli_netconf.driver.driver.NetconfScrape">NetconfScrape</a></li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.message_id"><code class="name">var <span class="ident">message_id</span> : int</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.netconf_version"><code class="name">var <span class="ident">netconf_version</span> : <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.readable_datastores"><code class="name">var <span class="ident">readable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.server_capabilities"><code class="name">var <span class="ident">server_capabilities</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strict_datastores"><code class="name">var <span class="ident">strict_datastores</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strip_namespaces"><code class="name">var <span class="ident">strip_namespaces</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args"><code class="name">var <span class="ident">transport_args</span> : Dict[str, Any]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores"><code class="name">var <span class="ident">writeable_datastores</span> : List[str]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
 </dl>
 </section>
 </article>
@@ -1801,6 +2041,19 @@ docs for given transport class for details of what to pass here</dd>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver">NetconfBaseDriver</a></code></h4>
+<ul class="">
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.client_capabilities">client_capabilities</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.host" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.host">host</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.netconf_version">netconf_version</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.readable_datastores" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.readable_datastores">readable_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.server_capabilities">server_capabilities</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.strict_datastores" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.strict_datastores">strict_datastores</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.strip_namespaces" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.strip_namespaces">strip_namespaces</a></code></li>
+<li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseDriver.writeable_datastores" href="#scrapli_netconf.driver.base_driver.NetconfBaseDriver.writeable_datastores">writeable_datastores</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations">NetconfBaseOperations</a></code></h4>
 <ul class="two-column">
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.COMMIT" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.COMMIT">COMMIT</a></code></li>
@@ -1817,33 +2070,13 @@ docs for given transport class for details of what to pass here</dd>
 <li><code><a title="scrapli_netconf.driver.base_driver.NetconfBaseOperations.VALIDATE" href="#scrapli_netconf.driver.base_driver.NetconfBaseOperations.VALIDATE">VALIDATE</a></code></li>
 </ul>
 </li>
-<li>
-<h4><code><a title="scrapli_netconf.driver.base_driver.NetconfClientCapabilities" href="#scrapli_netconf.driver.base_driver.NetconfClientCapabilities">NetconfClientCapabilities</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_0" href="#scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_0">CAPABILITIES_1_0</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_1" href="#scrapli_netconf.driver.base_driver.NetconfClientCapabilities.CAPABILITIES_1_1">CAPABILITIES_1_1</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase">NetconfScrapeBase</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.message_id" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.message_id">message_id</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.netconf_version" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.netconf_version">netconf_version</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.readable_datastores" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.readable_datastores">readable_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.server_capabilities" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.server_capabilities">server_capabilities</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strict_datastores" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.strict_datastores">strict_datastores</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.strip_namespaces" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.strip_namespaces">strip_namespaces</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.transport_args">transport_args</a></code></li>
-<li><code><a title="scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores" href="#scrapli_netconf.driver.base_driver.NetconfScrapeBase.writeable_datastores">writeable_datastores</a></code></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>scrapli_netconf.channel.async_channel API documentation</title>
-<meta name="description" content="scrapli_netconf.channel.async_channel" />
+<title>scrapli_netconf.channel.sync_channel API documentation</title>
+<meta name="description" content="scrapli_netconf.channel.sync_channel" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,29 +19,37 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>scrapli_netconf.channel.async_channel</code></h1>
+<h1 class="title">Module <code>scrapli_netconf.channel.sync_channel</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli_netconf.channel.async_channel</p>
+<p>scrapli_netconf.channel.sync_channel</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.channel.async_channel&#34;&#34;&#34;
-import asyncio
+<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.channel.sync_channel&#34;&#34;&#34;
+import re
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from select import select
+from typing import Optional
 
-from scrapli.channel import AsyncChannel
+from scrapli.channel import Channel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
-from scrapli.transport.base.async_transport import AsyncTransport
+from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
+from scrapli_netconf.transport.plugins.system.transport import NetconfSystemTransport
+
+HELLO_MATCH = re.compile(pattern=rb&#34;&lt;(\w+\:){0,1}hello&#34;, flags=re.I)
 
 
-class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
+class NetconfChannel(Channel, BaseNetconfChannel):
     def __init__(
         self,
-        transport: AsyncTransport,
+        transport: Transport,
         base_channel_args: BaseChannelArgs,
         netconf_base_channel_args: NetconfBaseChannelArgs,
     ):
@@ -51,10 +59,10 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
         # always use `]]&gt;]]&gt;` as the initial prompt to match
         self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
-        self._server_echo = False
+        self._server_echo: Optional[bool] = None
         self._capabilities_buf = b&#34;&#34;
 
-    async def open_netconf(self) -&gt; None:
+    def open_netconf(self) -&gt; None:
         &#34;&#34;&#34;
         Open the netconf channel
 
@@ -68,14 +76,127 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             N/A
 
         &#34;&#34;&#34;
-        raw_server_capabilities = await self._get_server_capabilities()
+        raw_server_capabilities = self._get_server_capabilities()
 
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
 
-        await self._check_echo()
-        await self._send_client_capabilities()
+        self._check_echo()
+        self._send_client_capabilities()
 
-    async def _check_echo(self) -&gt; None:
+    @staticmethod
+    def _authenticate_check_hello(buf: bytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if &#34;hello&#34; message is in output
+
+        Args:
+            buf: bytes output from the channel
+
+        Returns:
+            bool: true if hello message is seen, otherwise false
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        hello_match = re.search(pattern=HELLO_MATCH, string=buf)
+        if hello_match:
+            return True
+        return False
+
+    @ChannelTimeout(&#34;timed out during in channel netconf authentication&#34;)
+    def channel_authenticate_netconf(
+        self, auth_password: str, auth_private_key_passphrase: str
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Handle SSH Authentication for transports that only operate &#34;in the channel&#34; (i.e. system)
+
+        Args:
+            auth_password: password to authenticate with
+            auth_private_key_passphrase: passphrase for ssh key if necessary
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliAuthenticationFailed: if password prompt seen more than twice
+            ScrapliAuthenticationFailed: if passphrase prompt seen more than twice
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;attempting in channel netconf authentication&#34;)
+
+        password_count = 0
+        passphrase_count = 0
+        authenticate_buf = b&#34;&#34;
+
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        with self._channel_lock():  # type: ignore
+            while True:
+                buf = self.read()
+
+                authenticate_buf += buf.lower()
+                self._capabilities_buf += buf
+
+                self._ssh_message_handler(output=authenticate_buf)
+
+                if b&#34;password&#34; in authenticate_buf:
+                    # clear the authentication buffer so we don&#39;t re-read the password prompt
+                    authenticate_buf = b&#34;&#34;
+                    password_count += 1
+                    if password_count &gt; 2:
+                        msg = &#34;password prompt seen more than once, assuming auth failed&#34;
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_password, redacted=True)
+                    self.send_return()
+
+                if b&#34;enter passphrase for key&#34; in authenticate_buf:
+                    # clear the authentication buffer so we don&#39;t re-read the passphrase prompt
+                    authenticate_buf = b&#34;&#34;
+                    passphrase_count += 1
+                    if passphrase_count &gt; 2:
+                        msg = &#34;passphrase prompt seen more than once, assuming auth failed&#34;
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_private_key_passphrase, redacted=True)
+                    self.send_return()
+
+                if self._authenticate_check_hello(buf=authenticate_buf):
+                    self.logger.info(
+                        &#34;found start of server capabilities, authentication successful&#34;
+                    )
+                    return
+
+    def __check_echo(self, echo_timeout: float) -&gt; None:
+        &#34;&#34;&#34;
+        Function to drop into check echo thread
+
+        In the case of asyncio we just have a coroutine on the loop to check if the device echos
+        the inputs back to us
+
+        Args:
+            echo_timeout: duration to check echo for
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
+        start = datetime.now().timestamp()
+        while True:
+            fd_ready, _, _ = select([channel_fd], [], [], 0)
+            if channel_fd in fd_ready:
+                self._server_echo = True
+                break
+            interval_end = datetime.now().timestamp()
+            if (interval_end - start) &gt; echo_timeout:
+                self._server_echo = False
+                break
+
+    def _check_echo(self) -&gt; None:
         &#34;&#34;&#34;
         Determine if inputs are &#34;echoed&#34; back on stdout
 
@@ -94,29 +215,25 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for &#34;echo&#34;)
 
         Args:
-             timeout_transport: transport timeout value to modify to use as timeout to test echo
+            N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        try:
-            await asyncio.wait_for(self.read(), timeout=self._base_channel_args.timeout_ops / 20)
-            self.logger.info(
-                &#34;Determined that server echoes inputs on stdout, setting `_server_echo` to `True`&#34;
-            )
+        if isinstance(self.transport, NetconfSystemTransport):
             self._server_echo = True
-        except asyncio.exceptions.TimeoutError:
-            pass
-        return
+            return
+        pool = ThreadPoolExecutor(max_workers=1)
+        pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
 
     @ChannelTimeout(
         &#34;timed out determining if session is authenticated/getting server capabilities&#34;,
     )
-    async def _get_server_capabilities(self) -&gt; bytes:
+    def _get_server_capabilities(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all server capabilities have been sent by server
 
@@ -137,14 +254,14 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
         # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
         # is furious... fix this at some point!
-        async with self._channel_lock():  # type: ignore
+        with self._channel_lock():  # type: ignore
             while b&#34;]]&gt;]]&gt;&#34; not in capabilities_buf:
-                capabilities_buf += await self.read()
+                capabilities_buf += self.read()
             self.logger.debug(f&#34;received raw server capabilities: {repr(capabilities_buf)}&#34;)
         return capabilities_buf
 
     @ChannelTimeout(&#34;timed out sending client capabilities&#34;)
-    async def _send_client_capabilities(
+    def _send_client_capabilities(
         self,
     ) -&gt; None:
         &#34;&#34;&#34;
@@ -162,13 +279,21 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         &#34;&#34;&#34;
         # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
         # is furious... fix this at some point!
-        async with self._channel_lock():  # type: ignore
-            _ = self._pre_send_client_capabilities(
+        with self._channel_lock():  # type: ignore
+            bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
+
+            # in case of &#34;system&#34; transport we&#39;ll always want to read off the hello message inputs
+            if self._server_echo is True:
+                self._read_until_input(channel_input=bytes_client_capabilities)
+
             self.send_return()
 
-    async def _read_until_input(self, channel_input: bytes) -&gt; bytes:
+            while self._server_echo is None:
+                pass
+
+    def _read_until_input(self, channel_input: bytes) -&gt; bytes:
         &#34;&#34;&#34;
         Async read until all input has been entered.
 
@@ -192,15 +317,15 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             return output
 
         while True:
-            output += await self.read()
-
-            if channel_input in output:
+            output += self.read()
+            # if we have all the input *or* we see the closing rpc tag we know we are done here
+            if channel_input in output or b&#34;rpc&gt;&#34; in output:
                 break
 
         self.logger.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
-    async def send_input_netconf(self, channel_input: str) -&gt; bytes:
+    def send_input_netconf(self, channel_input: str) -&gt; bytes:
         &#34;&#34;&#34;
         Send inputs to netconf server
 
@@ -217,14 +342,16 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         final_channel_input = self._build_message(channel_input)
         bytes_final_channel_input = final_channel_input.encode()
 
-        buf, _ = await super().send_input(
+        buf, _ = super().send_input(
             channel_input=final_channel_input, strip_prompt=False, eager=True
         )
 
         if bytes_final_channel_input in buf:
+            # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
+            # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = await self._read_until_prompt(buf=buf)
+        buf = self._read_until_prompt(buf=buf)
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
@@ -242,9 +369,9 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel"><code class="flex name class">
-<span>class <span class="ident">AsyncNetconfChannel</span></span>
-<span>(</span><span>transport: scrapli.transport.base.async_transport.AsyncTransport, base_channel_args: scrapli.channel.base_channel.BaseChannelArgs, netconf_base_channel_args: <a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs" href="base_channel.html#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs">NetconfBaseChannelArgs</a>)</span>
+<dt id="scrapli_netconf.channel.sync_channel.NetconfChannel"><code class="flex name class">
+<span>class <span class="ident">NetconfChannel</span></span>
+<span>(</span><span>transport: scrapli.transport.base.sync_transport.Transport, base_channel_args: scrapli.channel.base_channel.BaseChannelArgs, netconf_base_channel_args: <a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs" href="base_channel.html#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs">NetconfBaseChannelArgs</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>BaseChannel Object &ndash; provides convenience methods to both sync and async Channels</p>
@@ -263,10 +390,10 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
+<pre><code class="python">class NetconfChannel(Channel, BaseNetconfChannel):
     def __init__(
         self,
-        transport: AsyncTransport,
+        transport: Transport,
         base_channel_args: BaseChannelArgs,
         netconf_base_channel_args: NetconfBaseChannelArgs,
     ):
@@ -276,10 +403,10 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
         # always use `]]&gt;]]&gt;` as the initial prompt to match
         self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
-        self._server_echo = False
+        self._server_echo: Optional[bool] = None
         self._capabilities_buf = b&#34;&#34;
 
-    async def open_netconf(self) -&gt; None:
+    def open_netconf(self) -&gt; None:
         &#34;&#34;&#34;
         Open the netconf channel
 
@@ -293,14 +420,127 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             N/A
 
         &#34;&#34;&#34;
-        raw_server_capabilities = await self._get_server_capabilities()
+        raw_server_capabilities = self._get_server_capabilities()
 
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
 
-        await self._check_echo()
-        await self._send_client_capabilities()
+        self._check_echo()
+        self._send_client_capabilities()
 
-    async def _check_echo(self) -&gt; None:
+    @staticmethod
+    def _authenticate_check_hello(buf: bytes) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if &#34;hello&#34; message is in output
+
+        Args:
+            buf: bytes output from the channel
+
+        Returns:
+            bool: true if hello message is seen, otherwise false
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        hello_match = re.search(pattern=HELLO_MATCH, string=buf)
+        if hello_match:
+            return True
+        return False
+
+    @ChannelTimeout(&#34;timed out during in channel netconf authentication&#34;)
+    def channel_authenticate_netconf(
+        self, auth_password: str, auth_private_key_passphrase: str
+    ) -&gt; None:
+        &#34;&#34;&#34;
+        Handle SSH Authentication for transports that only operate &#34;in the channel&#34; (i.e. system)
+
+        Args:
+            auth_password: password to authenticate with
+            auth_private_key_passphrase: passphrase for ssh key if necessary
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliAuthenticationFailed: if password prompt seen more than twice
+            ScrapliAuthenticationFailed: if passphrase prompt seen more than twice
+
+        &#34;&#34;&#34;
+        self.logger.debug(&#34;attempting in channel netconf authentication&#34;)
+
+        password_count = 0
+        passphrase_count = 0
+        authenticate_buf = b&#34;&#34;
+
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        with self._channel_lock():  # type: ignore
+            while True:
+                buf = self.read()
+
+                authenticate_buf += buf.lower()
+                self._capabilities_buf += buf
+
+                self._ssh_message_handler(output=authenticate_buf)
+
+                if b&#34;password&#34; in authenticate_buf:
+                    # clear the authentication buffer so we don&#39;t re-read the password prompt
+                    authenticate_buf = b&#34;&#34;
+                    password_count += 1
+                    if password_count &gt; 2:
+                        msg = &#34;password prompt seen more than once, assuming auth failed&#34;
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_password, redacted=True)
+                    self.send_return()
+
+                if b&#34;enter passphrase for key&#34; in authenticate_buf:
+                    # clear the authentication buffer so we don&#39;t re-read the passphrase prompt
+                    authenticate_buf = b&#34;&#34;
+                    passphrase_count += 1
+                    if passphrase_count &gt; 2:
+                        msg = &#34;passphrase prompt seen more than once, assuming auth failed&#34;
+                        self.logger.critical(msg)
+                        raise ScrapliAuthenticationFailed(msg)
+                    self.write(channel_input=auth_private_key_passphrase, redacted=True)
+                    self.send_return()
+
+                if self._authenticate_check_hello(buf=authenticate_buf):
+                    self.logger.info(
+                        &#34;found start of server capabilities, authentication successful&#34;
+                    )
+                    return
+
+    def __check_echo(self, echo_timeout: float) -&gt; None:
+        &#34;&#34;&#34;
+        Function to drop into check echo thread
+
+        In the case of asyncio we just have a coroutine on the loop to check if the device echos
+        the inputs back to us
+
+        Args:
+            echo_timeout: duration to check echo for
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
+        start = datetime.now().timestamp()
+        while True:
+            fd_ready, _, _ = select([channel_fd], [], [], 0)
+            if channel_fd in fd_ready:
+                self._server_echo = True
+                break
+            interval_end = datetime.now().timestamp()
+            if (interval_end - start) &gt; echo_timeout:
+                self._server_echo = False
+                break
+
+    def _check_echo(self) -&gt; None:
         &#34;&#34;&#34;
         Determine if inputs are &#34;echoed&#34; back on stdout
 
@@ -319,29 +559,25 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for &#34;echo&#34;)
 
         Args:
-             timeout_transport: transport timeout value to modify to use as timeout to test echo
+            N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        try:
-            await asyncio.wait_for(self.read(), timeout=self._base_channel_args.timeout_ops / 20)
-            self.logger.info(
-                &#34;Determined that server echoes inputs on stdout, setting `_server_echo` to `True`&#34;
-            )
+        if isinstance(self.transport, NetconfSystemTransport):
             self._server_echo = True
-        except asyncio.exceptions.TimeoutError:
-            pass
-        return
+            return
+        pool = ThreadPoolExecutor(max_workers=1)
+        pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
 
     @ChannelTimeout(
         &#34;timed out determining if session is authenticated/getting server capabilities&#34;,
     )
-    async def _get_server_capabilities(self) -&gt; bytes:
+    def _get_server_capabilities(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all server capabilities have been sent by server
 
@@ -362,14 +598,14 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
         # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
         # is furious... fix this at some point!
-        async with self._channel_lock():  # type: ignore
+        with self._channel_lock():  # type: ignore
             while b&#34;]]&gt;]]&gt;&#34; not in capabilities_buf:
-                capabilities_buf += await self.read()
+                capabilities_buf += self.read()
             self.logger.debug(f&#34;received raw server capabilities: {repr(capabilities_buf)}&#34;)
         return capabilities_buf
 
     @ChannelTimeout(&#34;timed out sending client capabilities&#34;)
-    async def _send_client_capabilities(
+    def _send_client_capabilities(
         self,
     ) -&gt; None:
         &#34;&#34;&#34;
@@ -387,13 +623,21 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         &#34;&#34;&#34;
         # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
         # is furious... fix this at some point!
-        async with self._channel_lock():  # type: ignore
-            _ = self._pre_send_client_capabilities(
+        with self._channel_lock():  # type: ignore
+            bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
+
+            # in case of &#34;system&#34; transport we&#39;ll always want to read off the hello message inputs
+            if self._server_echo is True:
+                self._read_until_input(channel_input=bytes_client_capabilities)
+
             self.send_return()
 
-    async def _read_until_input(self, channel_input: bytes) -&gt; bytes:
+            while self._server_echo is None:
+                pass
+
+    def _read_until_input(self, channel_input: bytes) -&gt; bytes:
         &#34;&#34;&#34;
         Async read until all input has been entered.
 
@@ -417,15 +661,15 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             return output
 
         while True:
-            output += await self.read()
-
-            if channel_input in output:
+            output += self.read()
+            # if we have all the input *or* we see the closing rpc tag we know we are done here
+            if channel_input in output or b&#34;rpc&gt;&#34; in output:
                 break
 
         self.logger.info(f&#34;Read: {repr(output)}&#34;)
         return output
 
-    async def send_input_netconf(self, channel_input: str) -&gt; bytes:
+    def send_input_netconf(self, channel_input: str) -&gt; bytes:
         &#34;&#34;&#34;
         Send inputs to netconf server
 
@@ -442,14 +686,16 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         final_channel_input = self._build_message(channel_input)
         bytes_final_channel_input = final_channel_input.encode()
 
-        buf, _ = await super().send_input(
+        buf, _ = super().send_input(
             channel_input=final_channel_input, strip_prompt=False, eager=True
         )
 
         if bytes_final_channel_input in buf:
+            # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
+            # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = await self._read_until_prompt(buf=buf)
+        buf = self._read_until_prompt(buf=buf)
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
@@ -459,14 +705,104 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>scrapli.channel.async_channel.AsyncChannel</li>
+<li>scrapli.channel.sync_channel.Channel</li>
 <li><a title="scrapli_netconf.channel.base_channel.BaseNetconfChannel" href="base_channel.html#scrapli_netconf.channel.base_channel.BaseNetconfChannel">BaseNetconfChannel</a></li>
 <li>scrapli.channel.base_channel.BaseChannel</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf"><code class="name flex">
-<span>async def <span class="ident">open_netconf</span></span>(<span>self) ‑> NoneType</span>
+<dt id="scrapli_netconf.channel.sync_channel.NetconfChannel.channel_authenticate_netconf"><code class="name flex">
+<span>def <span class="ident">channel_authenticate_netconf</span></span>(<span>self, auth_password: str, auth_private_key_passphrase: str) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle SSH Authentication for transports that only operate "in the channel" (i.e. system)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>auth_password</code></strong></dt>
+<dd>password to authenticate with</dd>
+<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
+<dd>passphrase for ssh key if necessary</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>None</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ScrapliAuthenticationFailed</code></dt>
+<dd>if password prompt seen more than twice</dd>
+<dt><code>ScrapliAuthenticationFailed</code></dt>
+<dd>if passphrase prompt seen more than twice</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@ChannelTimeout(&#34;timed out during in channel netconf authentication&#34;)
+def channel_authenticate_netconf(
+    self, auth_password: str, auth_private_key_passphrase: str
+) -&gt; None:
+    &#34;&#34;&#34;
+    Handle SSH Authentication for transports that only operate &#34;in the channel&#34; (i.e. system)
+
+    Args:
+        auth_password: password to authenticate with
+        auth_private_key_passphrase: passphrase for ssh key if necessary
+
+    Returns:
+        None
+
+    Raises:
+        ScrapliAuthenticationFailed: if password prompt seen more than twice
+        ScrapliAuthenticationFailed: if passphrase prompt seen more than twice
+
+    &#34;&#34;&#34;
+    self.logger.debug(&#34;attempting in channel netconf authentication&#34;)
+
+    password_count = 0
+    passphrase_count = 0
+    authenticate_buf = b&#34;&#34;
+
+    # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+    # is furious... fix this at some point!
+    with self._channel_lock():  # type: ignore
+        while True:
+            buf = self.read()
+
+            authenticate_buf += buf.lower()
+            self._capabilities_buf += buf
+
+            self._ssh_message_handler(output=authenticate_buf)
+
+            if b&#34;password&#34; in authenticate_buf:
+                # clear the authentication buffer so we don&#39;t re-read the password prompt
+                authenticate_buf = b&#34;&#34;
+                password_count += 1
+                if password_count &gt; 2:
+                    msg = &#34;password prompt seen more than once, assuming auth failed&#34;
+                    self.logger.critical(msg)
+                    raise ScrapliAuthenticationFailed(msg)
+                self.write(channel_input=auth_password, redacted=True)
+                self.send_return()
+
+            if b&#34;enter passphrase for key&#34; in authenticate_buf:
+                # clear the authentication buffer so we don&#39;t re-read the passphrase prompt
+                authenticate_buf = b&#34;&#34;
+                passphrase_count += 1
+                if passphrase_count &gt; 2:
+                    msg = &#34;passphrase prompt seen more than once, assuming auth failed&#34;
+                    self.logger.critical(msg)
+                    raise ScrapliAuthenticationFailed(msg)
+                self.write(channel_input=auth_private_key_passphrase, redacted=True)
+                self.send_return()
+
+            if self._authenticate_check_hello(buf=authenticate_buf):
+                self.logger.info(
+                    &#34;found start of server capabilities, authentication successful&#34;
+                )
+                return</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.channel.sync_channel.NetconfChannel.open_netconf"><code class="name flex">
+<span>def <span class="ident">open_netconf</span></span>(<span>self) ‑> NoneType</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Open the netconf channel</p>
@@ -480,7 +816,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def open_netconf(self) -&gt; None:
+<pre><code class="python">def open_netconf(self) -&gt; None:
     &#34;&#34;&#34;
     Open the netconf channel
 
@@ -494,16 +830,16 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         N/A
 
     &#34;&#34;&#34;
-    raw_server_capabilities = await self._get_server_capabilities()
+    raw_server_capabilities = self._get_server_capabilities()
 
     self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
 
-    await self._check_echo()
-    await self._send_client_capabilities()</code></pre>
+    self._check_echo()
+    self._send_client_capabilities()</code></pre>
 </details>
 </dd>
-<dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf"><code class="name flex">
-<span>async def <span class="ident">send_input_netconf</span></span>(<span>self, channel_input: str) ‑> bytes</span>
+<dt id="scrapli_netconf.channel.sync_channel.NetconfChannel.send_input_netconf"><code class="name flex">
+<span>def <span class="ident">send_input_netconf</span></span>(<span>self, channel_input: str) ‑> bytes</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send inputs to netconf server</p>
@@ -523,7 +859,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">async def send_input_netconf(self, channel_input: str) -&gt; bytes:
+<pre><code class="python">def send_input_netconf(self, channel_input: str) -&gt; bytes:
     &#34;&#34;&#34;
     Send inputs to netconf server
 
@@ -540,14 +876,16 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
     final_channel_input = self._build_message(channel_input)
     bytes_final_channel_input = final_channel_input.encode()
 
-    buf, _ = await super().send_input(
+    buf, _ = super().send_input(
         channel_input=final_channel_input, strip_prompt=False, eager=True
     )
 
     if bytes_final_channel_input in buf:
+        # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
+        # reply remaining
         buf = buf.split(bytes_final_channel_input)[1]
 
-    buf = await self._read_until_prompt(buf=buf)
+    buf = self._read_until_prompt(buf=buf)
 
     if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
         # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
@@ -575,10 +913,11 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel">AsyncNetconfChannel</a></code></h4>
+<h4><code><a title="scrapli_netconf.channel.sync_channel.NetconfChannel" href="#scrapli_netconf.channel.sync_channel.NetconfChannel">NetconfChannel</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf">open_netconf</a></code></li>
-<li><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf">send_input_netconf</a></code></li>
+<li><code><a title="scrapli_netconf.channel.sync_channel.NetconfChannel.channel_authenticate_netconf" href="#scrapli_netconf.channel.sync_channel.NetconfChannel.channel_authenticate_netconf">channel_authenticate_netconf</a></code></li>
+<li><code><a title="scrapli_netconf.channel.sync_channel.NetconfChannel.open_netconf" href="#scrapli_netconf.channel.sync_channel.NetconfChannel.open_netconf">open_netconf</a></code></li>
+<li><code><a title="scrapli_netconf.channel.sync_channel.NetconfChannel.send_input_netconf" href="#scrapli_netconf.channel.sync_channel.NetconfChannel.send_input_netconf">send_input_netconf</a></code></li>
 </ul>
 </li>
 </ul>

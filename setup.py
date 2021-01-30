@@ -3,7 +3,7 @@
 import setuptools
 
 __author__ = "Carl Montanari"
-__version__ = "2021.01.30a1"
+__version__ = "2021.01.30a2"
 
 with open("README.md", "r") as f:
     README = f.read()

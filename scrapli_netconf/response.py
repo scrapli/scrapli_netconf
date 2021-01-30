@@ -82,7 +82,7 @@ class NetconfResponse(Response):
 
         self.error_messages: List[str] = []
 
-    def _record_response(self, result: bytes) -> None:
+    def record_response(self, result: bytes) -> None:
         """
         Record channel_input results and elapsed time of channel input/reading output
 

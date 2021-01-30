@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli_netconf.channel.async_channel API documentation</title>
 <meta name="description" content="scrapli_netconf.channel.async_channel" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -29,26 +29,53 @@
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.channel.async_channel&#34;&#34;&#34;
 import asyncio
-from typing import Any, Optional
 
 from scrapli.channel import AsyncChannel
-from scrapli.decorators import OperationTimeout
-from scrapli.transport.async_transport import AsyncTransport
-from scrapli_netconf.channel.base_channel import NetconfChannelBase
+from scrapli.channel.base_channel import BaseChannelArgs
+from scrapli.decorators import ChannelTimeout
+from scrapli.transport.base.async_transport import AsyncTransport
+from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfClientCapabilities
 
 
-class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
-    def __init__(self, transport: AsyncTransport, **kwargs: Any):
-        # pop the comms prompt pattern out; always use `]]&gt;]]&gt;` as the initial prompt to match
-        kwargs.pop(&#34;comms_prompt_pattern&#34;)
-        super().__init__(transport=transport, comms_prompt_pattern=&#34;]]&gt;]]&gt;&#34;, **kwargs)
+class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
+    def __init__(
+        self,
+        transport: AsyncTransport,
+        base_channel_args: BaseChannelArgs,
+        netconf_base_channel_args: NetconfBaseChannelArgs,
+    ):
+        super().__init__(transport=transport, base_channel_args=base_channel_args)
 
-        self.netconf_version = NetconfVersion.VERSION_1_0
+        self._netconf_base_channel_args = netconf_base_channel_args
+
+        # always use `]]&gt;]]&gt;` as the initial prompt to match
+        self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
         self._server_echo = False
+        self._capabilities_buf = b&#34;&#34;
 
-    async def _check_echo(self, timeout_transport: float) -&gt; None:
+    async def open_netconf(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open the netconf channel
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        raw_server_capabilities = await self._get_server_capabilities()
+
+        self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
+
+        await self._check_echo()
+        await self._send_client_capabilities()
+
+    async def _check_echo(self) -&gt; None:
         &#34;&#34;&#34;
         Determine if inputs are &#34;echoed&#34; back on stdout
 
@@ -77,9 +104,7 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
 
         &#34;&#34;&#34;
         try:
-            await asyncio.wait_for(
-                self.transport.stdout.read(65535), timeout=timeout_transport / 20
-            )
+            await asyncio.wait_for(self.read(), timeout=self._base_channel_args.timeout_ops / 20)
             self.logger.info(
                 &#34;Determined that server echoes inputs on stdout, setting `_server_echo` to `True`&#34;
             )
@@ -88,16 +113,15 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             pass
         return
 
-    @OperationTimeout(
-        &#34;timeout_ops&#34;,
-        &#34;Timed out determining if session is authenticated/getting server capabilities&#34;,
+    @ChannelTimeout(
+        &#34;timed out determining if session is authenticated/getting server capabilities&#34;,
     )
-    async def _get_server_capabilities(self, login_bytes: bytes) -&gt; bytes:
+    async def _get_server_capabilities(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all server capabilities have been sent by server
 
         Args:
-            login_bytes: bytes captured during authentication
+            N/A
 
         Returns:
             bytes: raw bytes containing server capabilities
@@ -106,52 +130,50 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             N/A
 
         &#34;&#34;&#34;
-        with self.session_lock:
-            output = login_bytes
-            while b&#34;]]&gt;]]&gt;&#34; not in output:
-                output += await self.transport.read()
-            self.logger.debug(f&#34;Received raw server capabilities: {repr(output)}&#34;)
-        return output
+        capabilities_buf = self._capabilities_buf
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
+        # reset this to empty to avoid any confusion now that we are moving on
+        self._capabilities_buf = b&#34;&#34;
+
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
+            while b&#34;]]&gt;]]&gt;&#34; not in capabilities_buf:
+                capabilities_buf += await self.read()
+            self.logger.debug(f&#34;received raw server capabilities: {repr(capabilities_buf)}&#34;)
+        return capabilities_buf
+
+    @ChannelTimeout(&#34;timed out sending client capabilities&#34;)
     async def _send_client_capabilities(
         self,
-        client_capabilities: NetconfClientCapabilities,
-        capabilities_version: NetconfVersion = NetconfVersion.VERSION_1_1,
     ) -&gt; None:
         &#34;&#34;&#34;
         Send client capabilities to the netconf server
 
         Args:
-            client_capabilities: string of client netconf capabilities to send to server
-            capabilities_version: string of client netconf capabilities version, 1.0 or 1.1
+            N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        with self.session_lock:
-            _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
-            self._send_return()
-            self._post_send_client_capabilities(capabilities_version=capabilities_version)
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
+            _ = self._pre_send_client_capabilities(
+                client_capabilities=self._netconf_base_channel_args.client_capabilities
+            )
+            self.send_return()
 
-    async def _read_until_input(
-        self, channel_input: bytes, auto_expand: Optional[bool] = None
-    ) -&gt; bytes:
+    async def _read_until_input(self, channel_input: bytes) -&gt; bytes:
         &#34;&#34;&#34;
         Async read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
-            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
-                devices without `cli complete-on-space` disabled will convert `config` to
-                `configuration` after entering a space character after `config`; because scrapli
-                reads the channel until each command is entered, the command changing from `config`
-                to `configuration` will cause scrapli (by default) to never think the command has
-                been entered.
 
         Returns:
             bytes: output read from channel
@@ -169,17 +191,10 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
             self.logger.info(f&#34;Read: {repr(output)}&#34;)
             return output
 
-        if auto_expand is None:
-            auto_expand = self.comms_auto_expand
-
         while True:
-            output += await self._read_chunk()
+            output += await self.read()
 
-            if not auto_expand and channel_input in output:
-                break
-            if auto_expand and self._process_auto_expand(
-                output=output, channel_input=channel_input
-            ):
+            if channel_input in output:
                 break
 
         self.logger.info(f&#34;Read: {repr(output)}&#34;)
@@ -202,20 +217,20 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
         final_channel_input = self._build_message(channel_input)
         bytes_final_channel_input = final_channel_input.encode()
 
-        raw_result, _ = await super().send_input(
+        buf, _ = await super().send_input(
             channel_input=final_channel_input, strip_prompt=False, eager=True
         )
 
-        if bytes_final_channel_input in raw_result:
-            raw_result = raw_result.split(bytes_final_channel_input)[1]
+        if bytes_final_channel_input in buf:
+            buf = buf.split(bytes_final_channel_input)[1]
 
-        raw_result = await self._read_until_prompt(output=raw_result)
+        buf = await self._read_until_prompt(buf=buf)
 
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
-            self._send_return()
+            self.send_return()
 
-        return raw_result</code></pre>
+        return buf</code></pre>
 </details>
 </section>
 <section>
@@ -229,38 +244,63 @@ class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
 <dl>
 <dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel"><code class="flex name class">
 <span>class <span class="ident">AsyncNetconfChannel</span></span>
-<span>(</span><span>transport: scrapli.transport.async_transport.AsyncTransport, **kwargs: Any)</span>
+<span>(</span><span>transport: scrapli.transport.base.async_transport.AsyncTransport, base_channel_args: scrapli.channel.base_channel.BaseChannelArgs, netconf_base_channel_args: <a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs" href="base_channel.html#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs">NetconfBaseChannelArgs</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>AsyncChannel Object</p>
+<div class="desc"><p>BaseChannel Object &ndash; provides convenience methods to both sync and async Channels</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Scrapli Transport class</dd>
-<dt><strong><code>kwargs</code></strong></dt>
-<dd>keyword arguments to pass to ChannelBase</dd>
+<dd>initialized scrapli Transport/AsyncTransport object</dd>
+<dt><strong><code>base_channel_args</code></strong></dt>
+<dd>BaseChannelArgs object</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
+<p>None</p>
 <h2 id="raises">Raises</h2>
 <p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AsyncNetconfChannel(AsyncChannel, NetconfChannelBase):
-    def __init__(self, transport: AsyncTransport, **kwargs: Any):
-        # pop the comms prompt pattern out; always use `]]&gt;]]&gt;` as the initial prompt to match
-        kwargs.pop(&#34;comms_prompt_pattern&#34;)
-        super().__init__(transport=transport, comms_prompt_pattern=&#34;]]&gt;]]&gt;&#34;, **kwargs)
+<pre><code class="python">class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
+    def __init__(
+        self,
+        transport: AsyncTransport,
+        base_channel_args: BaseChannelArgs,
+        netconf_base_channel_args: NetconfBaseChannelArgs,
+    ):
+        super().__init__(transport=transport, base_channel_args=base_channel_args)
 
-        self.netconf_version = NetconfVersion.VERSION_1_0
+        self._netconf_base_channel_args = netconf_base_channel_args
+
+        # always use `]]&gt;]]&gt;` as the initial prompt to match
+        self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
         self._server_echo = False
+        self._capabilities_buf = b&#34;&#34;
 
-    async def _check_echo(self, timeout_transport: float) -&gt; None:
+    async def open_netconf(self) -&gt; None:
+        &#34;&#34;&#34;
+        Open the netconf channel
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        raw_server_capabilities = await self._get_server_capabilities()
+
+        self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
+
+        await self._check_echo()
+        await self._send_client_capabilities()
+
+    async def _check_echo(self) -&gt; None:
         &#34;&#34;&#34;
         Determine if inputs are &#34;echoed&#34; back on stdout
 
@@ -289,9 +329,7 @@ inheritance.</p>
 
         &#34;&#34;&#34;
         try:
-            await asyncio.wait_for(
-                self.transport.stdout.read(65535), timeout=timeout_transport / 20
-            )
+            await asyncio.wait_for(self.read(), timeout=self._base_channel_args.timeout_ops / 20)
             self.logger.info(
                 &#34;Determined that server echoes inputs on stdout, setting `_server_echo` to `True`&#34;
             )
@@ -300,16 +338,15 @@ inheritance.</p>
             pass
         return
 
-    @OperationTimeout(
-        &#34;timeout_ops&#34;,
-        &#34;Timed out determining if session is authenticated/getting server capabilities&#34;,
+    @ChannelTimeout(
+        &#34;timed out determining if session is authenticated/getting server capabilities&#34;,
     )
-    async def _get_server_capabilities(self, login_bytes: bytes) -&gt; bytes:
+    async def _get_server_capabilities(self) -&gt; bytes:
         &#34;&#34;&#34;
         Read until all server capabilities have been sent by server
 
         Args:
-            login_bytes: bytes captured during authentication
+            N/A
 
         Returns:
             bytes: raw bytes containing server capabilities
@@ -318,52 +355,50 @@ inheritance.</p>
             N/A
 
         &#34;&#34;&#34;
-        with self.session_lock:
-            output = login_bytes
-            while b&#34;]]&gt;]]&gt;&#34; not in output:
-                output += await self.transport.read()
-            self.logger.debug(f&#34;Received raw server capabilities: {repr(output)}&#34;)
-        return output
+        capabilities_buf = self._capabilities_buf
 
-    @OperationTimeout(&#34;timeout_ops&#34;, &#34;Timed out sending client capabilities&#34;)
+        # reset this to empty to avoid any confusion now that we are moving on
+        self._capabilities_buf = b&#34;&#34;
+
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
+            while b&#34;]]&gt;]]&gt;&#34; not in capabilities_buf:
+                capabilities_buf += await self.read()
+            self.logger.debug(f&#34;received raw server capabilities: {repr(capabilities_buf)}&#34;)
+        return capabilities_buf
+
+    @ChannelTimeout(&#34;timed out sending client capabilities&#34;)
     async def _send_client_capabilities(
         self,
-        client_capabilities: NetconfClientCapabilities,
-        capabilities_version: NetconfVersion = NetconfVersion.VERSION_1_1,
     ) -&gt; None:
         &#34;&#34;&#34;
         Send client capabilities to the netconf server
 
         Args:
-            client_capabilities: string of client netconf capabilities to send to server
-            capabilities_version: string of client netconf capabilities version, 1.0 or 1.1
+            N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
 
         &#34;&#34;&#34;
-        with self.session_lock:
-            _ = self._pre_send_client_capabilities(client_capabilities=client_capabilities)
-            self._send_return()
-            self._post_send_client_capabilities(capabilities_version=capabilities_version)
+        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
+        # is furious... fix this at some point!
+        async with self._channel_lock():  # type: ignore
+            _ = self._pre_send_client_capabilities(
+                client_capabilities=self._netconf_base_channel_args.client_capabilities
+            )
+            self.send_return()
 
-    async def _read_until_input(
-        self, channel_input: bytes, auto_expand: Optional[bool] = None
-    ) -&gt; bytes:
+    async def _read_until_input(self, channel_input: bytes) -&gt; bytes:
         &#34;&#34;&#34;
         Async read until all input has been entered.
 
         Args:
             channel_input: string to write to channel
-            auto_expand: bool to indicate if a device auto-expands commands, for example juniper
-                devices without `cli complete-on-space` disabled will convert `config` to
-                `configuration` after entering a space character after `config`; because scrapli
-                reads the channel until each command is entered, the command changing from `config`
-                to `configuration` will cause scrapli (by default) to never think the command has
-                been entered.
 
         Returns:
             bytes: output read from channel
@@ -381,17 +416,10 @@ inheritance.</p>
             self.logger.info(f&#34;Read: {repr(output)}&#34;)
             return output
 
-        if auto_expand is None:
-            auto_expand = self.comms_auto_expand
-
         while True:
-            output += await self._read_chunk()
+            output += await self.read()
 
-            if not auto_expand and channel_input in output:
-                break
-            if auto_expand and self._process_auto_expand(
-                output=output, channel_input=channel_input
-            ):
+            if channel_input in output:
                 break
 
         self.logger.info(f&#34;Read: {repr(output)}&#34;)
@@ -414,37 +442,66 @@ inheritance.</p>
         final_channel_input = self._build_message(channel_input)
         bytes_final_channel_input = final_channel_input.encode()
 
-        raw_result, _ = await super().send_input(
+        buf, _ = await super().send_input(
             channel_input=final_channel_input, strip_prompt=False, eager=True
         )
 
-        if bytes_final_channel_input in raw_result:
-            raw_result = raw_result.split(bytes_final_channel_input)[1]
+        if bytes_final_channel_input in buf:
+            buf = buf.split(bytes_final_channel_input)[1]
 
-        raw_result = await self._read_until_prompt(output=raw_result)
+        buf = await self._read_until_prompt(buf=buf)
 
-        if self.netconf_version == NetconfVersion.VERSION_1_1:
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
-            self._send_return()
+            self.send_return()
 
-        return raw_result</code></pre>
+        return buf</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>scrapli.channel.async_channel.AsyncChannel</li>
-<li><a title="scrapli_netconf.channel.base_channel.NetconfChannelBase" href="base_channel.html#scrapli_netconf.channel.base_channel.NetconfChannelBase">NetconfChannelBase</a></li>
-<li>scrapli.channel.base_channel.ChannelBase</li>
-<li>abc.ABC</li>
+<li><a title="scrapli_netconf.channel.base_channel.BaseNetconfChannel" href="base_channel.html#scrapli_netconf.channel.base_channel.BaseNetconfChannel">BaseNetconfChannel</a></li>
+<li>scrapli.channel.base_channel.BaseChannel</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.netconf_version"><code class="name">var <span class="ident">netconf_version</span> : <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
+<dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf"><code class="name flex">
+<span>async def <span class="ident">open_netconf</span></span>(<span>self) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open the netconf channel</p>
+<h2 id="args">Args</h2>
+<p>N/A</p>
+<h2 id="returns">Returns</h2>
+<p>None</p>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">async def open_netconf(self) -&gt; None:
+    &#34;&#34;&#34;
+    Open the netconf channel
+
+    Args:
+        N/A
+
+    Returns:
+        None
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    raw_server_capabilities = await self._get_server_capabilities()
+
+    self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
+
+    await self._check_echo()
+    await self._send_client_capabilities()</code></pre>
+</details>
+</dd>
 <dt id="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf"><code class="name flex">
 <span>async def <span class="ident">send_input_netconf</span></span>(<span>self, channel_input: str) ‑> bytes</span>
 </code></dt>
@@ -483,20 +540,20 @@ inheritance.</p>
     final_channel_input = self._build_message(channel_input)
     bytes_final_channel_input = final_channel_input.encode()
 
-    raw_result, _ = await super().send_input(
+    buf, _ = await super().send_input(
         channel_input=final_channel_input, strip_prompt=False, eager=True
     )
 
-    if bytes_final_channel_input in raw_result:
-        raw_result = raw_result.split(bytes_final_channel_input)[1]
+    if bytes_final_channel_input in buf:
+        buf = buf.split(bytes_final_channel_input)[1]
 
-    raw_result = await self._read_until_prompt(output=raw_result)
+    buf = await self._read_until_prompt(buf=buf)
 
-    if self.netconf_version == NetconfVersion.VERSION_1_1:
+    if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
         # netconf 1.1 with &#34;chunking&#34; style message format needs an extra return char here
-        self._send_return()
+        self.send_return()
 
-    return raw_result</code></pre>
+    return buf</code></pre>
 </details>
 </dd>
 </dl>
@@ -520,7 +577,7 @@ inheritance.</p>
 <li>
 <h4><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel">AsyncNetconfChannel</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.netconf_version" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel.netconf_version">netconf_version</a></code></li>
+<li><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel.open_netconf">open_netconf</a></code></li>
 <li><code><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf" href="#scrapli_netconf.channel.async_channel.AsyncNetconfChannel.send_input_netconf">send_input_netconf</a></code></li>
 </ul>
 </li>
@@ -530,7 +587,7 @@ inheritance.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

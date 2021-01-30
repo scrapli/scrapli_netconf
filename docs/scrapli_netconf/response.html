@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli_netconf.response API documentation</title>
 <meta name="description" content="scrapli_netconf.response" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -111,7 +111,7 @@ class NetconfResponse(Response):
 
         self.error_messages: List[str] = []
 
-    def _record_response(self, result: bytes) -&gt; None:
+    def record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -378,7 +378,7 @@ class NetconfResponse(Response):
 <dl>
 <dt id="scrapli_netconf.response.NetconfResponse"><code class="flex name class">
 <span>class <span class="ident">NetconfResponse</span></span>
-<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fe6b8128ee0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, xml_input: <cyfunction Element at 0x7fbb08e67ba0>, strip_namespaces: bool = True, failed_when_contains: Union[bytes, List[bytes], NoneType] = None, **kwargs: Any)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Scrapli Netconf NetconfResponse</p>
@@ -469,7 +469,7 @@ for these strings in raw byte strings we get back from the device</dd>
 
         self.error_messages: List[str] = []
 
-    def _record_response(self, result: bytes) -&gt; None:
+    def record_response(self, result: bytes) -&gt; None:
         &#34;&#34;&#34;
         Record channel_input results and elapsed time of channel input/reading output
 
@@ -767,7 +767,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.get_xml_elements"><code class="name flex">
-<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fe6b8128ee0>]</span>
+<span>def <span class="ident">get_xml_elements</span></span>(<span>self) ‑> Dict[str, <cyfunction Element at 0x7fbb08e67ba0>]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing</p>
@@ -808,6 +808,57 @@ for these strings in raw byte strings we get back from the device</dd>
             _tag = etree.QName(child.tag).localname
             xml_elements[_tag] = child
     return xml_elements</code></pre>
+</details>
+</dd>
+<dt id="scrapli_netconf.response.NetconfResponse.record_response"><code class="name flex">
+<span>def <span class="ident">record_response</span></span>(<span>self, result: bytes) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Record channel_input results and elapsed time of channel input/reading output</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>result</code></strong></dt>
+<dd>bytes result of channel_input</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>N/A
+# noqa: DAR202</p>
+<h2 id="raises">Raises</h2>
+<p>N/A</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def record_response(self, result: bytes) -&gt; None:
+    &#34;&#34;&#34;
+    Record channel_input results and elapsed time of channel input/reading output
+
+    Args:
+        result: bytes result of channel_input
+
+    Returns:
+        N/A  # noqa: DAR202
+
+    Raises:
+        N/A
+
+    &#34;&#34;&#34;
+    self.finish_time = datetime.now()
+    self.elapsed_time = (self.finish_time - self.start_time).total_seconds()
+    self.raw_result = result
+
+    if not self.failed_when_contains:
+        self.failed = False
+    elif not any(err in self.raw_result for err in self.failed_when_contains):
+        self.failed = False
+
+    if self.netconf_version == NetconfVersion.VERSION_1_0:
+        self._record_response_netconf_1_0()
+    else:
+        self._record_response_netconf_1_1()
+
+    if self.failed:
+        self._fetch_error_messages()</code></pre>
 </details>
 </dd>
 <dt id="scrapli_netconf.response.NetconfResponse.textfsm_parse_output"><code class="name flex">
@@ -872,6 +923,7 @@ for these strings in raw byte strings we get back from the device</dd>
 <ul class="">
 <li><code><a title="scrapli_netconf.response.NetconfResponse.genie_parse_output" href="#scrapli_netconf.response.NetconfResponse.genie_parse_output">genie_parse_output</a></code></li>
 <li><code><a title="scrapli_netconf.response.NetconfResponse.get_xml_elements" href="#scrapli_netconf.response.NetconfResponse.get_xml_elements">get_xml_elements</a></code></li>
+<li><code><a title="scrapli_netconf.response.NetconfResponse.record_response" href="#scrapli_netconf.response.NetconfResponse.record_response">record_response</a></code></li>
 <li><code><a title="scrapli_netconf.response.NetconfResponse.textfsm_parse_output" href="#scrapli_netconf.response.NetconfResponse.textfsm_parse_output">textfsm_parse_output</a></code></li>
 </ul>
 </li>
@@ -881,7 +933,7 @@ for these strings in raw byte strings we get back from the device</dd>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

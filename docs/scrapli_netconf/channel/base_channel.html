@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli_netconf.channel.base_channel API documentation</title>
 <meta name="description" content="scrapli_netconf.channel.base_channel" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
@@ -28,20 +28,96 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;scrapli_netconf.channel.base_channel&#34;&#34;&#34;
-from scrapli.channel.base_channel import ChannelBase
-from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfClientCapabilities
+import re
+from dataclasses import dataclass
+from typing import List, Optional
+
+from lxml import etree
+
+from scrapli.channel.base_channel import BaseChannel
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.exceptions import CouldNotExchangeCapabilities
 
 
-class NetconfChannelBase(ChannelBase):
+@dataclass()
+class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
+    server_capabilities: Optional[List[str]] = None
+    client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
 
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
+
+class BaseNetconfChannel(BaseChannel):
+    _netconf_base_channel_args: NetconfBaseChannelArgs
+
+    def _process_capabilities_exchange(self, raw_server_capabilities: bytes) -&gt; None:
         &#34;&#34;&#34;
-        Override scrapli _restructure_output as this is unnecessary for scrapli_netconf
+        Process received capabilities; return client capabilities
 
         Args:
-            output: bytes from channel
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        server_capabilities = self._parse_server_capabilities(
+            raw_server_capabilities=raw_server_capabilities
+        )
+
+        if &#34;urn:ietf:params:netconf:base:1.1&#34; in server_capabilities:
+            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
+            self._base_channel_args.comms_prompt_pattern = r&#34;^##$&#34;
+        else:
+            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_0
+            self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
+
+        self._netconf_base_channel_args.server_capabilities = server_capabilities
+        self._netconf_base_channel_args.client_capabilities = client_capabilities
+
+    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Parse netconf server capabilities
+
+        Args:
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
+
+        &#34;&#34;&#34;
+        server_capabilities = []
+
+        # matches hello with or without namespace
+        filtered_raw_server_capabilities = re.search(
+            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
+        )
+        if filtered_raw_server_capabilities is None:
+            msg = &#34;failed to parse server capabilities&#34;
+            raise CouldNotExchangeCapabilities(msg)
+        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
+        for elem in server_capabilities_xml.iter():
+            if &#34;capability&#34; not in elem.tag:
+                continue
+            server_capabilities.append(elem.text.strip())
+        self.logger.info(f&#34;server capabilities received and parsed: {server_capabilities}&#34;)
+        return server_capabilities
+
+    def _process_output(self, buf: bytes, strip_prompt: bool) -&gt; bytes:
+        &#34;&#34;&#34;
+        Override scrapli _process_output as this is unnecessary for scrapli_netconf
+
+        Args:
+            buf: bytes output from the device
             strip_prompt: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
@@ -52,7 +128,7 @@ class NetconfChannelBase(ChannelBase):
 
         &#34;&#34;&#34;
         _ = strip_prompt
-        return output
+        return buf
 
     def _build_message(self, channel_input: str) -&gt; str:
         &#34;&#34;&#34;
@@ -68,7 +144,7 @@ class NetconfChannelBase(ChannelBase):
             N/A
 
         &#34;&#34;&#34;
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
             return channel_input
 
         # format message for chunk (netconf 1.1) style message
@@ -95,29 +171,9 @@ class NetconfChannelBase(ChannelBase):
         self.logger.info(&#34;Sending client capabilities&#34;)
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f&#34;Attempting to send capabilities: {client_capabilities}&#34;)
-        self.transport.write(client_capabilities.value)
+        self.write(client_capabilities.value)
         self.logger.debug(f&#34;Write: {repr(client_capabilities.value)}&#34;)
-        return bytes_client_capabilities
-
-    def _post_send_client_capabilities(
-        self, capabilities_version: NetconfVersion = NetconfVersion.VERSION_1_1
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Handle pre &#34;_send_client_capabilities&#34; tasks for consistency between sync/async versions
-
-        Args:
-            capabilities_version: string of client netconf capabilities version, 1.0 or 1.1
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if capabilities_version == NetconfVersion.VERSION_1_1:
-            self.netconf_version = NetconfVersion.VERSION_1_1
-            self.comms_prompt_pattern = r&#34;^##$&#34;</code></pre>
+        return bytes_client_capabilities</code></pre>
 </details>
 </section>
 <section>
@@ -129,62 +185,99 @@ class NetconfChannelBase(ChannelBase):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="scrapli_netconf.channel.base_channel.NetconfChannelBase"><code class="flex name class">
-<span>class <span class="ident">NetconfChannelBase</span></span>
-<span>(</span><span>transport: Union[scrapli.transport.transport.Transport, scrapli.transport.async_transport.AsyncTransport], comms_prompt_pattern: str = &#x27;^[a-z0-9.\\-@()/:]{1,32}[#&gt;$]$&#x27;, comms_return_char: str = '\n', comms_ansi: bool = False, comms_auto_expand: bool = False, timeout_ops: float = 10)</span>
+<dt id="scrapli_netconf.channel.base_channel.BaseNetconfChannel"><code class="flex name class">
+<span>class <span class="ident">BaseNetconfChannel</span></span>
+<span>(</span><span>transport: Union[scrapli.transport.base.async_transport.AsyncTransport, scrapli.transport.base.sync_transport.Transport], base_channel_args: scrapli.channel.base_channel.BaseChannelArgs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>Channel Object</p>
+<div class="desc"><p>BaseChannel Object &ndash; provides convenience methods to both sync and async Channels</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>transport</code></strong></dt>
-<dd>Transport object of any transport provider (system|telnet or a plugin)
-transport could in theory be any transport as long as it provides a read and a write
-method&hellip; obviously its probably always going to be scrapli transport though</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>raw string regex pattern &ndash; use <code>^</code> and <code>$</code> for multi-line!</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>character to use to send returns to host</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output</dd>
-<dt><strong><code>comms_auto_expand</code></strong></dt>
-<dd>bool to indicate if a device auto-expands commands, for example
-juniper devices without <code>cli complete-on-space</code> disabled will convert <code>config</code> to
-<code>configuration</code> after entering a space character after <code>config</code>; because scrapli
-reads the channel until each command is entered, the command changing from <code>config</code>
-to <code>configuration</code> will cause scrapli (by default) to never think the command has
-been entered. Setting this value to <code>True</code> will force scrapli to zip the split lists
-of inputs and outputs together to determine if each read output starts with the
-corresponding input. For example, if the inputs are "sho ver" and the read output is
-"show version", scrapli will zip the split strings together and confirm that in fact
-"show" starts with "sho" and "version" starts with "ver", confirming that the
-commands that were input were input properly. This is disabled by default, as it is
-preferable to disable this type of behavior via the device itself if possible.</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout in seconds for channel operations (reads/writes)</dd>
+<dd>initialized scrapli Transport/AsyncTransport object</dd>
+<dt><strong><code>base_channel_args</code></strong></dt>
+<dd>BaseChannelArgs object</dd>
 </dl>
-<h2 id="args_1">Args</h2>
-<p>N/A</p>
 <h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
+<p>None</p>
 <h2 id="raises">Raises</h2>
 <p>N/A</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class NetconfChannelBase(ChannelBase):
-    netconf_version: NetconfVersion
+<pre><code class="python">class BaseNetconfChannel(BaseChannel):
+    _netconf_base_channel_args: NetconfBaseChannelArgs
 
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -&gt; bytes:
+    def _process_capabilities_exchange(self, raw_server_capabilities: bytes) -&gt; None:
         &#34;&#34;&#34;
-        Override scrapli _restructure_output as this is unnecessary for scrapli_netconf
+        Process received capabilities; return client capabilities
 
         Args:
-            output: bytes from channel
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            N/A
+
+        &#34;&#34;&#34;
+        server_capabilities = self._parse_server_capabilities(
+            raw_server_capabilities=raw_server_capabilities
+        )
+
+        if &#34;urn:ietf:params:netconf:base:1.1&#34; in server_capabilities:
+            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
+            self._base_channel_args.comms_prompt_pattern = r&#34;^##$&#34;
+        else:
+            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_0
+            self._base_channel_args.comms_prompt_pattern = &#34;]]&gt;]]&gt;&#34;
+
+        self._netconf_base_channel_args.server_capabilities = server_capabilities
+        self._netconf_base_channel_args.client_capabilities = client_capabilities
+
+    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -&gt; List[str]:
+        &#34;&#34;&#34;
+        Parse netconf server capabilities
+
+        Args:
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
+
+        &#34;&#34;&#34;
+        server_capabilities = []
+
+        # matches hello with or without namespace
+        filtered_raw_server_capabilities = re.search(
+            pattern=rb&#34;(&lt;(\w+\:){0,1}hello.*&lt;\/(\w+\:){0,1}hello&gt;)&#34;,
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
+        )
+        if filtered_raw_server_capabilities is None:
+            msg = &#34;failed to parse server capabilities&#34;
+            raise CouldNotExchangeCapabilities(msg)
+        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
+        for elem in server_capabilities_xml.iter():
+            if &#34;capability&#34; not in elem.tag:
+                continue
+            server_capabilities.append(elem.text.strip())
+        self.logger.info(f&#34;server capabilities received and parsed: {server_capabilities}&#34;)
+        return server_capabilities
+
+    def _process_output(self, buf: bytes, strip_prompt: bool) -&gt; bytes:
+        &#34;&#34;&#34;
+        Override scrapli _process_output as this is unnecessary for scrapli_netconf
+
+        Args:
+            buf: bytes output from the device
             strip_prompt: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
@@ -195,7 +288,7 @@ preferable to disable this type of behavior via the device itself if possible.</
 
         &#34;&#34;&#34;
         _ = strip_prompt
-        return output
+        return buf
 
     def _build_message(self, channel_input: str) -&gt; str:
         &#34;&#34;&#34;
@@ -211,7 +304,7 @@ preferable to disable this type of behavior via the device itself if possible.</
             N/A
 
         &#34;&#34;&#34;
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
             return channel_input
 
         # format message for chunk (netconf 1.1) style message
@@ -238,43 +331,46 @@ preferable to disable this type of behavior via the device itself if possible.</
         self.logger.info(&#34;Sending client capabilities&#34;)
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f&#34;Attempting to send capabilities: {client_capabilities}&#34;)
-        self.transport.write(client_capabilities.value)
+        self.write(client_capabilities.value)
         self.logger.debug(f&#34;Write: {repr(client_capabilities.value)}&#34;)
-        return bytes_client_capabilities
-
-    def _post_send_client_capabilities(
-        self, capabilities_version: NetconfVersion = NetconfVersion.VERSION_1_1
-    ) -&gt; None:
-        &#34;&#34;&#34;
-        Handle pre &#34;_send_client_capabilities&#34; tasks for consistency between sync/async versions
-
-        Args:
-            capabilities_version: string of client netconf capabilities version, 1.0 or 1.1
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        if capabilities_version == NetconfVersion.VERSION_1_1:
-            self.netconf_version = NetconfVersion.VERSION_1_1
-            self.comms_prompt_pattern = r&#34;^##$&#34;</code></pre>
+        return bytes_client_capabilities</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>scrapli.channel.base_channel.ChannelBase</li>
-<li>abc.ABC</li>
+<li>scrapli.channel.base_channel.BaseChannel</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="scrapli_netconf.channel.async_channel.AsyncNetconfChannel" href="async_channel.html#scrapli_netconf.channel.async_channel.AsyncNetconfChannel">AsyncNetconfChannel</a></li>
-<li><a title="scrapli_netconf.channel.channel.NetconfChannel" href="channel.html#scrapli_netconf.channel.channel.NetconfChannel">NetconfChannel</a></li>
+<li><a title="scrapli_netconf.channel.sync_channel.NetconfChannel" href="sync_channel.html#scrapli_netconf.channel.sync_channel.NetconfChannel">NetconfChannel</a></li>
 </ul>
+</dd>
+<dt id="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs"><code class="flex name class">
+<span>class <span class="ident">NetconfBaseChannelArgs</span></span>
+<span>(</span><span>netconf_version: <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a>, server_capabilities: Union[List[str], NoneType] = None, client_capabilities: <a title="scrapli_netconf.constants.NetconfClientCapabilities" href="../constants.html#scrapli_netconf.constants.NetconfClientCapabilities">NetconfClientCapabilities</a> = NetconfClientCapabilities.UNKNOWN)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Union[List[str], NoneType] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = <NetconfClientCapabilities.UNKNOWN: 'unknown'>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NetconfBaseChannelArgs:
+    netconf_version: NetconfVersion
+    server_capabilities: Optional[List[str]] = None
+    client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN</code></pre>
+</details>
 <h3>Class variables</h3>
 <dl>
-<dt id="scrapli_netconf.channel.base_channel.NetconfChannelBase.netconf_version"><code class="name">var <span class="ident">netconf_version</span> : <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a></code></dt>
+<dt id="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.client_capabilities"><code class="name">var <span class="ident">client_capabilities</span> : <a title="scrapli_netconf.constants.NetconfClientCapabilities" href="../constants.html#scrapli_netconf.constants.NetconfClientCapabilities">NetconfClientCapabilities</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.netconf_version"><code class="name">var <span class="ident">netconf_version</span> : <a title="scrapli_netconf.constants.NetconfVersion" href="../constants.html#scrapli_netconf.constants.NetconfVersion">NetconfVersion</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.server_capabilities"><code class="name">var <span class="ident">server_capabilities</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -297,9 +393,14 @@ preferable to disable this type of behavior via the device itself if possible.</
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="scrapli_netconf.channel.base_channel.NetconfChannelBase" href="#scrapli_netconf.channel.base_channel.NetconfChannelBase">NetconfChannelBase</a></code></h4>
+<h4><code><a title="scrapli_netconf.channel.base_channel.BaseNetconfChannel" href="#scrapli_netconf.channel.base_channel.BaseNetconfChannel">BaseNetconfChannel</a></code></h4>
+</li>
+<li>
+<h4><code><a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs" href="#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs">NetconfBaseChannelArgs</a></code></h4>
 <ul class="">
-<li><code><a title="scrapli_netconf.channel.base_channel.NetconfChannelBase.netconf_version" href="#scrapli_netconf.channel.base_channel.NetconfChannelBase.netconf_version">netconf_version</a></code></li>
+<li><code><a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.client_capabilities" href="#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.client_capabilities">client_capabilities</a></code></li>
+<li><code><a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.netconf_version" href="#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.netconf_version">netconf_version</a></code></li>
+<li><code><a title="scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.server_capabilities" href="#scrapli_netconf.channel.base_channel.NetconfBaseChannelArgs.server_capabilities">server_capabilities</a></code></li>
 </ul>
 </li>
 </ul>
@@ -308,7 +409,7 @@ preferable to disable this type of behavior via the device itself if possible.</
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

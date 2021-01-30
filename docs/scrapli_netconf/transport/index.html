@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.9.1" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>scrapli_netconf.transport API documentation</title>
-<meta name="description" content="scrapli_netconf.transport" />
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,35 +22,13 @@
 <h1 class="title">Module <code>scrapli_netconf.transport</code></h1>
 </header>
 <section id="section-intro">
-<p>scrapli_netconf.transport</p>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">&#34;&#34;&#34;scrapli_netconf.transport&#34;&#34;&#34;
-from scrapli_netconf.transport.systemssh import NetconfSystemSSHTransport
-
-__all__ = (&#34;NetconfSystemSSHTransport&#34;,)</code></pre>
-</details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="scrapli_netconf.transport.asyncssh_" href="asyncssh_.html">scrapli_netconf.transport.asyncssh_</a></code></dt>
+<dt><code class="name"><a title="scrapli_netconf.transport.plugins" href="plugins/index.html">scrapli_netconf.transport.plugins</a></code></dt>
 <dd>
-<div class="desc"><p>scrapli_netconf.transport.asyncssh_</p></div>
-</dd>
-<dt><code class="name"><a title="scrapli_netconf.transport.cssh2" href="cssh2.html">scrapli_netconf.transport.cssh2</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.transport.cssh2</p></div>
-</dd>
-<dt><code class="name"><a title="scrapli_netconf.transport.miko" href="miko.html">scrapli_netconf.transport.miko</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.transport.miko</p></div>
-</dd>
-<dt><code class="name"><a title="scrapli_netconf.transport.systemssh" href="systemssh.html">scrapli_netconf.transport.systemssh</a></code></dt>
-<dd>
-<div class="desc"><p>scrapli_netconf.transport.systemssh</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 </section>
@@ -59,291 +37,6 @@ __all__ = (&#34;NetconfSystemSSHTransport&#34;,)</code></pre>
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="scrapli_netconf.transport.NetconfSystemSSHTransport"><code class="flex name class">
-<span>class <span class="ident">NetconfSystemSSHTransport</span></span>
-<span>(</span><span>**kwargs: Any)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>SystemSSHTransport Object</p>
-<p>Inherit from Transport ABC
-SSH2Transport &lt;- Transport (ABC)</p>
-<p>If using this driver, and passing a ssh_config_file (or setting this argument to <code>True</code>),
-all settings in the ssh config file will be superseded by any arguments passed here!</p>
-<p>Note that comms_prompt_pattern, comms_return_char and comms_ansi are only passed here to
-handle "in channel" authentication required by SystemSSH &ndash; these are assigned to private
-attributes in this class and ignored after authentication. If you wish to modify these
-values on a "live" scrapli connection, modify them in the Channel object, i.e.
-<code>conn.channel.comms_prompt_pattern</code>. Additionally timeout_ops is passed and assigned to
-_timeout_ops to use the same timeout_ops that is used in Channel to decorate the
-authentication methods here.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>host</code></strong></dt>
-<dd>host ip/name to connect to</dd>
-<dt><strong><code>port</code></strong></dt>
-<dd>port to connect to</dd>
-<dt><strong><code>auth_username</code></strong></dt>
-<dd>username for authentication</dd>
-<dt><strong><code>auth_private_key</code></strong></dt>
-<dd>path to private key for authentication</dd>
-<dt><strong><code>auth_private_key_passphrase</code></strong></dt>
-<dd>passphrase for decrypting ssh key if necessary</dd>
-<dt><strong><code>auth_password</code></strong></dt>
-<dd>password for authentication</dd>
-<dt><strong><code>auth_strict_key</code></strong></dt>
-<dd>True/False to enforce strict key checking (default is True)</dd>
-<dt><strong><code>auth_bypass</code></strong></dt>
-<dd>bypass ssh key or password auth for devices without authentication, or that
-have auth prompts after ssh session establishment</dd>
-<dt><strong><code>timeout_socket</code></strong></dt>
-<dd>timeout for ssh session to start &ndash; this directly maps to ConnectTimeout
-ssh argument; see <code>man ssh_config</code></dd>
-<dt><strong><code>timeout_transport</code></strong></dt>
-<dd>timeout for transport in seconds. since system ssh is using popen/pty
-we can't really set a timeout directly, so this value governs the time timeout
-decorator for the transport read and write methods</dd>
-<dt><strong><code>timeout_ops</code></strong></dt>
-<dd>timeout for telnet channel operations in seconds &ndash; this is also the
-timeout for finding and responding to username and password prompts at initial
-login. This is assigned to a private attribute and is ignored after authentication
-is completed.</dd>
-<dt><strong><code>timeout_exit</code></strong></dt>
-<dd>True/False close transport if timeout encountered. If False and keepalives
-are in use, keepalives will prevent program from exiting so you should be sure to
-catch Timeout exceptions and handle them appropriately</dd>
-<dt><strong><code>comms_prompt_pattern</code></strong></dt>
-<dd>prompt pattern expected for device, same as the one provided to
-channel &ndash; system ssh needs to know this to know how to decide if we are properly
-sending/receiving data &ndash; i.e. we are not stuck at some password prompt or some
-other failure scenario. If using driver, this should be passed from driver (Scrape,
-or IOSXE, etc.) to this Transport class. This is assigned to a private attribute and
-is ignored after authentication is completed.</dd>
-<dt><strong><code>comms_return_char</code></strong></dt>
-<dd>return character to use on the channel, same as the one provided to
-channel &ndash; system ssh needs to know this to know what to send so that we can probe
-the channel to make sure we are authenticated and sending/receiving data. If using
-driver, this should be passed from driver (Scrape, or IOSXE, etc.) to this Transport
-class. This is assigned to a private attribute and is ignored after authentication
-is completed.</dd>
-<dt><strong><code>comms_ansi</code></strong></dt>
-<dd>True/False strip comms_ansi characters from output; this value is assigned
-self._comms_ansi and is ignored after authentication. We only need it for transport
-on the off chance (maybe never?) that username/password prompts contain ansi
-characters, otherwise "comms_ansi" is really a channel attribute and is treated as
-such. This is assigned to a private attribute and is ignored after authentication
-is completed.</dd>
-<dt><strong><code>ssh_config_file</code></strong></dt>
-<dd>string to path for ssh config file</dd>
-<dt><strong><code>ssh_known_hosts_file</code></strong></dt>
-<dd>string to path for ssh known hosts file</dd>
-<dt><strong><code>transport_options</code></strong></dt>
-<dd>SystemSSHTransport specific transport options (options that don't
-apply to any of the other transport classes) supplied in a dictionary where the key
-is the name of the option and the value is of course the value.
-- open_cmd: string or list of strings to extend the open_cmd with, for example:
-<code>["-o", "KexAlgorithms=+diffie-hellman-group1-sha1"]</code> or:
-<code>-oKexAlgorithms=+diffie-hellman-group1-sha1</code>
-these commands will be appended to the open command that scrapli builds which
-looks something like the following depending on the inputs provided:
-ssh 172.31.254.1 -p 22 -o ConnectTimeout=5 -o ServerAliveInterval=10
--l scrapli -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
--F /dev/null
-You can pass any arguments that would be supported if you were ssh'ing on your
-terminal "normally", passing some bad arguments can break things!
-- ptyprocess: in general you should <em>not</em> ever need/care about this! Right now the
-only use for this setting is for the huawei community platform. This dict
-currently supports two possible arguments: <code>rows</code> and <code>cols</code> &ndash; the values of
-which will be passed to the underlying <code>PtyProcess</code> spawn command, and used to
-set the window size of the pty process that is created.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>N/A
-# noqa: DAR202</p>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class NetconfSystemSSHTransport(SystemSSHTransport):
-    def __init__(self, **kwargs: Any):
-        super().__init__(**kwargs)
-
-    def _build_open_cmd(self) -&gt; None:
-        super()._build_open_cmd()
-        self.open_cmd.extend([&#34;-s&#34;, &#34;netconf&#34;])
-
-    def open_netconf(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Netconf open method
-
-        Several of the base SystemSSHTransport methods must be overridden in order to capture output
-        of server capabilities that must be parsed.
-
-        Args:
-            N/A
-
-        Returns:
-            bytes: bytes output from server captured while opening the connection
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        login_bytes = self._open_netconf_pty()
-        return login_bytes
-
-    def _open_netconf_pty(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Private method to open session with PtyProcess
-
-        Args:
-            N/A
-
-        Returns:
-            bytes: any output captured during login/authentication; needed to build server
-                capabilities
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        self.session = PtyProcess.spawn(self.open_cmd)
-        self.logger.debug(f&#34;Session to host {self.host} spawned&#34;)
-        login_bytes: bytes = self._authenticate()
-        self.logger.debug(f&#34;Authenticated to host {self.host} successfully&#34;)
-        return login_bytes
-
-    @staticmethod
-    def _authenticate_check_hello(output: bytes) -&gt; bool:
-        &#34;&#34;&#34;
-        Check if &#34;hello&#34; message is in output
-
-        Args:
-            output: bytes output from the channel
-
-        Returns:
-            bool: true if hello message is seen, otherwise false
-
-        Raises:
-            N/A
-
-        &#34;&#34;&#34;
-        hello_match = re.search(pattern=HELLO_MATCH, string=output)
-        if hello_match:
-            return True
-        return False
-
-    @OperationTimeout(&#34;_timeout_ops&#34;, &#34;Timed out looking for SSH login password prompt&#34;)
-    def _authenticate(self) -&gt; bytes:
-        &#34;&#34;&#34;
-        Private method to check initial authentication when using pty_session
-
-        Args:
-            N/A
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            ScrapliAuthenticationFailed: if we see a password prompt more than once, or we got an
-                unhandled EOF message
-
-        &#34;&#34;&#34;
-        output = b&#34;&#34;
-        password_count = 0
-
-        while True:
-            try:
-                new_output = self.session.read()
-                output += new_output
-                self.logger.debug(f&#34;Attempting to authenticate. Read: {repr(new_output)}&#34;)
-            except EOFError as exc:
-                self._ssh_message_handler(output=output)
-                # if _ssh_message_handler didn&#39;t raise any exception, we can raise the standard
-                # -- did you disable strict key message/exception
-                msg = (
-                    f&#34;Failed to open connection to host {self.host}. Do you need to disable &#34;
-                    &#34;`auth_strict_key`?&#34;
-                )
-                self.logger.critical(msg)
-                raise ScrapliAuthenticationFailed(msg) from exc
-            if b&#34;password:&#34; in output.lower():
-                # if password is seen in the output, reset output and enter the password
-                # count the times password occurs to have a decent idea if auth failed
-                password_count += 1
-                output = b&#34;&#34;
-                self.logger.info(&#34;Found password prompt, sending password&#34;)
-                self.session.write(self.auth_password.encode())
-                self.session.write(self._comms_return_char.encode())
-            if password_count &gt; 1:
-                msg = (
-                    &#34;`password` seen multiple times during session establishment, &#34;
-                    &#34;likely failed authentication&#34;
-                )
-                raise ScrapliAuthenticationFailed(msg)
-            if self._authenticate_check_hello(output=output):
-                self.logger.info(&#34;Found start of server capabilities, authentication successful&#34;)
-                self._isauthenticated = True
-                return output</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>scrapli.transport.systemssh.SystemSSHTransport</li>
-<li>scrapli.transport.transport.Transport</li>
-<li>scrapli.transport.base_transport.TransportBase</li>
-<li>abc.ABC</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="scrapli_netconf.transport.NetconfSystemSSHTransport.open_netconf"><code class="name flex">
-<span>def <span class="ident">open_netconf</span></span>(<span>self) ‑> bytes</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Netconf open method</p>
-<p>Several of the base SystemSSHTransport methods must be overridden in order to capture output
-of server capabilities that must be parsed.</p>
-<h2 id="args">Args</h2>
-<p>N/A</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>bytes</code></dt>
-<dd>bytes output from server captured while opening the connection</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<p>N/A</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def open_netconf(self) -&gt; bytes:
-    &#34;&#34;&#34;
-    Netconf open method
-
-    Several of the base SystemSSHTransport methods must be overridden in order to capture output
-    of server capabilities that must be parsed.
-
-    Args:
-        N/A
-
-    Returns:
-        bytes: bytes output from server captured while opening the connection
-
-    Raises:
-        N/A
-
-    &#34;&#34;&#34;
-    login_bytes = self._open_netconf_pty()
-    return login_bytes</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -359,27 +52,14 @@ of server capabilities that must be parsed.</p>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="scrapli_netconf.transport.asyncssh_" href="asyncssh_.html">scrapli_netconf.transport.asyncssh_</a></code></li>
-<li><code><a title="scrapli_netconf.transport.cssh2" href="cssh2.html">scrapli_netconf.transport.cssh2</a></code></li>
-<li><code><a title="scrapli_netconf.transport.miko" href="miko.html">scrapli_netconf.transport.miko</a></code></li>
-<li><code><a title="scrapli_netconf.transport.systemssh" href="systemssh.html">scrapli_netconf.transport.systemssh</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="scrapli_netconf.transport.NetconfSystemSSHTransport" href="#scrapli_netconf.transport.NetconfSystemSSHTransport">NetconfSystemSSHTransport</a></code></h4>
-<ul class="">
-<li><code><a title="scrapli_netconf.transport.NetconfSystemSSHTransport.open_netconf" href="#scrapli_netconf.transport.NetconfSystemSSHTransport.open_netconf">open_netconf</a></code></li>
-</ul>
-</li>
+<li><code><a title="scrapli_netconf.transport.plugins" href="plugins/index.html">scrapli_netconf.transport.plugins</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

@@ -1,1 +1,1 @@
-scrapli[paramiko]@git+https://github.com/carlmontanari/scrapli@overhaul#egg=scrapli
+scrapli[paramiko]>=2021.01.30a1

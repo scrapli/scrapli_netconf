@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+# 2021.01.30
+- Big overhaul in line with the scrapli core overhaul...
+
+
 # 2021.01.17
 - Support for future "vrouter" setup for testing
 - Flatten all channel inputs (no pretty printed xml) -- seems to behave much more nicely across the board!

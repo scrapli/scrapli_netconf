@@ -1,1 +1,1 @@
-scrapli[asyncssh]@git+https://github.com/carlmontanari/scrapli@overhaul#egg=scrapli
+scrapli[asyncssh]>=2021.01.30a1

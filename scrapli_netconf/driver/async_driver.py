@@ -129,6 +129,7 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Netconf get-config operation
@@ -137,6 +138,7 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
@@ -145,7 +147,9 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
             N/A
 
         """
-        response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+        response = self._pre_get_config(
+            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+        )
         raw_response = await self.channel.send_input_netconf(response.channel_input)
 
         response.record_response(raw_response)

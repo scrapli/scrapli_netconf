@@ -23,6 +23,7 @@ class NetconfBaseOperations(Enum):
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
+    GET_CONFIG_DEFAULT = '<get-config><source><{source}/></source><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">{default_type}</with-defaults></get-config>'
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
     DELETE_CONFIG = "<delete-config><target><{target}/></target></delete-config>"
     COMMIT = "<commit/>"
@@ -438,6 +439,7 @@ class NetconfBaseDriver(BaseDriver):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Handle pre "get_config" tasks for consistency between sync/async versions
@@ -446,6 +448,7 @@ class NetconfBaseDriver(BaseDriver):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
@@ -457,15 +460,23 @@ class NetconfBaseDriver(BaseDriver):
         """
         self.logger.debug(
             f"Building payload for `get-config` operation. source: {source}, filter_type: "
-            f"{filter_type}, filters: {filters}"
+            f"{filter_type}, filters: {filters}, default_type: {default_type}"
         )
         self._validate_get_config_target(source=source)
 
         # build base request and insert the get-config element
         xml_request = self._build_base_elem()
-        xml_get_config_element = etree.fromstring(
-            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
-        )
+        if default_type is not None:
+            xml_get_config_element = etree.fromstring(
+                NetconfBaseOperations.GET_CONFIG_DEFAULT.value.format(
+                    source=source, default_type=default_type
+                ),
+                parser=PARSER,
+            )
+        else:
+            xml_get_config_element = etree.fromstring(
+                NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
+            )
         xml_request.insert(0, xml_get_config_element)
 
         if filters is not None:

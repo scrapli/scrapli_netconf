@@ -25,7 +25,8 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
             None
 
         Raises:
-            N/A
+            ScrapliAuthenticationFailed: if auth fails
+            ScrapliConnectionNotOpened: if connection cant be opened (but is not an auth failure)
 
         """
         if self.plugin_transport_args.auth_strict_key:

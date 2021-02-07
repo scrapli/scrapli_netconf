@@ -65,10 +65,10 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
 
         Args:
-             timeout_transport: transport timeout value to modify to use as timeout to test echo
+            N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A

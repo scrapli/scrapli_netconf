@@ -179,7 +179,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             echo_timeout: duration to check echo for
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -522,7 +522,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             echo_timeout: duration to check echo for
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A

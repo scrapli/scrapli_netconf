@@ -387,6 +387,7 @@ class NetconfBaseDriver(BaseDriver):
             Element: lxml with-defaults element to use for netconf operation
 
         Raises:
+            CapabilityNotSupported: if default_type provided but not supported by device
             ValueError: if default_type is not one of report-all|trim|explicit|report-all-tagged
 
         """

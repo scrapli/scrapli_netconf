@@ -169,6 +169,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Netconf get-config operation
@@ -177,6 +178,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
@@ -185,7 +187,9 @@ class NetconfDriver(Driver, NetconfBaseDriver):
             N/A
 
         """
-        response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+        response = self._pre_get_config(
+            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+        )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
         response.record_response(raw_response)
@@ -589,6 +593,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Netconf get-config operation
@@ -597,6 +602,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
@@ -605,7 +611,9 @@ class NetconfDriver(Driver, NetconfBaseDriver):
             N/A
 
         """
-        response = self._pre_get_config(source=source, filters=filters, filter_type=filter_type)
+        response = self._pre_get_config(
+            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+        )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
         response.record_response(raw_response)
@@ -914,7 +922,7 @@ Raises:
     
 
 ##### get_config
-`get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree') ‑> scrapli_netconf.response.NetconfResponse`
+`get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree', default_type: Union[str, NoneType] = None) ‑> scrapli_netconf.response.NetconfResponse`
 
 ```text
 Netconf get-config operation
@@ -923,6 +931,7 @@ Args:
     source: configuration source to get; typically one of running|startup|candidate
     filters: string or list of strings of filters to apply to configuration
     filter_type: type of filter; subtree|xpath
+    default_type: string of with-default mode to apply when retrieving configuration
 
 Returns:
     NetconfResponse: scrapli_netconf NetconfResponse object

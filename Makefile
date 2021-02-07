@@ -7,15 +7,6 @@ lint:
 	python -m pydocstyle scrapli_netconf/
 	python -m mypy scrapli_netconf/
 
-.PHONY: docs
-docs:
-	rm -rf docs/scrapli_netconf
-	python -m pdoc \
-	--html \
-	--output-dir docs \
-	scrapli_netconf \
-	--force
-
 cov:
 	python -m pytest \
 	--cov=scrapli_netconf \
@@ -38,3 +29,10 @@ test_unit:
 
 test_functional:
 	python -m pytest tests/functional/
+
+.PHONY: docs
+docs:
+	python docs/generate/generate_docs.py
+
+deploy_docs:
+	mkdocs gh-deploy

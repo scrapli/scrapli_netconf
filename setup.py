@@ -34,9 +34,7 @@ setuptools.setup(
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/scrapli/scrapli_netconf",
-    project_urls={
-        "Changelog": "https://scrapli.github.io/scrapli_netconf/changelog"
-    },
+    project_urls={"Changelog": "https://scrapli.github.io/scrapli_netconf/changelog"},
     license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,

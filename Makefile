@@ -1,10 +1,8 @@
 lint:
-	python -m isort scrapli_netconf/
-	python -m isort tests/
-	python -m black scrapli_netconf/
-	python -m black tests/
-	python -m pylama scrapli_netconf/
-	python -m pydocstyle scrapli_netconf/
+	python -m isort .
+	python -m black .
+	python -m pylama .
+	python -m pydocstyle .
 	python -m mypy scrapli_netconf/
 
 cov:

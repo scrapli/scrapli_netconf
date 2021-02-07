@@ -1,9 +1,5 @@
-import logging
-
+"""basic_usage_iosxr"""
 from scrapli_netconf.driver import NetconfScrape
-
-logging.basicConfig(filename="scrapli.log", level=logging.INFO)
-logger = logging.getLogger("scrapli")
 
 IOSXR_DEVICE = {
     "host": "172.18.0.13",
@@ -59,6 +55,7 @@ EDIT_BANNER = """
 
 
 def main():
+    """Basic use example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
     conn = NetconfScrape(**IOSXR_DEVICE)
     conn.open()

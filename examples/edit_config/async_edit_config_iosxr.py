@@ -1,10 +1,7 @@
+"""async_edit_config_iosxr"""
 import asyncio
-import logging
 
 from scrapli_netconf.driver import AsyncNetconfScrape
-
-logging.basicConfig(filename="scrapli.log", level=logging.INFO)
-logger = logging.getLogger("scrapli")
 
 IOSXR_DEVICE = {
     "host": "172.18.0.13",
@@ -36,6 +33,7 @@ EDIT_INTERFACE_G_0_0_0_0 = """
 
 
 async def main():
+    """Edit config example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
     conn = AsyncNetconfScrape(**IOSXR_DEVICE)
     await conn.open()

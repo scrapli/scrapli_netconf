@@ -22,7 +22,10 @@ doc_map = {
         "path": "transport/plugins/paramiko",
         "conent": None,
     },
-    "scrapli_netconf.transport.plugins.ssh2.transport": {"path": "transport/plugins/ssh2", "conent": None},
+    "scrapli_netconf.transport.plugins.ssh2.transport": {
+        "path": "transport/plugins/ssh2",
+        "conent": None,
+    },
     "scrapli_netconf.transport.plugins.system.transport": {
         "path": "transport/plugins/system",
         "conent": None,

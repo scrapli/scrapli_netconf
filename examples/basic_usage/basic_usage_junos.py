@@ -1,9 +1,5 @@
-import logging
-
+"""basic_usage_junos"""
 from scrapli_netconf.driver import NetconfScrape
-
-logging.basicConfig(filename="scrapli.log", level=logging.INFO)
-logger = logging.getLogger("scrapli")
 
 JUNOS_DEVICE = {
     "host": "172.18.0.15",
@@ -26,7 +22,7 @@ CONFIG_FILTER = """
             <ssh>
             </ssh>
         </services>
-    </system>    
+    </system>
 </configuration>
 """
 
@@ -47,7 +43,7 @@ EDIT_NETCONF = """
                     </ssh>
                 </netconf>
             </services>
-        </system>    
+        </system>
     </configuration>
 </config>
 """
@@ -68,14 +64,15 @@ EDIT_MULTIPLE = """
                         <port>22</port>
                     </ssh>
                 </netconf>
-            </services>        
-        </system>    
+            </services>
+        </system>
     </configuration>
 </config>
 """
 
 
 def main():
+    """Basic use example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
     conn = NetconfScrape(**JUNOS_DEVICE)
     conn.open()

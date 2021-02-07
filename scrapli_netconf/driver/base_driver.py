@@ -21,7 +21,10 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 class NetconfBaseOperations(Enum):
     FILTER_SUBTREE = "<filter type='{filter_type}'></filter>"
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
-    WITH_DEFAULTS_SUBTREE = '<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">{default_type}</with-defaults>'  # noqa: E501
+    WITH_DEFAULTS_SUBTREE = (
+        "<with-defaults xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults'>"
+        "{default_type}</with-defaults>"
+    )
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
@@ -402,7 +405,8 @@ class NetconfBaseDriver(BaseDriver):
             )
         else:
             raise ValueError(
-                f"`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `{default_type}`"  # noqa: E501
+                "`default_type` should be one of report-all|trim|explicit|report-all-tagged, "
+                f"got `{default_type}`"
             )
         return xml_with_defaults_element
 

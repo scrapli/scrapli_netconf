@@ -113,6 +113,7 @@ def test_build_filters():
 
 
 def test_build_with_defaults(dummy_conn):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
     report_all_elem = dummy_conn._build_with_defaults("report-all")
     trim_elem = dummy_conn._build_with_defaults("trim")
     explicit_elem = dummy_conn._build_with_defaults("explicit")
@@ -142,6 +143,13 @@ def test_build_with_defaults_exception_invalid_type(dummy_conn):
         str(exc.value)
         == "`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `sushicat`"
     )
+
+
+def test_build_with_defaults_exception_unsupported(dummy_conn):
+    dummy_conn.server_capabilities = []
+    with pytest.raises(CapabilityNotSupported) as exc:
+        dummy_conn._build_with_defaults(default_type="trim")
+    assert str(exc.value) == "with-defaults requested, but is not supported by the server"
 
 
 def test_build_filters_exception_invalid_type(dummy_conn):
@@ -202,6 +210,7 @@ def test_pre_get_config(dummy_conn, capabilities):
     ids=["1.0", "1.1"],
 )
 def test_pre_get_config_with_default(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
     dummy_conn.netconf_version = capabilities[0]
     dummy_conn.readable_datastores = ["running"]
     expected_channel_input = capabilities[1]

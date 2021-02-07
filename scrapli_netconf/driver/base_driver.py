@@ -373,8 +373,7 @@ class NetconfBaseDriver(BaseDriver):
             raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         return xml_filter_elem
 
-    @staticmethod
-    def _build_with_defaults(default_type: str = "report-all") -> Element:
+    def _build_with_defaults(self, default_type: str = "report-all") -> Element:
         """
         Create with-defaults element for a given operation
 
@@ -390,6 +389,13 @@ class NetconfBaseDriver(BaseDriver):
         """
 
         if default_type in ["report-all", "trim", "explicit", "report-all-tagged"]:
+            if (
+                "urn:ietf:params:netconf:capability:with-defaults:1.0"
+                not in self.server_capabilities
+            ):
+                msg = "with-defaults requested, but is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
             xml_with_defaults_element = etree.fromstring(
                 NetconfBaseOperations.WITH_DEFAULTS_SUBTREE.value.format(default_type=default_type),
                 parser=PARSER,

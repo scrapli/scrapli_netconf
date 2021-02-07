@@ -21,6 +21,10 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 class NetconfBaseOperations(Enum):
     FILTER_SUBTREE = "<filter type='{filter_type}'></filter>"
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
+    WITH_DEFAULTS_SUBTREE = (
+        "<with-defaults xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults'>"
+        "{default_type}</with-defaults>"
+    )
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
@@ -372,6 +376,40 @@ class NetconfBaseDriver(BaseDriver):
             raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
         return xml_filter_elem
 
+    def _build_with_defaults(self, default_type: str = "report-all") -> Element:
+        """
+        Create with-defaults element for a given operation
+
+        Args:
+            default_type: enumeration of with-defaults; report-all|trim|explicit|report-all-tagged
+
+        Returns:
+            Element: lxml with-defaults element to use for netconf operation
+
+        Raises:
+            ValueError: if default_type is not one of report-all|trim|explicit|report-all-tagged
+
+        """
+
+        if default_type in ["report-all", "trim", "explicit", "report-all-tagged"]:
+            if (
+                "urn:ietf:params:netconf:capability:with-defaults:1.0"
+                not in self.server_capabilities
+            ):
+                msg = "with-defaults requested, but is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
+            xml_with_defaults_element = etree.fromstring(
+                NetconfBaseOperations.WITH_DEFAULTS_SUBTREE.value.format(default_type=default_type),
+                parser=PARSER,
+            )
+        else:
+            raise ValueError(
+                "`default_type` should be one of report-all|trim|explicit|report-all-tagged, "
+                f"got `{default_type}`"
+            )
+        return xml_with_defaults_element
+
     def _pre_get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
         Handle pre "get" tasks for consistency between sync/async versions
@@ -438,6 +476,7 @@ class NetconfBaseDriver(BaseDriver):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Handle pre "get_config" tasks for consistency between sync/async versions
@@ -446,6 +485,7 @@ class NetconfBaseDriver(BaseDriver):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
@@ -457,7 +497,7 @@ class NetconfBaseDriver(BaseDriver):
         """
         self.logger.debug(
             f"Building payload for `get-config` operation. source: {source}, filter_type: "
-            f"{filter_type}, filters: {filters}"
+            f"{filter_type}, filters: {filters}, default_type: {default_type}"
         )
         self._validate_get_config_target(source=source)
 
@@ -476,6 +516,11 @@ class NetconfBaseDriver(BaseDriver):
             get_element = xml_request.find("get-config")
             # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
             get_element.insert(1, xml_filter_elem)
+
+        if default_type is not None:
+            xml_with_defaults_elem = self._build_with_defaults(default_type=default_type)
+            get_element = xml_request.find("get-config")
+            get_element.insert(2, xml_with_defaults_elem)
 
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"

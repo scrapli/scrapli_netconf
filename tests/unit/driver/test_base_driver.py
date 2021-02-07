@@ -10,6 +10,8 @@ GET_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmln
 GET_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get></rpc>"""
 GET_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get-config></rpc>\n]]>]]>"""
 GET_CONFIG_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get-config></rpc>"""
+GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults></get-config></rpc>\n]]>]]>"""
+GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults></get-config></rpc>"""
 EDIT_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version='1.0' encoding='utf-8'?>
 <rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><edit-config><target><running/></target><config><cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg"><timer>80</timer><enable>true</enable><log-adjacency/><hold-time>200</hold-time><advertise-v1-only/></cdp></config></edit-config></rpc>
 ]]>]]>"""
@@ -110,6 +112,46 @@ def test_build_filters():
     pass
 
 
+def test_build_with_defaults(dummy_conn):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
+    report_all_elem = dummy_conn._build_with_defaults("report-all")
+    trim_elem = dummy_conn._build_with_defaults("trim")
+    explicit_elem = dummy_conn._build_with_defaults("explicit")
+    tagged_elem = dummy_conn._build_with_defaults("report-all-tagged")
+    assert (
+        etree.tostring(report_all_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults>"""
+    )
+    assert (
+        etree.tostring(trim_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">trim</with-defaults>"""
+    )
+    assert (
+        etree.tostring(explicit_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">explicit</with-defaults>"""
+    )
+    assert (
+        etree.tostring(tagged_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all-tagged</with-defaults>"""
+    )
+
+
+def test_build_with_defaults_exception_invalid_type(dummy_conn):
+    with pytest.raises(ValueError) as exc:
+        dummy_conn._build_with_defaults(default_type="sushicat")
+    assert (
+        str(exc.value)
+        == "`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `sushicat`"
+    )
+
+
+def test_build_with_defaults_exception_unsupported(dummy_conn):
+    dummy_conn.server_capabilities = []
+    with pytest.raises(CapabilityNotSupported) as exc:
+        dummy_conn._build_with_defaults(default_type="trim")
+    assert str(exc.value) == "with-defaults requested, but is not supported by the server"
+
+
 def test_build_filters_exception_invalid_type(dummy_conn):
     with pytest.raises(ValueError) as exc:
         dummy_conn._build_filters(filters=[], filter_type="tacocat")
@@ -155,6 +197,26 @@ def test_pre_get_config(dummy_conn, capabilities):
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     response = dummy_conn._pre_get_config(filters=[filter_])
+    assert isinstance(response, NetconfResponse)
+    assert response.channel_input == expected_channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_0),
+        (NetconfVersion.VERSION_1_1, GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_1),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_get_config_with_default(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.readable_datastores = ["running"]
+    expected_channel_input = capabilities[1]
+    filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
+    default_type_ = "report-all"
+    response = dummy_conn._pre_get_config(filters=[filter_], default_type=default_type_)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
 

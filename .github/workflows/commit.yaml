@@ -9,7 +9,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-latest]
-        version: [3.8]
+        version: [3.9]
     steps:
       - uses: actions/checkout@v2
       - name: set up python ${{ matrix.version }}

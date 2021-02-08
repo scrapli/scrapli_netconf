@@ -31,7 +31,8 @@ class BaseNetconfChannel(BaseChannel):
             None
 
         Raises:
-            N/A
+            CapabilityNotSupported: if user has provided a preferred netconf version but it is not
+                available in servers offered capabilites
 
         """
         server_capabilities = self._parse_server_capabilities(

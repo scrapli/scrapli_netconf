@@ -9,7 +9,7 @@ from lxml import etree
 from lxml.etree import Element
 
 from scrapli.driver.base.base_driver import BaseDriver
-from scrapli.exceptions import ScrapliTypeError
+from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported
@@ -166,6 +166,35 @@ class NetconfBaseDriver(BaseDriver):
             raise ScrapliTypeError
 
         self._netconf_base_channel_args.server_capabilities = value
+
+    @staticmethod
+    def _determine_preferred_netconf_version(
+        preferred_netconf_version: Optional[str],
+    ) -> NetconfVersion:
+        """
+        Determine users preferred netconf version (if applicable)
+
+        Args:
+            preferred_netconf_version: optional string indicating users preferred netconf version
+
+        Returns:
+            NetconfVersion: users preferred netconf version
+
+        Raises:
+            ScrapliValueError: if preferred_netconf_version is not None or a valid option
+
+        """
+        if preferred_netconf_version is None:
+            return NetconfVersion.UNKNOWN
+        if preferred_netconf_version == "1.0":
+            return NetconfVersion.VERSION_1_0
+        if preferred_netconf_version == "1.1":
+            return NetconfVersion.VERSION_1_1
+
+        raise ScrapliValueError(
+            "'preferred_netconf_version' provided with invalid value, must be one of: "
+            "None, '1.0', or '1.1'"
+        )
 
     def _transport_factory(self) -> Tuple[Callable[..., Any], object]:
         """

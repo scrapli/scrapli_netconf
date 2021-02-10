@@ -5,7 +5,6 @@ from warnings import warn
 from scrapli import AsyncDriver
 from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
-from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
@@ -38,6 +37,7 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         transport_options: Optional[Dict[str, Any]] = None,
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
+        preferred_netconf_version: Optional[str] = None,
     ) -> None:
         super().__init__(
             host=host,
@@ -64,8 +64,12 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
             channel_log=channel_log,
             channel_lock=channel_lock,
         )
+
+        _preferred_netconf_version = self._determine_preferred_netconf_version(
+            preferred_netconf_version=preferred_netconf_version
+        )
         self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=NetconfVersion.UNKNOWN
+            netconf_version=_preferred_netconf_version
         )
         self.channel = AsyncNetconfChannel(
             transport=self.transport,

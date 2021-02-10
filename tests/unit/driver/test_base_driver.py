@@ -1,8 +1,8 @@
 import pytest
 from lxml import etree
 
+from scrapli.exceptions import ScrapliValueError
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfClientCapabilities
 from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
@@ -33,6 +33,34 @@ RPC_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmln
 RPC_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></rpc>"""
 VALIDATE_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>\n]]>]]>"""
 VALIDATE_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>"""
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        (None, NetconfVersion.UNKNOWN),
+        ("1.0", NetconfVersion.VERSION_1_0),
+        ("1.1", NetconfVersion.VERSION_1_1),
+    ),
+    ids=(
+        "none",
+        "1.0",
+        "1.1",
+    ),
+)
+def test_determine_preferred_netconf_version(dummy_conn, test_data):
+    preferred_version_input, preferred_version_output = test_data
+    assert (
+        dummy_conn._determine_preferred_netconf_version(
+            preferred_netconf_version=preferred_version_input
+        )
+        == preferred_version_output
+    )
+
+
+def test_determine_preferred_netconf_version_exception(dummy_conn):
+    with pytest.raises(ScrapliValueError):
+        dummy_conn._determine_preferred_netconf_version(preferred_netconf_version="blah")
 
 
 def test_build_readable_datastores(dummy_conn, parsed_server_capabilities_1_1):

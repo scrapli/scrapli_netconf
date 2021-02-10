@@ -1,11 +1,11 @@
 import pytest
 
-from scrapli_netconf.driver import NetconfScrape
+from scrapli_netconf.driver import NetconfDriver
 
 
 @pytest.fixture(scope="function")
 def dummy_conn():
-    conn = NetconfScrape(host="localhost")
+    conn = NetconfDriver(host="localhost")
     return conn
 
 
@@ -89,3 +89,16 @@ def parsed_server_capabilities_1_1():
         "urn:ietf:params:netconf:capability:interleave:1.0",
     ]
     return PARSED_CAPABILITIES_1_1
+
+
+@pytest.fixture(scope="function")
+def server_capabilities_both():
+    SERVER_CAPABILITIES_1_0 = b"""<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <capabilities>
+        <capability>urn:ietf:params:netconf:base:1.0</capability>
+        <capability>urn:ietf:params:netconf:base:1.1</capability>
+    </capabilities>
+    <session-id>151399960</session-id>
+</hello>]]>]]>"""
+    return SERVER_CAPABILITIES_1_0

@@ -236,7 +236,7 @@ class NetconfBaseDriver(BaseDriver):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -257,7 +257,7 @@ class NetconfBaseDriver(BaseDriver):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -419,7 +419,7 @@ class NetconfBaseDriver(BaseDriver):
 
         Raises:
             CapabilityNotSupported: if default_type provided but not supported by device
-            ValueError: if default_type is not one of report-all|trim|explicit|report-all-tagged
+            ScrapliValueError: if default_type is not one of report-all|trim|explicit|report-all-tagged
 
         """
 

@@ -1,11 +1,21 @@
 import pytest
 
-from scrapli_netconf.driver import NetconfDriver
+from scrapli.channel.base_channel import BaseChannelArgs
+from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
+from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
+from scrapli_netconf.channel.sync_channel import NetconfChannel
+from scrapli_netconf.driver import AsyncNetconfDriver, NetconfDriver
 
 
 @pytest.fixture(scope="function")
 def dummy_conn():
     conn = NetconfDriver(host="localhost")
+    return conn
+
+
+@pytest.fixture(scope="function")
+def dummy_async_conn():
+    conn = AsyncNetconfDriver(host="localhost", transport="asyncssh")
     return conn
 
 
@@ -102,3 +112,34 @@ def server_capabilities_both():
     <session-id>151399960</session-id>
 </hello>]]>]]>"""
     return SERVER_CAPABILITIES_1_0
+
+
+# Channel related fixtures
+
+
+@pytest.fixture(scope="function")
+def base_channel_args():
+    base_channel_args = BaseChannelArgs()
+    return base_channel_args
+
+
+@pytest.fixture(scope="function")
+def base_netconf_channel_args():
+    base_channel_args = NetconfBaseChannelArgs()
+    return base_channel_args
+
+
+@pytest.fixture(scope="function")
+def sync_channel(sync_transport_no_abc, base_channel_args):
+    sync_channel = NetconfChannel(
+        transport=sync_transport_no_abc, base_channel_args=base_channel_args
+    )
+    return sync_channel
+
+
+@pytest.fixture(scope="function")
+def async_channel(async_transport_no_abc, base_channel_args):
+    async_channel = AsyncNetconfChannel(
+        transport=async_transport_no_abc, base_channel_args=base_channel_args
+    )
+    return async_channel

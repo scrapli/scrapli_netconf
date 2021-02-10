@@ -1,6 +1,6 @@
 import pytest
 
-from scrapli_netconf.constants import NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 SERVER_CAPABILITIES_1_0 = b"""<?xml version="1.0" encoding="UTF-8"?>
@@ -133,3 +133,22 @@ def test_build_message(dummy_conn, test_data):
 def test_process_output(dummy_conn):
     output = dummy_conn.channel._process_output(buf=b"tacocat", strip_prompt=True)
     assert output == b"tacocat"
+
+
+def test_pre_send_client_capabilities(monkeypatch, dummy_conn):
+    def _write(cls, channel_input):
+        assert (
+            channel_input
+            == b"""\n<?xml version="1.0" encoding="utf-8"?>
+    <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+        <capabilities>
+            <capability>urn:ietf:params:netconf:base:1.0</capability>
+        </capabilities>
+</hello>]]>]]>"""
+        )
+
+    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
+
+    dummy_conn.channel._pre_send_client_capabilities(
+        client_capabilities=NetconfClientCapabilities.CAPABILITIES_1_0
+    )

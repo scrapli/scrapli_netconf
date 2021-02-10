@@ -1,8 +1,8 @@
 import pytest
 from lxml import etree
 
-from scrapli.exceptions import ScrapliValueError
-from scrapli_netconf.constants import NetconfVersion
+from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
@@ -33,6 +33,33 @@ RPC_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmln
 RPC_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></rpc>"""
 VALIDATE_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>\n]]>]]>"""
 VALIDATE_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>"""
+
+
+def test_set_netconf_version_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.netconf_version = "blah"
+
+
+def test_client_capabilities(dummy_conn):
+    assert dummy_conn.client_capabilities == NetconfClientCapabilities.UNKNOWN
+    dummy_conn.client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+    assert dummy_conn.client_capabilities == NetconfClientCapabilities.CAPABILITIES_1_0
+
+
+def test_set_client_capabilities_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.client_capabilities = "blah"
+
+
+def test_server_capabilities(dummy_conn):
+    assert dummy_conn.server_capabilities == []
+    dummy_conn.server_capabilities = ["blah"]
+    assert dummy_conn.server_capabilities == ["blah"]
+
+
+def test_set_server_capabilities_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.server_capabilities = "blah"
 
 
 @pytest.mark.parametrize(
@@ -94,10 +121,10 @@ def test_validate_get_config_target(dummy_conn, capabilities):
 
 def test_validate_get_config_target_exception(dummy_conn):
     dummy_conn.strict_datastores = True
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_readable_datastores()
         dummy_conn._validate_get_config_target(source="tacocat")
-    assert str(exc.value) == "`source` should be one of ['running'], got `tacocat`"
+    assert str(exc.value) == "'source' should be one of ['running'], got 'tacocat'"
 
 
 @pytest.mark.parametrize(
@@ -119,10 +146,10 @@ def test_validate_edit_config_target(dummy_conn, capabilities):
 
 def test_validate_edit_config_target_exception(dummy_conn):
     dummy_conn.strict_datastores = True
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_writeable_datastores()
         dummy_conn._validate_edit_config_target(target="tacocat")
-    assert str(exc.value) == "`target` should be one of [], got `tacocat`"
+    assert str(exc.value) == "'target' should be one of [], got 'tacocat'"
 
 
 def test_build_base_elem(dummy_conn):
@@ -165,11 +192,11 @@ def test_build_with_defaults(dummy_conn):
 
 
 def test_build_with_defaults_exception_invalid_type(dummy_conn):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_with_defaults(default_type="sushicat")
     assert (
         str(exc.value)
-        == "`default_type` should be one of report-all|trim|explicit|report-all-tagged, got `sushicat`"
+        == "'default_type' should be one of report-all|trim|explicit|report-all-tagged, got 'sushicat'"
     )
 
 
@@ -181,9 +208,9 @@ def test_build_with_defaults_exception_unsupported(dummy_conn):
 
 
 def test_build_filters_exception_invalid_type(dummy_conn):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_filters(filters=[], filter_type="tacocat")
-    assert str(exc.value) == "`filter_type` should be one of subtree|xpath, got `tacocat`"
+    assert str(exc.value) == "'filter_type' should be one of subtree|xpath, got 'tacocat'"
 
 
 def test_build_filters_exception_unsupported(dummy_conn):
@@ -296,9 +323,9 @@ def test_pre_delete_config_running(dummy_conn):
     dummy_conn.strict_datastores = True
     dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
     dummy_conn.writeable_datastores = ["running", "candidate"]
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._pre_delete_config(target="running")
-    assert str(exc.value) == "delete-config `target` may not be `running`"
+    assert str(exc.value) == "delete-config 'target' may not be 'running'"
 
 
 @pytest.mark.parametrize(

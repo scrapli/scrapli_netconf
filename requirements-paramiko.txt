@@ -1,1 +1,1 @@
-scrapli[paramiko]>=2021.01.30a1
+scrapli[paramiko]>=2021.01.30

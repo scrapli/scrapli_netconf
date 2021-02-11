@@ -164,8 +164,8 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
         while True:
             output += await self.read()
-
-            if channel_input in output:
+            # if we have all the input *or* we see the closing rpc tag we know we are done here
+            if channel_input in output or b"rpc>" in output:
                 break
 
         self.logger.info(f"Read: {repr(output)}")

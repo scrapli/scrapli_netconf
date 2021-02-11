@@ -749,7 +749,7 @@ Raises:
     
 
 ##### get_xml_elements
-`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f9d40141d40>]`
+`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f82c0169d40>]`
 
 ```text
 Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing

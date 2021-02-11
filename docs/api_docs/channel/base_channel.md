@@ -37,7 +37,7 @@ from lxml import etree
 
 from scrapli.channel.base_channel import BaseChannel
 from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
-from scrapli_netconf.exceptions import CouldNotExchangeCapabilities
+from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
 @dataclass()
@@ -61,24 +61,46 @@ class BaseNetconfChannel(BaseChannel):
             None
 
         Raises:
-            N/A
+            CapabilityNotSupported: if user has provided a preferred netconf version but it is not
+                available in servers offered capabilites
 
         """
         server_capabilities = self._parse_server_capabilities(
             raw_server_capabilities=raw_server_capabilities
         )
+        self._netconf_base_channel_args.server_capabilities = server_capabilities
 
         if "urn:ietf:params:netconf:base:1.1" in server_capabilities:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
-            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
-            self._base_channel_args.comms_prompt_pattern = r"^##$"
+            final_channel_version = NetconfVersion.VERSION_1_1
         else:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+            final_channel_version = NetconfVersion.VERSION_1_0
+
+        if self._netconf_base_channel_args.netconf_version != NetconfVersion.UNKNOWN:
+            if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+                if "urn:ietf:params:netconf:base:1.0" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.0 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_0
+            elif self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
+                if "urn:ietf:params:netconf:base:1.1" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.1 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_1
+
+        if final_channel_version == NetconfVersion.VERSION_1_0:
             self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_0
             self._base_channel_args.comms_prompt_pattern = "]]>]]>"
-
-        self._netconf_base_channel_args.server_capabilities = server_capabilities
-        self._netconf_base_channel_args.client_capabilities = client_capabilities
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_0
+            )
+        else:
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
+            self._base_channel_args.comms_prompt_pattern = r"^##$"
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_1
+            )
 
     def _parse_server_capabilities(self, raw_server_capabilities: bytes) -> List[str]:
         """
@@ -220,24 +242,46 @@ class BaseNetconfChannel(BaseChannel):
             None
 
         Raises:
-            N/A
+            CapabilityNotSupported: if user has provided a preferred netconf version but it is not
+                available in servers offered capabilites
 
         """
         server_capabilities = self._parse_server_capabilities(
             raw_server_capabilities=raw_server_capabilities
         )
+        self._netconf_base_channel_args.server_capabilities = server_capabilities
 
         if "urn:ietf:params:netconf:base:1.1" in server_capabilities:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
-            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
-            self._base_channel_args.comms_prompt_pattern = r"^##$"
+            final_channel_version = NetconfVersion.VERSION_1_1
         else:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+            final_channel_version = NetconfVersion.VERSION_1_0
+
+        if self._netconf_base_channel_args.netconf_version != NetconfVersion.UNKNOWN:
+            if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+                if "urn:ietf:params:netconf:base:1.0" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.0 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_0
+            elif self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
+                if "urn:ietf:params:netconf:base:1.1" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.1 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_1
+
+        if final_channel_version == NetconfVersion.VERSION_1_0:
             self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_0
             self._base_channel_args.comms_prompt_pattern = "]]>]]>"
-
-        self._netconf_base_channel_args.server_capabilities = server_capabilities
-        self._netconf_base_channel_args.client_capabilities = client_capabilities
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_0
+            )
+        else:
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
+            self._base_channel_args.comms_prompt_pattern = r"^##$"
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_1
+            )
 
     def _parse_server_capabilities(self, raw_server_capabilities: bytes) -> List[str]:
         """

@@ -1,5 +1,7 @@
 import pytest
 
+from scrapli_netconf.constants import NetconfClientCapabilities
+
 
 def test_open_netconf():
     pass
@@ -70,16 +72,54 @@ def test_check_echo():
     pass
 
 
-def test_get_server_capabilities():
-    pass
+def test_check_echo_system_transport(dummy_conn):
+    assert dummy_conn.channel._server_echo is None
+    dummy_conn.channel._check_echo()
+    assert dummy_conn.channel._server_echo is True
+
+
+def test_get_server_capabilities(monkeypatch, dummy_conn):
+    read_counter = 0
+
+    def _read(cls):
+        nonlocal read_counter
+
+        if read_counter == 0:
+            read_counter += 1
+            return b"lasjdfkldsjaflkdjf"
+        return b"]]>]]>"
+
+    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
+
+    assert dummy_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf]]>]]>"
 
 
 def test_send_client_capabilities():
     pass
 
 
-def test_read_until_input():
-    pass
+@pytest.mark.parametrize(
+    "test_data",
+    ((b"blah", b"blah"), (b"", b""), (b"blah", b"rpc>")),
+    ids=("some_input", "no_input", "rpc_in_output"),
+)
+def test_read_until_input(monkeypatch, dummy_conn, test_data):
+    channel_input, expected_read_input = test_data
+    dummy_conn.channel._server_echo = True
+
+    def _read(cls):
+        nonlocal expected_read_input
+
+        return expected_read_input
+
+    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
+
+    assert dummy_conn.channel._read_until_input(channel_input=channel_input) == expected_read_input
+
+
+def test_read_until_input_no_echo(dummy_conn):
+    dummy_conn.channel._server_echo = False
+    assert dummy_conn.channel._read_until_input(channel_input=b"blah") == b""
 
 
 def test_send_input_netconf(monkeypatch, dummy_conn):

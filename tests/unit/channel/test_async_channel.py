@@ -7,23 +7,27 @@ async def test_open_netconf():
 
 
 @pytest.mark.asyncio
-async def test_channel_authenticate_netconf():
-    pass
-
-
-@pytest.mark.asyncio
-async def test__check_echo():
-    pass
-
-
-@pytest.mark.asyncio
 async def test_check_echo():
     pass
 
 
 @pytest.mark.asyncio
-async def test_get_server_capabilities():
-    pass
+async def test_get_server_capabilities(monkeypatch, dummy_async_conn):
+    read_counter = 0
+
+    async def _read(cls):
+        nonlocal read_counter
+
+        if read_counter == 0:
+            read_counter += 1
+            return b"lasjdfkldsjaflkdjf"
+        return b"]]>]]>"
+
+    monkeypatch.setattr(
+        "scrapli.transport.plugins.asyncssh.transport.AsyncsshTransport.read", _read
+    )
+
+    assert await dummy_async_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf]]>]]>"
 
 
 @pytest.mark.asyncio
@@ -32,8 +36,34 @@ async def test_send_client_capabilities():
 
 
 @pytest.mark.asyncio
-async def test_read_until_input():
-    pass
+@pytest.mark.parametrize(
+    "test_data",
+    ((b"blah", b"blah"), (b"", b""), (b"blah", b"rpc>")),
+    ids=("some_input", "no_input", "rpc_in_output"),
+)
+async def test_read_until_input(monkeypatch, dummy_async_conn, test_data):
+    channel_input, expected_read_input = test_data
+    dummy_async_conn.channel._server_echo = True
+
+    async def _read(cls):
+        nonlocal expected_read_input
+
+        return expected_read_input
+
+    monkeypatch.setattr(
+        "scrapli.transport.plugins.asyncssh.transport.AsyncsshTransport.read", _read
+    )
+
+    assert (
+        await dummy_async_conn.channel._read_until_input(channel_input=channel_input)
+        == expected_read_input
+    )
+
+
+@pytest.mark.asyncio
+async def test_read_until_input_no_echo(dummy_async_conn):
+    dummy_async_conn.channel._server_echo = False
+    assert await dummy_async_conn.channel._read_until_input(channel_input=b"blah") == b""
 
 
 @pytest.mark.asyncio

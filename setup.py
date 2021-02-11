@@ -3,6 +3,7 @@
 import setuptools
 
 __author__ = "Carl Montanari"
+__version__ = "2021.01.30"
 
 with open("README.md", "r") as f:
     README = f.read()
@@ -26,19 +27,18 @@ EXTRAS_REQUIRE["full"] = full_requirements
 
 setuptools.setup(
     name="scrapli_netconf",
-    version="2021.01.17",
+    version=__version__,
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
     description="Netconf driver built on scrapli",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/scrapli/scrapli_netconf",
-    project_urls={
-        "Changelog": "https://github.com/scrapli/scrapli_netconf/blob/master/CHANGELOG.md"
-    },
+    project_urls={"Changelog": "https://scrapli.github.io/scrapli_netconf/changelog"},
     license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,
+    dependency_links=[],
     extras_require=EXTRAS_REQUIRE,
     classifiers=[
         "License :: OSI Approved :: MIT License",

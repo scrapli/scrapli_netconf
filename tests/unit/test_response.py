@@ -273,7 +273,7 @@ def test_record_response(response_setup):
         failed_when_contains=[b"<rpc-error>"],
         strip_namespaces=strip_namespaces,
     )
-    response._record_response(result=result.encode())
+    response.record_response(result=result.encode())
     assert str(response.finish_time)[:-7] == response_end_time
     assert response.result == final_result
     assert response.failed is False
@@ -368,7 +368,7 @@ def test_failed_when_contains_default_values(response_data):
         xml_input=xml_input,
         netconf_version=NetconfVersion.VERSION_1_0,
     )
-    response._record_response(result=response_output)
+    response.record_response(result=response_output)
     assert response.failed is not response_success
 
 
@@ -397,5 +397,5 @@ def test_parse_error_messages(response_data):
         xml_input=xml_input,
         netconf_version=NetconfVersion.VERSION_1_1,
     )
-    response._record_response(result=response_output.encode())
+    response.record_response(result=response_output.encode())
     assert response.error_messages == expected_errors

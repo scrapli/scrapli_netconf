@@ -1,40 +1,30 @@
 """scrapli_netconf.driver.base_driver"""
-import re
-import warnings
+import importlib
+from dataclasses import fields
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from lxml import etree
 from lxml.etree import Element
 
-from scrapli.driver.base_driver import ScrapeBase
-from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
+from scrapli.driver.base.base_driver import BaseDriver
+from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
+from scrapli.helper import user_warning
+from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
 PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
-class NetconfClientCapabilities(Enum):
-    CAPABILITIES_1_0 = """
-<?xml version="1.0" encoding="utf-8"?>
-    <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-        <capabilities>
-            <capability>urn:ietf:params:netconf:base:1.0</capability>
-        </capabilities>
-</hello>]]>]]>"""
-    CAPABILITIES_1_1 = """
-<?xml version="1.0" encoding="utf-8"?>
-    <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-        <capabilities>
-            <capability>urn:ietf:params:netconf:base:1.1</capability>
-        </capabilities>
-</hello>]]>]]>"""
-
-
 class NetconfBaseOperations(Enum):
     FILTER_SUBTREE = "<filter type='{filter_type}'></filter>"
     FILTER_XPATH = "<filter type='{filter_type}' select='{xpath}'></filter>"
+    WITH_DEFAULTS_SUBTREE = (
+        "<with-defaults xmlns='urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults'>"
+        "{default_type}</with-defaults>"
+    )
     GET = "<get></get>"
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
@@ -47,70 +37,196 @@ class NetconfBaseOperations(Enum):
     VALIDATE = "<validate><source><{source}/></source></validate>"
 
 
-class NetconfScrapeBase(ScrapeBase):
-    transport_args: Dict[str, Any]
-    server_capabilities: List[str]
+class NetconfBaseDriver(BaseDriver):
+    host: str
     readable_datastores: List[str]
     writeable_datastores: List[str]
-    netconf_version: NetconfVersion
     strip_namespaces: bool
     strict_datastores: bool
-    message_id: int
+    _netconf_base_channel_args: NetconfBaseChannelArgs
 
-    def _process_open(self, raw_server_capabilities: bytes) -> NetconfClientCapabilities:
+    @property
+    def netconf_version(self) -> NetconfVersion:
         """
-        Process received capabilities; return client capabilities
+        Getter for 'netconf_version' attribute
 
         Args:
-            raw_server_capabilities: raw bytes containing server capabilities
+            N/A
 
         Returns:
-            NetconfClientCapabilities: NetconfClientCapabilities enum of appropriate type
+            NetconfVersion: netconf_version enum
 
         Raises:
             N/A
 
         """
-        self._parse_server_capabilities(raw_server_capabilities=raw_server_capabilities)
+        return self._netconf_base_channel_args.netconf_version
 
-        client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
-        if "urn:ietf:params:netconf:base:1.1" in self.server_capabilities:
-            client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_1
-            self.netconf_version = NetconfVersion.VERSION_1_1
-
-        return client_capabilities
-
-    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -> None:
+    @netconf_version.setter
+    def netconf_version(self, value: NetconfVersion) -> None:
         """
-        Parse netconf server capabilities
+        Setter for 'netconf_version' attribute
 
         Args:
-            raw_server_capabilities: raw bytes containing server capabilities
+            value: NetconfVersion
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
+            ScrapliTypeError: if value is not of type NetconfVersion
 
         """
-        # matches hello with or without namespace
-        filtered_raw_server_capabilities = re.search(
-            pattern=rb"(<(\w+\:){0,1}hello.*<\/(\w+\:){0,1}hello>)",
-            string=raw_server_capabilities,
-            flags=re.I | re.S,
+        if not isinstance(value, NetconfVersion):
+            raise ScrapliTypeError
+
+        self.logger.debug(f"setting 'netconf_version' value to '{value.value}'")
+
+        self._netconf_base_channel_args.netconf_version = value
+
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+            self._base_channel_args.comms_prompt_pattern = "]]>]]>"
+        else:
+            self._base_channel_args.comms_prompt_pattern = r"^##$"
+
+    @property
+    def client_capabilities(self) -> NetconfClientCapabilities:
+        """
+        Getter for 'client_capabilities' attribute
+
+        Args:
+            N/A
+
+        Returns:
+            NetconfClientCapabilities: netconf client capabilities enum
+
+        Raises:
+            N/A
+
+        """
+        return self._netconf_base_channel_args.client_capabilities
+
+    @client_capabilities.setter
+    def client_capabilities(self, value: NetconfClientCapabilities) -> None:
+        """
+        Setter for 'client_capabilities' attribute
+
+        Args:
+            value: NetconfClientCapabilities value for client_capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type NetconfClientCapabilities
+
+        """
+        if not isinstance(value, NetconfClientCapabilities):
+            raise ScrapliTypeError
+
+        self.logger.debug(f"setting 'client_capabilities' value to '{value.value}'")
+
+        self._netconf_base_channel_args.client_capabilities = value
+
+    @property
+    def server_capabilities(self) -> List[str]:
+        """
+        Getter for 'server_capabilities' attribute
+
+        Args:
+            N/A
+
+        Returns:
+            list: list of strings of server capabilities
+
+        Raises:
+            N/A
+
+        """
+        return self._netconf_base_channel_args.server_capabilities or []
+
+    @server_capabilities.setter
+    def server_capabilities(self, value: NetconfClientCapabilities) -> None:
+        """
+        Setter for 'server_capabilities' attribute
+
+        Args:
+            value: list of strings of netconf server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type list
+
+        """
+        if not isinstance(value, list):
+            raise ScrapliTypeError
+
+        self.logger.debug(f"setting 'server_capabilities' value to '{value}'")
+
+        self._netconf_base_channel_args.server_capabilities = value
+
+    @staticmethod
+    def _determine_preferred_netconf_version(
+        preferred_netconf_version: Optional[str],
+    ) -> NetconfVersion:
+        """
+        Determine users preferred netconf version (if applicable)
+
+        Args:
+            preferred_netconf_version: optional string indicating users preferred netconf version
+
+        Returns:
+            NetconfVersion: users preferred netconf version
+
+        Raises:
+            ScrapliValueError: if preferred_netconf_version is not None or a valid option
+
+        """
+        if preferred_netconf_version is None:
+            return NetconfVersion.UNKNOWN
+        if preferred_netconf_version == "1.0":
+            return NetconfVersion.VERSION_1_0
+        if preferred_netconf_version == "1.1":
+            return NetconfVersion.VERSION_1_1
+
+        raise ScrapliValueError(
+            "'preferred_netconf_version' provided with invalid value, must be one of: "
+            "None, '1.0', or '1.1'"
         )
-        if filtered_raw_server_capabilities is None:
-            msg = f"Failed to parse server capabilities from host {self._host}"
-            raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
-        for elem in server_capabilities_xml.iter():
-            if "capability" not in elem.tag:
-                continue
-            self.server_capabilities.append(elem.text.strip())
-        self._build_readable_datastores()
-        self._build_writeable_datastores()
-        self.logger.info(f"Server capabilities received and parsed: {self.server_capabilities}")
+
+    def _transport_factory(self) -> Tuple[Callable[..., Any], object]:
+        """
+        Determine proper transport class and necessary arguments to initialize that class
+
+        Args:
+            N/A
+
+        Returns:
+            Tuple[Callable[..., Any], object]: tuple of transport class and dataclass of transport
+                class specific arguments
+
+        Raises:
+            N/A
+
+        """
+        transport_plugin_module = importlib.import_module(
+            f"scrapli_netconf.transport.plugins.{self.transport_name}.transport"
+        )
+
+        transport_class = getattr(
+            transport_plugin_module, f"Netconf{self.transport_name.capitalize()}Transport"
+        )
+        plugin_transport_args_class = getattr(transport_plugin_module, "PluginTransportArgs")
+
+        _plugin_transport_args = {
+            field.name: getattr(self, field.name) for field in fields(plugin_transport_args_class)
+        }
+
+        plugin_transport_args = plugin_transport_args_class(**_plugin_transport_args)
+
+        return transport_class, plugin_transport_args
 
     def _build_readable_datastores(self) -> None:
         """
@@ -120,7 +236,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -141,7 +257,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
             N/A
@@ -166,18 +282,18 @@ class NetconfScrapeBase(ScrapeBase):
             source: configuration source to get; typically one of running|startup|candidate
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            ValueError: if an invalid source was selected and strict_datastores is True
+            ScrapliValueError: if an invalid source was selected and strict_datastores is True
 
         """
         if source not in self.readable_datastores:
-            msg = f"`source` should be one of {self.readable_datastores}, got `{source}`"
+            msg = f"'source' should be one of {self.readable_datastores}, got '{source}'"
             self.logger.warning(msg)
             if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
+                raise ScrapliValueError(msg)
+            user_warning(title="Invalid datastore source!", message=msg)
 
     def _validate_edit_config_target(self, target: str) -> None:
         """
@@ -187,18 +303,18 @@ class NetconfScrapeBase(ScrapeBase):
             target: configuration source to edit/lock; typically one of running|startup|candidate
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            ValueError: if an invalid source was selected
+            ScrapliValueError: if an invalid source was selected
 
         """
         if target not in self.writeable_datastores:
-            msg = f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            msg = f"'target' should be one of {self.writeable_datastores}, got '{target}'"
             self.logger.warning(msg)
             if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
+                raise ScrapliValueError(msg)
+            user_warning(title="Invalid datastore target!", message=msg)
 
     def _validate_delete_config_target(self, target: str) -> None:
         """
@@ -208,20 +324,20 @@ class NetconfScrapeBase(ScrapeBase):
             target: configuration source to delete; typically one of startup|candidate
 
         Returns:
-            N/A  # noqa: DAR202
+            None
 
         Raises:
-            ValueError: if an invalid target was selected
+            ScrapliValueError: if an invalid target was selected
 
         """
         if target == "running" or target not in self.writeable_datastores:
-            msg = f"`target` should be one of {self.writeable_datastores}, got `{target}`"
+            msg = f"'target' should be one of {self.writeable_datastores}, got '{target}'"
             if target == "running":
-                msg = "delete-config `target` may not be `running`"
+                msg = "delete-config 'target' may not be 'running'"
             self.logger.warning(msg)
             if self.strict_datastores is True:
-                raise ValueError(msg)
-            warnings.warn(msg)
+                raise ScrapliValueError(msg)
+            user_warning(title="Invalid datastore target!", message=msg)
 
     def _build_base_elem(self) -> Element:
         """
@@ -237,6 +353,9 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
+        # pylint did not seem to want to be ok with assigning this as a class attribute... and its
+        # only used here so... here we are
+        self.message_id: int  # pylint: disable=W0201
         self.logger.debug(f"Building base element for message id {self.message_id}")
         base_xml_str = NetconfBaseOperations.RPC.value.format(message_id=self.message_id)
         self.message_id += 1
@@ -256,7 +375,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         Raises:
             CapabilityNotSupported: if xpath selected and not supported on server
-            ValueError: if filter_type is not one of subtree|xpath
+            ScrapliValueError: if filter_type is not one of subtree|xpath
 
         """
         if filter_type == "subtree":
@@ -283,8 +402,46 @@ class NetconfScrapeBase(ScrapeBase):
                 parser=PARSER,
             )
         else:
-            raise ValueError(f"`filter_type` should be one of subtree|xpath, got `{filter_type}`")
+            raise ScrapliValueError(
+                f"'filter_type' should be one of subtree|xpath, got '{filter_type}'"
+            )
         return xml_filter_elem
+
+    def _build_with_defaults(self, default_type: str = "report-all") -> Element:
+        """
+        Create with-defaults element for a given operation
+
+        Args:
+            default_type: enumeration of with-defaults; report-all|trim|explicit|report-all-tagged
+
+        Returns:
+            Element: lxml with-defaults element to use for netconf operation
+
+        Raises:
+            CapabilityNotSupported: if default_type provided but not supported by device
+            ScrapliValueError: if default_type is not one of
+                report-all|trim|explicit|report-all-tagged
+
+        """
+
+        if default_type in ["report-all", "trim", "explicit", "report-all-tagged"]:
+            if (
+                "urn:ietf:params:netconf:capability:with-defaults:1.0"
+                not in self.server_capabilities
+            ):
+                msg = "with-defaults requested, but is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
+            xml_with_defaults_element = etree.fromstring(
+                NetconfBaseOperations.WITH_DEFAULTS_SUBTREE.value.format(default_type=default_type),
+                parser=PARSER,
+            )
+        else:
+            raise ScrapliValueError(
+                "'default_type' should be one of report-all|trim|explicit|report-all-tagged, "
+                f"got '{default_type}'"
+            )
+        return xml_with_defaults_element
 
     def _pre_get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
@@ -316,7 +473,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         self.logger.debug(
-            f"Building payload for `get` operation. filter_type: {filter_type}, filter_: {filter_}"
+            f"Building payload for 'get' operation. filter_type: {filter_type}, filter_: {filter_}"
         )
 
         # build base request and insert the get element
@@ -338,13 +495,13 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
-        self.logger.debug(f"Built payload for `get` operation. Payload: {channel_input.decode()}")
+        self.logger.debug(f"Built payload for 'get' operation. Payload: {channel_input.decode()}")
         return response
 
     def _pre_get_config(
@@ -352,6 +509,7 @@ class NetconfScrapeBase(ScrapeBase):
         source: str = "running",
         filters: Optional[Union[str, List[str]]] = None,
         filter_type: str = "subtree",
+        default_type: Optional[str] = None,
     ) -> NetconfResponse:
         """
         Handle pre "get_config" tasks for consistency between sync/async versions
@@ -360,6 +518,7 @@ class NetconfScrapeBase(ScrapeBase):
             source: configuration source to get; typically one of running|startup|candidate
             filters: string or list of strings of filters to apply to configuration
             filter_type: type of filter; subtree|xpath
+            default_type: string of with-default mode to apply when retrieving configuration
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
@@ -370,8 +529,8 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         self.logger.debug(
-            f"Building payload for `get-config` operation. source: {source}, filter_type: "
-            f"{filter_type}, filters: {filters}"
+            f"Building payload for 'get-config' operation. source: {source}, filter_type: "
+            f"{filter_type}, filters: {filters}, default_type: {default_type}"
         )
         self._validate_get_config_target(source=source)
 
@@ -391,6 +550,11 @@ class NetconfScrapeBase(ScrapeBase):
             # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
             get_element.insert(1, xml_filter_elem)
 
+        if default_type is not None:
+            xml_with_defaults_elem = self._build_with_defaults(default_type=default_type)
+            get_element = xml_request.find("get-config")
+            get_element.insert(2, xml_with_defaults_elem)
+
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
         )
@@ -399,14 +563,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `get-config` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'get-config' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -429,7 +593,7 @@ class NetconfScrapeBase(ScrapeBase):
 
         """
         self.logger.debug(
-            f"Building payload for `edit-config` operation. target: {target}, config: {config}"
+            f"Building payload for 'edit-config' operation. target: {target}, config: {config}"
         )
         self._validate_edit_config_target(target=target)
 
@@ -455,14 +619,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `edit-config` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'edit-config' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -481,7 +645,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug(f"Building payload for `delete-config` operation. target: {target}")
+        self.logger.debug(f"Building payload for 'delete-config' operation. target: {target}")
         self._validate_delete_config_target(target=target)
 
         xml_request = self._build_base_elem()
@@ -497,14 +661,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `delete-config` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'delete-config' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -523,7 +687,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug("Building payload for `commit` operation")
+        self.logger.debug("Building payload for 'commit' operation")
         xml_request = self._build_base_elem()
         xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value, parser=PARSER)
         xml_request.insert(0, xml_commit_element)
@@ -533,14 +697,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `commit` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'commit' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -559,7 +723,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug("Building payload for `discard` operation.")
+        self.logger.debug("Building payload for 'discard' operation.")
         xml_request = self._build_base_elem()
         xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value, parser=PARSER)
         xml_request.insert(0, xml_commit_element)
@@ -571,14 +735,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `discard` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'discard' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -597,7 +761,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug("Building payload for `lock` operation.")
+        self.logger.debug("Building payload for 'lock' operation.")
         self._validate_edit_config_target(target=target)
 
         xml_request = self._build_base_elem()
@@ -613,13 +777,13 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
-        self.logger.debug(f"Built payload for `lock` operation. Payload: {channel_input.decode()}")
+        self.logger.debug(f"Built payload for 'lock' operation. Payload: {channel_input.decode()}")
         return response
 
     def _pre_unlock(self, target: str) -> NetconfResponse:
@@ -637,7 +801,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug("Building payload for `unlock` operation.")
+        self.logger.debug("Building payload for 'unlock' operation.")
         self._validate_edit_config_target(target=target)
 
         xml_request = self._build_base_elem()
@@ -653,14 +817,14 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `unlock` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'unlock' operation. Payload: {channel_input.decode()}"
         )
         return response
 
@@ -679,7 +843,7 @@ class NetconfScrapeBase(ScrapeBase):
             N/A
 
         """
-        self.logger.debug("Building payload for `rpc` operation.")
+        self.logger.debug("Building payload for 'rpc' operation.")
         xml_request = self._build_base_elem()
 
         # build filter element
@@ -696,13 +860,13 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
-        self.logger.debug(f"Built payload for `rpc` operation. Payload: {channel_input.decode()}")
+        self.logger.debug(f"Built payload for 'rpc' operation. Payload: {channel_input.decode()}")
         return response
 
     def _pre_validate(self, source: str) -> NetconfResponse:
@@ -717,10 +881,10 @@ class NetconfScrapeBase(ScrapeBase):
                 channel inputs (string and xml)
 
         Raises:
-            CapabilityNotSupported: if `validate` capability does not exist
+            CapabilityNotSupported: if 'validate' capability does not exist
 
         """
-        self.logger.debug("Building payload for `validate` operation.")
+        self.logger.debug("Building payload for 'validate' operation.")
 
         if not any(
             cap in self.server_capabilities
@@ -748,13 +912,13 @@ class NetconfScrapeBase(ScrapeBase):
             channel_input = channel_input + b"\n]]>]]>"
 
         response = NetconfResponse(
-            host=self.transport.host,
+            host=self.host,
             channel_input=channel_input.decode(),
             xml_input=xml_request,
             netconf_version=self.netconf_version,
             strip_namespaces=self.strip_namespaces,
         )
         self.logger.debug(
-            f"Built payload for `validate` operation. Payload: {channel_input.decode()}"
+            f"Built payload for 'validate' operation. Payload: {channel_input.decode()}"
         )
         return response

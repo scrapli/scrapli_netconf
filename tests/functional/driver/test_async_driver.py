@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pytest
@@ -278,6 +279,9 @@ async def test_delete_config(async_conn):
 
 @pytest.mark.asyncio
 async def test_lock_unlock(async_conn):
+    # seems that after the previous config change the virtual iosxe device wants to fail to auth
+    # connections, sleep a tick to maybe let it chill
+    await asyncio.sleep(1)
     conn = async_conn[0]
     device_type = async_conn[1]
 

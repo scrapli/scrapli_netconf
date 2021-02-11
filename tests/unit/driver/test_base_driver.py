@@ -1,72 +1,17 @@
 import pytest
 from lxml import etree
 
-from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfClientCapabilities
-from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
+from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
-SERVER_CAPABILITIES_1_0 = b"""<?xml version="1.0" encoding="UTF-8"?>
-<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-    <capabilities>
-        <capability>urn:ietf:params:netconf:base:1.0</capability>
-        <capability>urn:ietf:params:netconf:capability:writeable-running:1.0</capability>
-        <capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
-        <capability>urn:ietf:params:netconf:capability:startup:1.0</capability>
-        <capability>urn:ietf:params:netconf:capability:url:1.0</capability>
-        <capability>urn:cisco:params:netconf:capability:pi-data-model:1.0</capability>
-        <capability>urn:cisco:params:netconf:capability:notification:1.0</capability>
-    </capabilities>
-    <session-id>151399960</session-id>
-</hello>]]>]]>"""
-PARSED_CAPABILITIES_1_0 = [
-    "urn:ietf:params:netconf:base:1.0",
-    "urn:ietf:params:netconf:capability:writeable-running:1.0",
-    "urn:ietf:params:netconf:capability:rollback-on-error:1.0",
-    "urn:ietf:params:netconf:capability:startup:1.0",
-    "urn:ietf:params:netconf:capability:url:1.0",
-    "urn:cisco:params:netconf:capability:pi-data-model:1.0",
-    "urn:cisco:params:netconf:capability:notification:1.0",
-]
-SERVER_CAPABILITIES_1_1 = b"""<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
- <capabilities>
-  <capability>urn:ietf:params:netconf:base:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:candidate:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:validate:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:confirmed-commit:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:notification:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:interleave:1.0</capability>
- </capabilities>
- <session-id>3671877071</session-id>
-</hello>
-]]>]]>"""
-SERVER_CAPABILITIES_1_1_NAMESPACE = b"""<nc:hello xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0">
- <capabilities>
-  <capability>urn:ietf:params:netconf:base:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:candidate:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:rollback-on-error:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:validate:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:confirmed-commit:1.1</capability>
-  <capability>urn:ietf:params:netconf:capability:notification:1.0</capability>
-  <capability>urn:ietf:params:netconf:capability:interleave:1.0</capability>
- </capabilities>
- <session-id>3671877071</session-id>
-</nc:hello>
-]]>]]>"""
-PARSED_CAPABILITIES_1_1 = [
-    "urn:ietf:params:netconf:base:1.1",
-    "urn:ietf:params:netconf:capability:candidate:1.0",
-    "urn:ietf:params:netconf:capability:rollback-on-error:1.0",
-    "urn:ietf:params:netconf:capability:validate:1.1",
-    "urn:ietf:params:netconf:capability:confirmed-commit:1.1",
-    "urn:ietf:params:netconf:capability:notification:1.0",
-    "urn:ietf:params:netconf:capability:interleave:1.0",
-]
 GET_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get></rpc>\n]]>]]>"""
 GET_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get></rpc>"""
 GET_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get-config></rpc>\n]]>]]>"""
 GET_CONFIG_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter></get-config></rpc>"""
+GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults></get-config></rpc>\n]]>]]>"""
+GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source><filter type="subtree"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></filter><with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults></get-config></rpc>"""
 EDIT_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version='1.0' encoding='utf-8'?>
 <rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><edit-config><target><running/></target><config><cdp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-cdp-cfg"><timer>80</timer><enable>true</enable><log-adjacency/><hold-time>200</hold-time><advertise-v1-only/></cdp></config></edit-config></rpc>
 ]]>]]>"""
@@ -90,61 +35,69 @@ VALIDATE_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc
 VALIDATE_CHANNEL_INPUT_1_1 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>"""
 
 
-@pytest.mark.parametrize(
-    "capabilities",
-    [
-        (
-            SERVER_CAPABILITIES_1_0,
-            NetconfVersion.VERSION_1_0,
-            NetconfClientCapabilities.CAPABILITIES_1_0,
-        ),
-        (
-            SERVER_CAPABILITIES_1_1,
-            NetconfVersion.VERSION_1_1,
-            NetconfClientCapabilities.CAPABILITIES_1_1,
-        ),
-    ],
-    ids=["1.0", "1.1"],
-)
-def test_process_open(dummy_conn, capabilities):
-    server_capabilities = capabilities[0]
-    expected_netconf_version = capabilities[1]
-    expected_client_capabilities = capabilities[2]
-    client_capabilities = dummy_conn._process_open(raw_server_capabilities=server_capabilities)
-    assert client_capabilities == expected_client_capabilities
-    assert dummy_conn.netconf_version == expected_netconf_version
+def test_set_netconf_version_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.netconf_version = "blah"
+
+
+def test_client_capabilities(dummy_conn):
+    assert dummy_conn.client_capabilities == NetconfClientCapabilities.UNKNOWN
+    dummy_conn.client_capabilities = NetconfClientCapabilities.CAPABILITIES_1_0
+    assert dummy_conn.client_capabilities == NetconfClientCapabilities.CAPABILITIES_1_0
+
+
+def test_set_client_capabilities_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.client_capabilities = "blah"
+
+
+def test_server_capabilities(dummy_conn):
+    assert dummy_conn.server_capabilities == []
+    dummy_conn.server_capabilities = ["blah"]
+    assert dummy_conn.server_capabilities == ["blah"]
+
+
+def test_set_server_capabilities_exception(dummy_conn):
+    with pytest.raises(ScrapliTypeError):
+        dummy_conn.server_capabilities = "blah"
 
 
 @pytest.mark.parametrize(
-    "capabilities",
-    [
-        (SERVER_CAPABILITIES_1_0, PARSED_CAPABILITIES_1_0),
-        (SERVER_CAPABILITIES_1_1, PARSED_CAPABILITIES_1_1),
-        (SERVER_CAPABILITIES_1_1_NAMESPACE, PARSED_CAPABILITIES_1_1),
-    ],
-    ids=["1.0", "1.1", "1.1-namespace"],
+    "test_data",
+    (
+        (None, NetconfVersion.UNKNOWN),
+        ("1.0", NetconfVersion.VERSION_1_0),
+        ("1.1", NetconfVersion.VERSION_1_1),
+    ),
+    ids=(
+        "none",
+        "1.0",
+        "1.1",
+    ),
 )
-def test_parse_server_capabilities(dummy_conn, capabilities):
-    server_capabilities = capabilities[0]
-    parsed_server_capabilities = capabilities[1]
-    dummy_conn._parse_server_capabilities(raw_server_capabilities=server_capabilities)
-    assert dummy_conn.server_capabilities == parsed_server_capabilities
+def test_determine_preferred_netconf_version(dummy_conn, test_data):
+    preferred_version_input, preferred_version_output = test_data
+    assert (
+        dummy_conn._determine_preferred_netconf_version(
+            preferred_netconf_version=preferred_version_input
+        )
+        == preferred_version_output
+    )
 
 
-def test_parse_server_capabilities_exception(dummy_conn):
-    with pytest.raises(CouldNotExchangeCapabilities) as exc:
-        dummy_conn._parse_server_capabilities(raw_server_capabilities=b"boo!")
-    assert str(exc.value) == "Failed to parse server capabilities from host localhost"
+def test_determine_preferred_netconf_version_exception(dummy_conn):
+    with pytest.raises(ScrapliValueError):
+        dummy_conn._determine_preferred_netconf_version(preferred_netconf_version="blah")
 
 
-def test_build_readable_datastores(dummy_conn):
-    dummy_conn._parse_server_capabilities(raw_server_capabilities=SERVER_CAPABILITIES_1_1)
+def test_build_readable_datastores(dummy_conn, parsed_server_capabilities_1_1):
+    dummy_conn.server_capabilities = parsed_server_capabilities_1_1
     dummy_conn._build_readable_datastores()
     assert dummy_conn.readable_datastores == ["running", "candidate"]
 
 
-def test_build_writeable_datastores(dummy_conn):
-    dummy_conn._parse_server_capabilities(raw_server_capabilities=SERVER_CAPABILITIES_1_1)
+def test_build_writeable_datastores(dummy_conn, parsed_server_capabilities_1_1):
+    dummy_conn.server_capabilities = parsed_server_capabilities_1_1
     dummy_conn._build_writeable_datastores()
     assert dummy_conn.writeable_datastores == ["candidate"]
 
@@ -168,10 +121,10 @@ def test_validate_get_config_target(dummy_conn, capabilities):
 
 def test_validate_get_config_target_exception(dummy_conn):
     dummy_conn.strict_datastores = True
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_readable_datastores()
         dummy_conn._validate_get_config_target(source="tacocat")
-    assert str(exc.value) == "`source` should be one of ['running'], got `tacocat`"
+    assert str(exc.value) == "'source' should be one of ['running'], got 'tacocat'"
 
 
 @pytest.mark.parametrize(
@@ -193,10 +146,10 @@ def test_validate_edit_config_target(dummy_conn, capabilities):
 
 def test_validate_edit_config_target_exception(dummy_conn):
     dummy_conn.strict_datastores = True
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_writeable_datastores()
         dummy_conn._validate_edit_config_target(target="tacocat")
-    assert str(exc.value) == "`target` should be one of [], got `tacocat`"
+    assert str(exc.value) == "'target' should be one of [], got 'tacocat'"
 
 
 def test_build_base_elem(dummy_conn):
@@ -214,10 +167,50 @@ def test_build_filters():
     pass
 
 
+def test_build_with_defaults(dummy_conn):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
+    report_all_elem = dummy_conn._build_with_defaults("report-all")
+    trim_elem = dummy_conn._build_with_defaults("trim")
+    explicit_elem = dummy_conn._build_with_defaults("explicit")
+    tagged_elem = dummy_conn._build_with_defaults("report-all-tagged")
+    assert (
+        etree.tostring(report_all_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all</with-defaults>"""
+    )
+    assert (
+        etree.tostring(trim_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">trim</with-defaults>"""
+    )
+    assert (
+        etree.tostring(explicit_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">explicit</with-defaults>"""
+    )
+    assert (
+        etree.tostring(tagged_elem)
+        == b"""<with-defaults xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-with-defaults">report-all-tagged</with-defaults>"""
+    )
+
+
+def test_build_with_defaults_exception_invalid_type(dummy_conn):
+    with pytest.raises(ScrapliValueError) as exc:
+        dummy_conn._build_with_defaults(default_type="sushicat")
+    assert (
+        str(exc.value)
+        == "'default_type' should be one of report-all|trim|explicit|report-all-tagged, got 'sushicat'"
+    )
+
+
+def test_build_with_defaults_exception_unsupported(dummy_conn):
+    dummy_conn.server_capabilities = []
+    with pytest.raises(CapabilityNotSupported) as exc:
+        dummy_conn._build_with_defaults(default_type="trim")
+    assert str(exc.value) == "with-defaults requested, but is not supported by the server"
+
+
 def test_build_filters_exception_invalid_type(dummy_conn):
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._build_filters(filters=[], filter_type="tacocat")
-    assert str(exc.value) == "`filter_type` should be one of subtree|xpath, got `tacocat`"
+    assert str(exc.value) == "'filter_type' should be one of subtree|xpath, got 'tacocat'"
 
 
 def test_build_filters_exception_unsupported(dummy_conn):
@@ -259,6 +252,26 @@ def test_pre_get_config(dummy_conn, capabilities):
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     response = dummy_conn._pre_get_config(filters=[filter_])
+    assert isinstance(response, NetconfResponse)
+    assert response.channel_input == expected_channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_0),
+        (NetconfVersion.VERSION_1_1, GET_CONFIG_WITH_DEFAULT_CHANNEL_INPUT_1_1),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_get_config_with_default(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:with-defaults:1.0"]
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.readable_datastores = ["running"]
+    expected_channel_input = capabilities[1]
+    filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
+    default_type_ = "report-all"
+    response = dummy_conn._pre_get_config(filters=[filter_], default_type=default_type_)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
 
@@ -310,9 +323,9 @@ def test_pre_delete_config_running(dummy_conn):
     dummy_conn.strict_datastores = True
     dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:writeable-running:1.0"]
     dummy_conn.writeable_datastores = ["running", "candidate"]
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ScrapliValueError) as exc:
         dummy_conn._pre_delete_config(target="running")
-    assert str(exc.value) == "delete-config `target` may not be `running`"
+    assert str(exc.value) == "delete-config 'target' may not be 'running'"
 
 
 @pytest.mark.parametrize(

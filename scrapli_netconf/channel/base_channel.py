@@ -1,18 +1,116 @@
 """scrapli_netconf.channel.base_channel"""
-from scrapli.channel.base_channel import ChannelBase
-from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.driver.base_driver import NetconfClientCapabilities
+import re
+from dataclasses import dataclass
+from typing import List, Optional
+
+from lxml import etree
+
+from scrapli.channel.base_channel import BaseChannel
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
-class NetconfChannelBase(ChannelBase):
+@dataclass()
+class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
+    server_capabilities: Optional[List[str]] = None
+    client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
 
-    def _restructure_output(self, output: bytes, strip_prompt: bool = False) -> bytes:
+
+class BaseNetconfChannel(BaseChannel):
+    _netconf_base_channel_args: NetconfBaseChannelArgs
+
+    def _process_capabilities_exchange(self, raw_server_capabilities: bytes) -> None:
         """
-        Override scrapli _restructure_output as this is unnecessary for scrapli_netconf
+        Process received capabilities; return client capabilities
 
         Args:
-            output: bytes from channel
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            None
+
+        Raises:
+            CapabilityNotSupported: if user has provided a preferred netconf version but it is not
+                available in servers offered capabilites
+
+        """
+        server_capabilities = self._parse_server_capabilities(
+            raw_server_capabilities=raw_server_capabilities
+        )
+        self._netconf_base_channel_args.server_capabilities = server_capabilities
+
+        if "urn:ietf:params:netconf:base:1.1" in server_capabilities:
+            final_channel_version = NetconfVersion.VERSION_1_1
+        else:
+            final_channel_version = NetconfVersion.VERSION_1_0
+
+        if self._netconf_base_channel_args.netconf_version != NetconfVersion.UNKNOWN:
+            if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
+                if "urn:ietf:params:netconf:base:1.0" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.0 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_0
+            elif self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
+                if "urn:ietf:params:netconf:base:1.1" not in server_capabilities:
+                    raise CapabilityNotSupported(
+                        "user requested netconf version 1.1 but capability not offered"
+                    )
+                final_channel_version = NetconfVersion.VERSION_1_1
+
+        if final_channel_version == NetconfVersion.VERSION_1_0:
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_0
+            self._base_channel_args.comms_prompt_pattern = "]]>]]>"
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_0
+            )
+        else:
+            self._netconf_base_channel_args.netconf_version = NetconfVersion.VERSION_1_1
+            self._base_channel_args.comms_prompt_pattern = r"^##$"
+            self._netconf_base_channel_args.client_capabilities = (
+                NetconfClientCapabilities.CAPABILITIES_1_1
+            )
+
+    def _parse_server_capabilities(self, raw_server_capabilities: bytes) -> List[str]:
+        """
+        Parse netconf server capabilities
+
+        Args:
+            raw_server_capabilities: raw bytes containing server capabilities
+
+        Returns:
+            N/A  # noqa: DAR202
+
+        Raises:
+            CouldNotExchangeCapabilities: if server capabilities cannot be parsed
+
+        """
+        server_capabilities = []
+
+        # matches hello with or without namespace
+        filtered_raw_server_capabilities = re.search(
+            pattern=rb"(<(\w+\:){0,1}hello.*<\/(\w+\:){0,1}hello>)",
+            string=raw_server_capabilities,
+            flags=re.I | re.S,
+        )
+        if filtered_raw_server_capabilities is None:
+            msg = "failed to parse server capabilities"
+            raise CouldNotExchangeCapabilities(msg)
+        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
+        for elem in server_capabilities_xml.iter():
+            if "capability" not in elem.tag:
+                continue
+            server_capabilities.append(elem.text.strip())
+        self.logger.info(f"server capabilities received and parsed: {server_capabilities}")
+        return server_capabilities
+
+    def _process_output(self, buf: bytes, strip_prompt: bool) -> bytes:
+        """
+        Override scrapli _process_output as this is unnecessary for scrapli_netconf
+
+        Args:
+            buf: bytes output from the device
             strip_prompt: ignored in this base class; for LSP reasons for subclasses
 
         Returns:
@@ -23,7 +121,7 @@ class NetconfChannelBase(ChannelBase):
 
         """
         _ = strip_prompt
-        return output
+        return buf
 
     def _build_message(self, channel_input: str) -> str:
         """
@@ -39,7 +137,7 @@ class NetconfChannelBase(ChannelBase):
             N/A
 
         """
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
+        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
             return channel_input
 
         # format message for chunk (netconf 1.1) style message
@@ -66,26 +164,6 @@ class NetconfChannelBase(ChannelBase):
         self.logger.info("Sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
         self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
-        self.transport.write(client_capabilities.value)
+        self.write(client_capabilities.value)
         self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
-
-    def _post_send_client_capabilities(
-        self, capabilities_version: NetconfVersion = NetconfVersion.VERSION_1_1
-    ) -> None:
-        """
-        Handle pre "_send_client_capabilities" tasks for consistency between sync/async versions
-
-        Args:
-            capabilities_version: string of client netconf capabilities version, 1.0 or 1.1
-
-        Returns:
-            N/A  # noqa: DAR202
-
-        Raises:
-            N/A
-
-        """
-        if capabilities_version == NetconfVersion.VERSION_1_1:
-            self.netconf_version = NetconfVersion.VERSION_1_1
-            self.comms_prompt_pattern = r"^##$"

@@ -2,8 +2,8 @@ import time
 
 import pytest
 
-from scrapli_netconf.driver.async_driver import AsyncNetconfScrape
-from scrapli_netconf.driver.driver import NetconfScrape
+from scrapli_netconf.driver.async_driver import AsyncNetconfDriver
+from scrapli_netconf.driver.sync_driver import NetconfDriver
 
 from ..test_data.devices import DEVICES, PRIVATE_KEY
 
@@ -52,7 +52,7 @@ def sync_conn_1_0(device_type_1_0, auth_type, transport):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device, transport=transport)
+    conn = NetconfDriver(**device, transport=transport)
     yield conn, device_type_1_0
     if conn.isalive():
         conn.close()
@@ -68,7 +68,7 @@ async def async_conn_1_0(device_type_1_0, auth_type):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = AsyncNetconfScrape(**device)
+    conn = AsyncNetconfDriver(**device)
     yield conn, device_type_1_0
     if conn.isalive():
         await conn.close()
@@ -83,7 +83,7 @@ def sync_conn_1_1(device_type_1_1, auth_type, transport):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device, transport=transport)
+    conn = NetconfDriver(**device, transport=transport)
     yield conn, device_type_1_1
     if conn.isalive():
         conn.close()
@@ -99,7 +99,7 @@ async def async_conn_1_1(device_type_1_1, auth_type):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = AsyncNetconfScrape(**device)
+    conn = AsyncNetconfDriver(**device)
     yield conn, device_type_1_1
     if conn.isalive():
         await conn.close()
@@ -114,7 +114,7 @@ def sync_conn(device_type, auth_type, transport):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfScrape(**device, transport=transport)
+    conn = NetconfDriver(**device, transport=transport)
     yield conn, device_type
     if conn.isalive():
         conn.close()
@@ -130,7 +130,7 @@ async def async_conn(device_type, auth_type):
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = AsyncNetconfScrape(**device)
+    conn = AsyncNetconfDriver(**device)
     yield conn, device_type
     if conn.isalive():
         await conn.close()

@@ -1,20 +1,9 @@
 lint:
-	python -m isort scrapli_netconf/
-	python -m isort tests/
-	python -m black scrapli_netconf/
-	python -m black tests/
-	python -m pylama scrapli_netconf/
-	python -m pydocstyle scrapli_netconf/
+	python -m isort .
+	python -m black .
+	python -m pylama .
+	python -m pydocstyle .
 	python -m mypy scrapli_netconf/
-
-.PHONY: docs
-docs:
-	rm -rf docs/scrapli_netconf
-	python -m pdoc \
-	--html \
-	--output-dir docs \
-	scrapli_netconf \
-	--force
 
 cov:
 	python -m pytest \
@@ -38,3 +27,10 @@ test_unit:
 
 test_functional:
 	python -m pytest tests/functional/
+
+.PHONY: docs
+docs:
+	python docs/generate/generate_docs.py
+
+deploy_docs:
+	mkdocs gh-deploy

@@ -931,7 +931,7 @@ Raises:
     
 
 ##### get_config
-`get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree', default_type: Union[str, NoneType] = None) ‑> scrapli_netconf.response.NetconfResponse`
+`get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree', default_type: Optional[str] = None) ‑> scrapli_netconf.response.NetconfResponse`
 
 ```text
 Netconf get-config operation

@@ -395,7 +395,7 @@ class BaseNetconfChannel(BaseChannel):
 
 
 ```text
-NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Union[List[str], NoneType] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = <NetconfClientCapabilities.UNKNOWN: 'unknown'>)
+NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Optional[List[str]] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = <NetconfClientCapabilities.UNKNOWN: 'unknown'>)
 ```
 
 <details class="source">
@@ -404,6 +404,7 @@ NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion
     </summary>
     <pre>
         <code class="python">
+@dataclass()
 class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
@@ -428,4 +429,4 @@ class NetconfBaseChannelArgs:
 
 
     
-`server_capabilities: Union[List[str], NoneType]`
+`server_capabilities: Optional[List[str]]`

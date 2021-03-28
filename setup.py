@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""scrapli_netconf - netconf driver built on scrapli"""
+"""scrapli_netconf"""
 import setuptools
 
-__author__ = "Carl Montanari"
 __version__ = "2021.01.30"
+__author__ = "Carl Montanari"
 
-with open("README.md", "r") as f:
+with open("README.md", "r", encoding="utf-8") as f:
     README = f.read()
 
 with open("requirements.txt", "r") as f:
@@ -30,11 +30,16 @@ setuptools.setup(
     version=__version__,
     author=__author__,
     author_email="carl.r.montanari@gmail.com",
-    description="Netconf driver built on scrapli",
+    description="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli",
     long_description=README,
     long_description_content_type="text/markdown",
+    keywords="ssh telnet netconf automation network cisco iosxr iosxe nxos arista eos juniper "
+    "junos",
     url="https://github.com/scrapli/scrapli_netconf",
-    project_urls={"Changelog": "https://scrapli.github.io/scrapli_netconf/changelog"},
+    project_urls={
+        "Changelog": "https://scrapli.github.io/scrapli_netconf/changelog/",
+        "Docs": "https://scrapli.github.io/scrapli_netconf/",
+    },
     license="MIT",
     packages=setuptools.find_packages(),
     install_requires=INSTALL_REQUIRES,

@@ -14,6 +14,7 @@ class NetconfSystemTransport(SystemTransport):
         # should also have a similar affect, though this seems simpler.
         self.open_cmd.extend(["-tt"])
         self.open_cmd.extend(["-s", "netconf"])
+        self.logger.debug(f"final open_cmd: {self.open_cmd}")
 
     def open_netconf(self) -> None:
         """

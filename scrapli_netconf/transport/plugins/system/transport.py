@@ -47,4 +47,5 @@ class NetconfSystemTransport(SystemTransport):
             N/A
 
         """
-        return self.session.fd
+        channel_fd: int = self.session.fd
+        return channel_fd

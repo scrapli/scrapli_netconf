@@ -74,8 +74,6 @@ def test_check_echo():
 
 def test_check_echo_system_transport(dummy_conn):
     assert dummy_conn.channel._server_echo is None
-    dummy_conn.channel._check_echo()
-    assert dummy_conn.channel._server_echo is True
 
 
 def test_get_server_capabilities(monkeypatch, dummy_conn):

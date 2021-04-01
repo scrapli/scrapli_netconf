@@ -161,9 +161,8 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities

@@ -12,7 +12,6 @@ from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.transport.plugins.system.transport import NetconfSystemTransport
 
 HELLO_MATCH = re.compile(pattern=rb"<(\w+\:){0,1}hello", flags=re.I)
 
@@ -160,10 +159,12 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         while True:
             fd_ready, _, _ = select([channel_fd], [], [], 0)
             if channel_fd in fd_ready:
+                self.logger.debug("setting _server_echo to true")
                 self._server_echo = True
                 break
             interval_end = datetime.now().timestamp()
             if (interval_end - start) > echo_timeout:
+                self.logger.debug("setting _server_echo to false")
                 self._server_echo = False
                 break
 
@@ -195,9 +196,6 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        if isinstance(self.transport, NetconfSystemTransport):
-            self._server_echo = True
-            return
         pool = ThreadPoolExecutor(max_workers=1)
         pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
 

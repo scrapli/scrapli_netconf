@@ -46,6 +46,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
+        # open in scrapli core is where we open channel log (if applicable), do that
+        self.open()
+
         raw_server_capabilities = self._get_server_capabilities()
 
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)

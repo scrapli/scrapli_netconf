@@ -3,7 +3,7 @@ lint:
 	python -m black .
 	python -m pylama .
 	python -m pydocstyle .
-	python -m mypy scrapli_netconf/
+	python -m mypy scrapli_netconf/ --strict
 
 cov:
 	python -m pytest \

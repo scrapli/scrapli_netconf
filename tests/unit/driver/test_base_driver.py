@@ -2,7 +2,7 @@ import pytest
 from lxml import etree
 
 from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
@@ -88,6 +88,25 @@ def test_determine_preferred_netconf_version(dummy_conn, test_data):
 def test_determine_preferred_netconf_version_exception(dummy_conn):
     with pytest.raises(ScrapliValueError):
         dummy_conn._determine_preferred_netconf_version(preferred_netconf_version="blah")
+
+
+@pytest.mark.parametrize(
+    "test_data",
+    (
+        (True, XmlParserVersion.COMPRESSED_PARSER),
+        (False, XmlParserVersion.STANDARD_PARSER),
+    ),
+    ids=(
+        "compressed",
+        "standard",
+    ),
+)
+def test_determine_preferred_xml_parser(dummy_conn, test_data):
+    use_compressed_parser, preferred_parser_output = test_data
+    assert (
+        dummy_conn._determine_preferred_xml_parser(use_compressed_parser=use_compressed_parser)
+        == preferred_parser_output
+    )
 
 
 def test_build_readable_datastores(dummy_conn, parsed_server_capabilities_1_1):

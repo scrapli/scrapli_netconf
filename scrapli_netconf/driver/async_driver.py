@@ -38,6 +38,7 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
         preferred_netconf_version: Optional[str] = None,
+        use_compressed_parser: bool = True,
     ) -> None:
         super().__init__(
             host=host,
@@ -68,9 +69,13 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         _preferred_netconf_version = self._determine_preferred_netconf_version(
             preferred_netconf_version=preferred_netconf_version
         )
-        self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=_preferred_netconf_version
+        _preferred_xml_parser = self._determine_preferred_xml_parser(
+            use_compressed_parser=use_compressed_parser
         )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=_preferred_netconf_version, xml_parser=_preferred_xml_parser
+        )
+
         self.channel = AsyncNetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,

@@ -12,6 +12,11 @@ NETCONF_1_1_DEVICE_TYPES = ["cisco_iosxe_1_1", "cisco_iosxr_1_1"]
 NETCONF_ALL_VERSIONS_DEVICE_TYPES = NETCONF_1_0_DEVICE_TYPES + NETCONF_1_1_DEVICE_TYPES
 
 
+@pytest.fixture(scope="session", params=(True, False), ids=("compressed", "uncompressed"))
+def use_compressed_parser(request):
+    yield request.param
+
+
 @pytest.fixture(
     scope="session",
     params=NETCONF_1_0_DEVICE_TYPES,
@@ -109,12 +114,12 @@ async def async_conn_1_1(device_type_1_1, auth_type):
 
 
 @pytest.fixture(scope="function")
-def sync_conn(device_type, auth_type, transport):
+def sync_conn(device_type, auth_type, transport, use_compressed_parser):
     device = DEVICES[device_type].copy()
     if auth_type == "key":
         device.pop("auth_password")
         device["auth_private_key"] = PRIVATE_KEY
-    conn = NetconfDriver(**device, transport=transport)
+    conn = NetconfDriver(**device, transport=transport, use_compressed_parser=use_compressed_parser)
     yield conn, device_type
     if conn.isalive():
         conn.close()

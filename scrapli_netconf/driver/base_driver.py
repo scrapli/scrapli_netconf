@@ -11,11 +11,12 @@ from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
 from scrapli.helper import user_warning
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported
 from scrapli_netconf.response import NetconfResponse
 
-PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
+COMPRESSED_PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
+STANDARD_PARSER = etree.XMLParser(remove_blank_text=False, recover=True)
 
 
 class NetconfBaseOperations(Enum):
@@ -43,6 +44,7 @@ class NetconfBaseDriver(BaseDriver):
     writeable_datastores: List[str]
     strip_namespaces: bool
     strict_datastores: bool
+    flatten_input: bool
     _netconf_base_channel_args: NetconfBaseChannelArgs
 
     @property
@@ -195,6 +197,64 @@ class NetconfBaseDriver(BaseDriver):
             "'preferred_netconf_version' provided with invalid value, must be one of: "
             "None, '1.0', or '1.1'"
         )
+
+    @staticmethod
+    def _determine_preferred_xml_parser(use_compressed_parser: bool) -> XmlParserVersion:
+        """
+        Determine users preferred xml payload parser
+
+        Args:
+            use_compressed_parser: bool indicating use of compressed parser or not
+
+        Returns:
+            XmlParserVersion: users xml parser version
+
+        Raises:
+            N/A
+
+        """
+        if use_compressed_parser is True:
+            return XmlParserVersion.COMPRESSED_PARSER
+        return XmlParserVersion.STANDARD_PARSER
+
+    @property
+    def xml_parser(self) -> etree.XMLParser:
+        """
+        Getter for 'xml_parser' attribute
+
+        Args:
+            N/A
+
+        Returns:
+            etree.XMLParser: parser to use for parsing xml documents
+
+        Raises:
+            N/A
+
+        """
+        if self._netconf_base_channel_args.xml_parser == XmlParserVersion.COMPRESSED_PARSER:
+            return COMPRESSED_PARSER
+        return STANDARD_PARSER
+
+    @xml_parser.setter
+    def xml_parser(self, value: XmlParserVersion) -> None:
+        """
+        Setter for 'xml_parser' attribute
+
+        Args:
+            value: enum indicating parser version to use
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliTypeError: if value is not of type XmlParserVersion
+
+        """
+        if not isinstance(value, XmlParserVersion):
+            raise ScrapliTypeError
+
+        self._netconf_base_channel_args.xml_parser = value
 
     def _transport_factory(self) -> Tuple[Callable[..., Any], object]:
         """
@@ -384,7 +444,7 @@ class NetconfBaseDriver(BaseDriver):
             )
             for filter_ in filters:
                 # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
-                xml_filter_element = etree.fromstring(filter_, parser=PARSER)
+                xml_filter_element = etree.fromstring(filter_, parser=self.xml_parser)
                 # insert the subtree filter into the parent filter element
                 xml_filter_elem.insert(1, xml_filter_element)
         elif filter_type == "xpath":
@@ -399,7 +459,7 @@ class NetconfBaseDriver(BaseDriver):
                 NetconfBaseOperations.FILTER_XPATH.value.format(
                     filter_type=filter_type, xpath=filter_
                 ),
-                parser=PARSER,
+                parser=self.xml_parser,
             )
         else:
             raise ScrapliValueError(
@@ -434,7 +494,7 @@ class NetconfBaseDriver(BaseDriver):
                 raise CapabilityNotSupported(msg)
             xml_with_defaults_element = etree.fromstring(
                 NetconfBaseOperations.WITH_DEFAULTS_SUBTREE.value.format(default_type=default_type),
-                parser=PARSER,
+                parser=self.xml_parser,
             )
         else:
             raise ScrapliValueError(
@@ -537,7 +597,7 @@ class NetconfBaseDriver(BaseDriver):
         # build base request and insert the get-config element
         xml_request = self._build_base_elem()
         xml_get_config_element = etree.fromstring(
-            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=PARSER
+            NetconfBaseOperations.GET_CONFIG.value.format(source=source), parser=self.xml_parser
         )
         xml_request.insert(0, xml_get_config_element)
 
@@ -597,7 +657,7 @@ class NetconfBaseDriver(BaseDriver):
         )
         self._validate_edit_config_target(target=target)
 
-        xml_config = etree.fromstring(config, parser=PARSER)
+        xml_config = etree.fromstring(config, parser=self.xml_parser)
 
         # build base request and insert the edit-config element
         xml_request = self._build_base_elem()
@@ -650,7 +710,7 @@ class NetconfBaseDriver(BaseDriver):
 
         xml_request = self._build_base_elem()
         xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=PARSER
+            NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=self.xml_parser
         )
         xml_request.insert(0, xml_validate_element)
         channel_input = etree.tostring(
@@ -689,7 +749,9 @@ class NetconfBaseDriver(BaseDriver):
         """
         self.logger.debug("Building payload for 'commit' operation")
         xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.COMMIT.value, parser=PARSER)
+        xml_commit_element = etree.fromstring(
+            NetconfBaseOperations.COMMIT.value, parser=self.xml_parser
+        )
         xml_request.insert(0, xml_commit_element)
         channel_input = etree.tostring(xml_request)
 
@@ -725,7 +787,9 @@ class NetconfBaseDriver(BaseDriver):
         """
         self.logger.debug("Building payload for 'discard' operation.")
         xml_request = self._build_base_elem()
-        xml_commit_element = etree.fromstring(NetconfBaseOperations.DISCARD.value, parser=PARSER)
+        xml_commit_element = etree.fromstring(
+            NetconfBaseOperations.DISCARD.value, parser=self.xml_parser
+        )
         xml_request.insert(0, xml_commit_element)
         channel_input = etree.tostring(
             element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
@@ -766,7 +830,7 @@ class NetconfBaseDriver(BaseDriver):
 
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.LOCK.value.format(target=target), parser=PARSER
+            NetconfBaseOperations.LOCK.value.format(target=target), parser=self.xml_parser
         )
         xml_request.insert(0, xml_lock_element)
         channel_input = etree.tostring(
@@ -806,7 +870,7 @@ class NetconfBaseDriver(BaseDriver):
 
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=PARSER)
+            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=self.xml_parser)
         )
         xml_request.insert(0, xml_lock_element)
         channel_input = etree.tostring(
@@ -847,7 +911,7 @@ class NetconfBaseDriver(BaseDriver):
         xml_request = self._build_base_elem()
 
         # build filter element
-        xml_filter_elem = etree.fromstring(filter_, parser=PARSER)
+        xml_filter_elem = etree.fromstring(filter_, parser=self.xml_parser)
 
         # insert filter element
         xml_request.insert(0, xml_filter_elem)
@@ -901,7 +965,7 @@ class NetconfBaseDriver(BaseDriver):
 
         xml_request = self._build_base_elem()
         xml_validate_element = etree.fromstring(
-            NetconfBaseOperations.VALIDATE.value.format(source=source), parser=PARSER
+            NetconfBaseOperations.VALIDATE.value.format(source=source), parser=self.xml_parser
         )
         xml_request.insert(0, xml_validate_element)
         channel_input = etree.tostring(

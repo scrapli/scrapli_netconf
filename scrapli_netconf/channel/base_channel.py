@@ -6,7 +6,7 @@ from typing import List, Optional
 from lxml import etree
 
 from scrapli.channel.base_channel import BaseChannel
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
@@ -15,6 +15,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
 
 
 class BaseNetconfChannel(BaseChannel):
@@ -32,7 +33,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(

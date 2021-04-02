@@ -2,6 +2,11 @@
 from enum import Enum
 
 
+class XmlParserVersion(Enum):
+    COMPRESSED_PARSER = "flat"
+    STANDARD_PARSER = "standard"
+
+
 class NetconfVersion(Enum):
     UNKNOWN = "unknown"
     VERSION_1_0 = "1.0"

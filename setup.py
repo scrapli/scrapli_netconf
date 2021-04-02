@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """scrapli_netconf"""
+from pathlib import Path
+
 import setuptools
 
 __version__ = "2021.01.30"
@@ -25,6 +27,11 @@ full_requirements = [requirement for extra in EXTRAS_REQUIRE.values() for requir
 EXTRAS_REQUIRE["full"] = full_requirements
 
 
+def get_packages(package):
+    """Return root package and all sub-packages"""
+    return [str(path.parent) for path in Path(package).glob("**/__init__.py")]
+
+
 setuptools.setup(
     name="scrapli_netconf",
     version=__version__,
@@ -41,7 +48,8 @@ setuptools.setup(
         "Docs": "https://scrapli.github.io/scrapli_netconf/",
     },
     license="MIT",
-    packages=setuptools.find_packages(),
+    package_data={"scrapli_netconf": ["py.typed"]},
+    packages=get_packages("scrapli_netconf"),
     install_requires=INSTALL_REQUIRES,
     dependency_links=[],
     extras_require=EXTRAS_REQUIRE,
@@ -58,4 +66,7 @@ setuptools.setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     python_requires=">=3.6",
+    # zip_safe False for mypy
+    # https://mypy.readthedocs.io/en/stable/installed_packages.html
+    zip_safe=False,
 )

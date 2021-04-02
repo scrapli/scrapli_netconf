@@ -2,6 +2,7 @@
 import asyncio
 
 from asyncssh import connect
+from asyncssh.connection import SSHClientConnection
 from asyncssh.misc import ChannelOpenError, PermissionDenied
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionNotOpened
@@ -49,7 +50,7 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
         }
 
         try:
-            self.session = await asyncio.wait_for(
+            self.session: SSHClientConnection = await asyncio.wait_for(
                 connect(
                     client_keys=self.plugin_transport_args.auth_private_key,
                     password=self.plugin_transport_args.auth_password,

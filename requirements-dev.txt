@@ -15,4 +15,3 @@ pytest==6.2.2
 -r requirements-paramiko.txt
 -r requirements-ssh2.txt
 -r requirements.txt
--e git+https://github.com/scrapli/scrapli_stubs@master#egg=scrapli_stubs

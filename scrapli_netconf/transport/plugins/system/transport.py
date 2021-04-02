@@ -1,4 +1,5 @@
 """scrapli_netconf.transport.plugins.system.transport"""
+from scrapli.exceptions import ScrapliConnectionNotOpened
 from scrapli.transport.plugins.system.transport import PluginTransportArgs, SystemTransport
 
 # imported from base driver
@@ -45,8 +46,11 @@ class NetconfSystemTransport(SystemTransport):
             int: fd of the channel
 
         Raises:
-            N/A
+            ScrapliConnectionNotOpened: if session is not assigned
 
         """
+        if not self.session:
+            raise ScrapliConnectionNotOpened
+
         channel_fd: int = self.session.fd
         return channel_fd

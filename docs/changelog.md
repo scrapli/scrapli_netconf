@@ -5,6 +5,11 @@ CHANGELOG
 
 - Force system transport ssh connections to allocate a tty (-tt); fixes issue that would prevent system transport 
   from sending any command > 1024 chars.
+- Added `use_compressed_parser` argument to the driver constructor -- defaults to `True` which means we "squish" all 
+  the whitespace out of any input we get from the user before sending it to the netconf server, generally this is no 
+  problem but some devices (looking at you NX-OS!) lock up and stop reading at some character counts (4096 in NX-OS 
+  it seems) causing the connection to timeout and die. By *not* "squishing" whitespace out this does not happen.
+- Fixed some typing issues and pinned to scrapli pre-release to take advantage of updated typing/packaging setup  
 
 
 # 2021.01.30

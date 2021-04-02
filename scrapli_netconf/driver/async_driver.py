@@ -10,6 +10,10 @@ from scrapli_netconf.response import NetconfResponse
 
 
 class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
+    # kinda hate this but need to tell mypy that channel in netconf land is in fact a channel of
+    # type `NetconfChannel`
+    channel: AsyncNetconfChannel
+
     def __init__(
         self,
         host: str,

@@ -162,9 +162,8 @@ def mypy(session):
         N/A
 
     """
+    session.install("-e", ".")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
-    session.install("-e", DEV_REQUIREMENTS["scrapli_stubs"].split()[1])
-    session.env["MYPYPATH"] = f"{session.virtualenv.location}/src/scrapli-stubs"
     session.run("mypy", "--strict", "scrapli_netconf/")
 
 

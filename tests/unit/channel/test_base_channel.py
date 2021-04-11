@@ -147,7 +147,9 @@ def test_pre_send_client_capabilities(monkeypatch, dummy_conn):
 </hello>]]>]]>"""
         )
 
-    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
+    monkeypatch.setattr(
+        "scrapli_netconf.transport.plugins.system.transport.NetconfSystemTransport.write", _write
+    )
 
     dummy_conn.channel._pre_send_client_capabilities(
         client_capabilities=NetconfClientCapabilities.CAPABILITIES_1_0

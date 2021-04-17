@@ -40,6 +40,10 @@ from scrapli_netconf.response import NetconfResponse
 
 
 class NetconfDriver(Driver, NetconfBaseDriver):
+    # kinda hate this but need to tell mypy that channel in netconf land is in fact a channel of
+    # type `NetconfChannel`
+    channel: NetconfChannel
+
     def __init__(
         self,
         host: str,
@@ -68,6 +72,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
         preferred_netconf_version: Optional[str] = None,
+        use_compressed_parser: bool = True,
     ) -> None:
         super().__init__(
             host=host,
@@ -98,9 +103,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         _preferred_netconf_version = self._determine_preferred_netconf_version(
             preferred_netconf_version=preferred_netconf_version
         )
-        self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=_preferred_netconf_version
+        _preferred_xml_parser = self._determine_preferred_xml_parser(
+            use_compressed_parser=use_compressed_parser
         )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=_preferred_netconf_version, xml_parser=_preferred_xml_parser
+        )
+
         self.channel = NetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,
@@ -451,6 +460,8 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: "write"|"append", all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -469,6 +480,10 @@ Raises:
     <pre>
         <code class="python">
 class NetconfDriver(Driver, NetconfBaseDriver):
+    # kinda hate this but need to tell mypy that channel in netconf land is in fact a channel of
+    # type `NetconfChannel`
+    channel: NetconfChannel
+
     def __init__(
         self,
         host: str,
@@ -497,6 +512,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
         preferred_netconf_version: Optional[str] = None,
+        use_compressed_parser: bool = True,
     ) -> None:
         super().__init__(
             host=host,
@@ -527,9 +543,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         _preferred_netconf_version = self._determine_preferred_netconf_version(
             preferred_netconf_version=preferred_netconf_version
         )
-        self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=_preferred_netconf_version
+        _preferred_xml_parser = self._determine_preferred_xml_parser(
+            use_compressed_parser=use_compressed_parser
         )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=_preferred_netconf_version, xml_parser=_preferred_xml_parser
+        )
+
         self.channel = NetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,
@@ -796,31 +816,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 #### Class variables
 
     
-`host: str`
-
-
-
-
-    
-`readable_datastores: List[str]`
-
-
-
-
-    
-`strict_datastores: bool`
-
-
-
-
-    
-`strip_namespaces: bool`
-
-
-
-
-    
-`writeable_datastores: List[str]`
+`channel: scrapli_netconf.channel.sync_channel.NetconfChannel`
 
 
 
@@ -1129,6 +1125,8 @@ Args:
         these are not "logs" in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: "write"|"append", all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -1172,34 +1170,10 @@ class NetconfScrape(NetconfDriver):
 #### Class variables
 
     
-`host: str`
-
-
-
-
-    
-`readable_datastores: List[str]`
-
-
-
-
-    
-`strict_datastores: bool`
-
-
-
-
-    
-`strip_namespaces: bool`
+`channel: scrapli_netconf.channel.sync_channel.NetconfChannel`
 
 
 
 
     
 `warning`
-
-
-
-
-    
-`writeable_datastores: List[str]`

@@ -36,7 +36,7 @@ from typing import List, Optional
 from lxml import etree
 
 from scrapli.channel.base_channel import BaseChannel
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
@@ -45,6 +45,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
 
 
 class BaseNetconfChannel(BaseChannel):
@@ -62,7 +63,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(
@@ -191,11 +192,10 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
         </code>
     </pre>
@@ -243,7 +243,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(
@@ -372,11 +372,10 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
         </code>
     </pre>
@@ -395,7 +394,7 @@ class BaseNetconfChannel(BaseChannel):
 
 
 ```text
-NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Optional[List[str]] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = <NetconfClientCapabilities.UNKNOWN: 'unknown'>)
+NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Optional[List[str]] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = <NetconfClientCapabilities.UNKNOWN: 'unknown'>, xml_parser: scrapli_netconf.constants.XmlParserVersion = <XmlParserVersion.COMPRESSED_PARSER: 'flat'>)
 ```
 
 <details class="source">
@@ -409,6 +408,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
         </code>
     </pre>
 </details>
@@ -430,3 +430,9 @@ class NetconfBaseChannelArgs:
 
     
 `server_capabilities: Optional[List[str]]`
+
+
+
+
+    
+`xml_parser: scrapli_netconf.constants.XmlParserVersion`

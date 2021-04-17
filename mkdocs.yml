@@ -1,6 +1,5 @@
 ---
 site_name: Scrapli Netconf
-site_url: https://github.com/scrapli/scrapli_netconf
 site_description: "Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli"
 site_author: Carl Montanari
 

@@ -90,9 +90,12 @@ class NetconfParamikoTransport(ParamikoTransport):
             int: fd of the channel
 
         Raises:
-            N/A
+            ScrapliConnectionNotOpened: if session_channel is not assigned
 
         """
+        if not self.session_channel:
+            raise ScrapliConnectionNotOpened
+
         channel_fd: int = self.session_channel.fileno()
         return channel_fd
         </code>
@@ -171,9 +174,12 @@ class NetconfParamikoTransport(ParamikoTransport):
             int: fd of the channel
 
         Raises:
-            N/A
+            ScrapliConnectionNotOpened: if session_channel is not assigned
 
         """
+        if not self.session_channel:
+            raise ScrapliConnectionNotOpened
+
         channel_fd: int = self.session_channel.fileno()
         return channel_fd
         </code>

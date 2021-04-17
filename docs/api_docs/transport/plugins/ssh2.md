@@ -91,10 +91,13 @@ class NetconfSsh2Transport(Ssh2Transport):
             int: fd of the channel
 
         Raises:
-            N/A
+            ScrapliConnectionNotOpened: if socket isnt set yet
 
         """
-        channel_fd: int = self.socket.sock.fileno()
+        if not self.socket:
+            raise ScrapliConnectionNotOpened
+
+        channel_fd: int = self.socket.sock.fileno()  # type: ignore
         return channel_fd
         </code>
     </pre>
@@ -173,10 +176,13 @@ class NetconfSsh2Transport(Ssh2Transport):
             int: fd of the channel
 
         Raises:
-            N/A
+            ScrapliConnectionNotOpened: if socket isnt set yet
 
         """
-        channel_fd: int = self.socket.sock.fileno()
+        if not self.socket:
+            raise ScrapliConnectionNotOpened
+
+        channel_fd: int = self.socket.sock.fileno()  # type: ignore
         return channel_fd
         </code>
     </pre>

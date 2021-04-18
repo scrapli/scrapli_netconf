@@ -21,9 +21,6 @@ cov:
 
 test_unit:
 	python -m pytest \
-	--cov=scrapli_netconf \
-	--cov-report html \
-	--cov-report term \
 	tests/unit/
 
 cov_unit:
@@ -35,9 +32,6 @@ cov_unit:
 
 test_functional:
 	python -m pytest \
-	--cov=scrapli_netconf \
-	--cov-report html \
-	--cov-report term \
 	tests/functional/
 
 cov_functional:

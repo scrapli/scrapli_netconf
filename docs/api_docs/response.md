@@ -375,6 +375,7 @@ class NetconfResponse(Response):
 
 
 
+
 ## Classes
 
 ### NetconfResponse
@@ -762,7 +763,7 @@ Raises:
     
 
 ##### get_xml_elements
-`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7fc920327110>]`
+`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7fc4a01bf110>]`
 
 ```text
 Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing

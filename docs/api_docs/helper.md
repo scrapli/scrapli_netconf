@@ -64,3 +64,28 @@ def remove_namespaces(tree: Element) -> Element:
         </code>
     </pre>
 </details>
+
+
+
+## Functions
+
+    
+
+#### remove_namespaces
+`remove_namespaces(tree: <cyfunction Element at 0x7fc4a01bf110>) ‑> <cyfunction Element at 0x7fc4a01bf110>`
+
+```text
+Remove all namespace tags from Element object
+
+Replace element tags like: {http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state
+With: connection-state
+
+Args:
+    tree: lxml Element
+
+Returns:
+    Element: lxml Element with namespaces stripped out
+
+Raises:
+    N/A
+```

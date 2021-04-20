@@ -1,6 +1,6 @@
 ---
 site_name: Scrapli Netconf
-site_description: "Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli"
+site_description: Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli
 site_author: Carl Montanari
 
 repo_name: scrapli/scrapli_netconf
@@ -46,10 +46,11 @@ nav:
     - Response: api_docs/response.md
   - Changelog: changelog.md
   - More Scrapli:
-    - Nornir Scrapli: more_scrapli/nornir_scrapli.md
-    - Scrapli Community: more_scrapli/scrapli_community.md
     - Scrapli: more_scrapli/scrapli.md
-    - Scrapli Stubs: more_scrapli/scrapli_stubs.md
+    - Scrapli Community: more_scrapli/scrapli_community.md
+    - Scrapli Cfg: more_scrapli/scrapli_cfg.md
+    - Scrapli Replay: more_scrapli/scrapli_replay.md
+    - Nornir Scrapli: more_scrapli/nornir_scrapli.md
   - Other:
     - Contributing: about/contributing.md
     - Code of Conduct: about/code_of_conduct.md

@@ -408,7 +408,7 @@ class NetconfBaseDriver(BaseDriver):
             N/A
 
         Returns:
-            Element: lxml base element to use for netconf operation
+            _Element: lxml base element to use for netconf operation
 
         Raises:
             N/A
@@ -449,7 +449,7 @@ class NetconfBaseDriver(BaseDriver):
             filter_type: type of filter; subtree|xpath
 
         Returns:
-            Element: lxml filter element to use for netconf operation
+            _Element: lxml filter element to use for netconf operation
 
         Raises:
             CapabilityNotSupported: if xpath selected and not supported on server
@@ -496,7 +496,7 @@ class NetconfBaseDriver(BaseDriver):
             default_type: enumeration of with-defaults; report-all|trim|explicit|report-all-tagged
 
         Returns:
-            Element: lxml with-defaults element to use for netconf operation
+            _Element: lxml with-defaults element to use for netconf operation
 
         Raises:
             CapabilityNotSupported: if default_type provided but not supported by device

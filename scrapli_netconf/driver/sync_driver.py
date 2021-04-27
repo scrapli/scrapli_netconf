@@ -2,9 +2,12 @@
 from typing import Any, Callable, Dict, List, Optional, Union
 from warnings import warn
 
+from lxml.etree import _Element
+
 from scrapli import Driver
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
 from scrapli_netconf.channel.sync_channel import NetconfChannel
+from scrapli_netconf.decorators import DeprecateFilters
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
@@ -132,7 +135,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         Netconf get operation
 
         Args:
-            filter_: string filter to apply to the get
+            filter_: filter to apply to the get
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -147,10 +150,11 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -159,7 +163,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -171,7 +175,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         """
         response = self._pre_get_config(
-            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+            source=source, filter_=filter_, filter_type=filter_type, default_type=default_type
         )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
@@ -293,11 +297,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    def rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices
+        Netconf "rpc" operation
 
-        You can also use this to build send your own payload in a more manual fashion
+        Typically used with juniper devices or if you want to build/send your own payload in a more
+        manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+        provide an lxml element yourself.
 
         Args:
             filter_: filter/rpc to execute

@@ -91,10 +91,10 @@ async def test_get_config_filtered_single_filter_subtree(async_conn):
 
     config_replacer = CONFIG_REPLACER[device_type]
     expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE_GET_CONFIG_ELEMENTS
-    filters = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE
+    filter_ = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE
     expected_config = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE_GET_CONFIG_RESULT
 
-    response = await conn.get_config(filters=filters, filter_type="subtree")
+    response = await conn.get_config(filter_=filter_, filter_type="subtree")
 
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
@@ -115,9 +115,10 @@ async def test_get_config_filtered_multi_filter_subtree(async_conn_1_1):
     config_replacer = CONFIG_REPLACER[device_type]
     expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS
     filters = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI
+    filter_ = "".join(filters)
     expected_result = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_RESULT
 
-    response = await conn.get_config(filters=filters, filter_type="subtree")
+    response = await conn.get_config(filter_=filter_, filter_type="subtree")
 
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
@@ -143,7 +144,7 @@ async def test_get_config_filter_single_filter_xpath(async_conn_1_1):
     expected_result = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_RESULT
     filter_ = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_FILTER
 
-    response = await conn.get_config(filters=filter_, filter_type="xpath")
+    response = await conn.get_config(filter_=filter_, filter_type="xpath")
 
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
@@ -178,7 +179,7 @@ async def test_edit_config_and_discard(async_conn):
     )
 
     validation_response = await conn.get_config(
-        source=target, filter_type="subtree", filters=validate_filter
+        source=target, filter_type="subtree", filter_=validate_filter
     )
     assert isinstance(validation_response, NetconfResponse)
     assert validation_response.failed is False
@@ -221,7 +222,7 @@ async def test_edit_config_and_commit(async_conn):
         assert commit_response.failed is False
 
     validation_response = await conn.get_config(
-        source=target, filter_type="subtree", filters=validate_filter
+        source=target, filter_type="subtree", filter_=validate_filter
     )
     assert isinstance(validation_response, NetconfResponse)
     assert validation_response.failed is False

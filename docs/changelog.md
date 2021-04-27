@@ -10,6 +10,9 @@ CHANGELOG
   problem but some devices (looking at you NX-OS!) lock up and stop reading at some character counts (4096 in NX-OS 
   it seems) causing the connection to timeout and die. By *not* "squishing" whitespace out this does not happen.
 - Fixed some typing issues and pinned to scrapli pre-release to take advantage of updated typing/packaging setup  
+- Deprecate `filters` argument on `get_config` -- will be supported (by decorator) until 2022.01.30 (and 
+  pre-releases). This was done to make the arguments consistent for `get`, `get_config`, and `rpc`.
+- Better handling of multiple filter elements in a filter string
 
 
 # 2021.01.30

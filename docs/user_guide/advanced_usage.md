@@ -68,3 +68,42 @@ my_device = {
 with NetconfDriver(**my_device) as conn:
     print(conn.get_config())
 ```
+
+
+## A Note about Filters
+
+The `filter_` string value for the `get` and `get_config` methods may contain multiple xml elements at its "root" 
+(for subtree filters) -- when cast to an lxml etree object this would normally result in the first filter being the 
+only element in the resulting object. This is because `etree.fromstring` assumes (rather correctly) that this is the 
+root of the document, and it ignores the remaining filter elements. In example, given the following string data:
+
+```
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+    <interface-configuration>
+        <active>act</active>
+    </interface-configuration>
+</interface-configurations>
+<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg">
+</netconf-yang>
+```
+
+The resulting lxml object (when re-dumped back to string) would look like this:
+
+```
+<interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+    <interface-configuration>
+        <active>act</active>
+    </interface-configuration>
+</interface-configurations>
+```
+
+This is.... shall we say not ideal if we want to pass in a string like the previous section to filter for multiple 
+things in our config. To cope with this scrapli_netconf will wrap the user provided string filter in a "tmp" tag, 
+which allows us to load up the filter with all element(s) intact; we then simply ditch the outer temp tag when 
+placing the filter element(s) into the final filter payload, allowing users to simply provide a big string 
+containing as many or few filters as they want.
+
+If you preferred to craft your payloads more... "correctly" shall we say, then you are welcome to do so, and 
+provide the valid lxml object to the `rpc` method. The `rpc` method does nothing but wrap the provided element in 
+the outer-most xml tags needed for a NETCONF payload, so your provided element would need to contain the 
+get/filter/edit/etc. tags as appropriate!

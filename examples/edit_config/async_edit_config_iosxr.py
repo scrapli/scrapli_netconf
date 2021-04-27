@@ -1,7 +1,7 @@
 """async_edit_config_iosxr"""
 import asyncio
 
-from scrapli_netconf.driver import AsyncNetconfScrape
+from scrapli_netconf import AsyncNetconfDriver
 
 IOSXR_DEVICE = {
     "host": "172.18.0.13",
@@ -35,7 +35,7 @@ EDIT_INTERFACE_G_0_0_0_0 = """
 async def main():
     """Edit config example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
-    conn = AsyncNetconfScrape(**IOSXR_DEVICE)
+    conn = AsyncNetconfDriver(**IOSXR_DEVICE)
     await conn.open()
 
     # lock the candidate config before starting because why not

@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 """scrapli_netconf.driver.base_driver"""
 import importlib
 from dataclasses import fields
@@ -5,7 +6,7 @@ from enum import Enum
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 from lxml import etree
-from lxml.etree import Element
+from lxml.etree import _Element
 
 from scrapli.driver.base.base_driver import BaseDriver
 from scrapli.exceptions import ScrapliTypeError, ScrapliValueError
@@ -399,7 +400,7 @@ class NetconfBaseDriver(BaseDriver):
                 raise ScrapliValueError(msg)
             user_warning(title="Invalid datastore target!", message=msg)
 
-    def _build_base_elem(self) -> Element:
+    def _build_base_elem(self) -> _Element:
         """
         Create base element for netconf operations
 
@@ -422,12 +423,29 @@ class NetconfBaseDriver(BaseDriver):
         base_elem = etree.fromstring(text=base_xml_str)
         return base_elem
 
-    def _build_filters(self, filters: List[str], filter_type: str = "subtree") -> Element:
+    def _build_filter(self, filter_: str, filter_type: str = "subtree") -> _Element:
         """
         Create filter element for a given rpc
 
+        The `filter_` string may contain multiple xml elements at its "root" (subtree filters); we
+        will simply place the payload into a temporary "tmp" outer tag so that when we cast it to an
+        etree object the elements are all preserved; without this outer "tmp" tag, lxml will scoop
+        up only the first element provided as it appears to be the root of the document presumably.
+
+        An example valid (to scrapli netconf at least) xml filter would be:
+
+        ```
+        <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+            <interface-configuration>
+                <active>act</active>
+            </interface-configuration>
+        </interface-configurations>
+        <netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg">
+        </netconf-yang>
+        ```
+
         Args:
-            filters: list of strings of filters to build into a filter element
+            filter_: strings of filters to build into a filter element
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -442,19 +460,22 @@ class NetconfBaseDriver(BaseDriver):
             xml_filter_elem = etree.fromstring(
                 NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
             )
-            for filter_ in filters:
-                # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
-                xml_filter_element = etree.fromstring(filter_, parser=self.xml_parser)
+            # tmp tags to place the users kinda not valid xml filter into
+            _filter_ = f"<tmp>{filter_}</tmp>"
+            # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
+            tmp_xml_filter_element = etree.fromstring(_filter_, parser=self.xml_parser)
+
+            # iterate through the children inside the tmp tags and insert *those* elements into the
+            # actual final filter payload
+            for xml_filter_element in tmp_xml_filter_element:
                 # insert the subtree filter into the parent filter element
                 xml_filter_elem.insert(1, xml_filter_element)
+
         elif filter_type == "xpath":
             if "urn:ietf:params:netconf:capability:xpath:1.0" not in self.server_capabilities:
                 msg = "xpath filter requested, but is not supported by the server"
                 self.logger.exception(msg)
                 raise CapabilityNotSupported(msg)
-            # assuming for now that there will only ever be a single xpath string/filter... this may
-            # end up being a shitty assumption!
-            filter_ = filters[0]
             xml_filter_elem = etree.fromstring(
                 NetconfBaseOperations.FILTER_XPATH.value.format(
                     filter_type=filter_type, xpath=filter_
@@ -467,7 +488,7 @@ class NetconfBaseDriver(BaseDriver):
             )
         return xml_filter_elem
 
-    def _build_with_defaults(self, default_type: str = "report-all") -> Element:
+    def _build_with_defaults(self, default_type: str = "report-all") -> _Element:
         """
         Create with-defaults element for a given operation
 
@@ -541,7 +562,8 @@ class NetconfBaseDriver(BaseDriver):
         xml_get_element = etree.fromstring(NetconfBaseOperations.GET.value)
         xml_request.insert(0, xml_get_element)
 
-        xml_filter_elem = self._build_filters(filters=[filter_], filter_type=filter_type)
+        # build filter element
+        xml_filter_elem = self._build_filter(filter_=filter_, filter_type=filter_type)
 
         # insert filter element into parent get element
         get_element = xml_request.find("get")
@@ -567,7 +589,7 @@ class NetconfBaseDriver(BaseDriver):
     def _pre_get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -576,7 +598,7 @@ class NetconfBaseDriver(BaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -590,7 +612,7 @@ class NetconfBaseDriver(BaseDriver):
         """
         self.logger.debug(
             f"Building payload for 'get-config' operation. source: {source}, filter_type: "
-            f"{filter_type}, filters: {filters}, default_type: {default_type}"
+            f"{filter_type}, filter: {filter_}, default_type: {default_type}"
         )
         self._validate_get_config_target(source=source)
 
@@ -601,10 +623,8 @@ class NetconfBaseDriver(BaseDriver):
         )
         xml_request.insert(0, xml_get_config_element)
 
-        if filters is not None:
-            if isinstance(filters, str):
-                filters = [filters]
-            xml_filter_elem = self._build_filters(filters=filters, filter_type=filter_type)
+        if filter_ is not None:
+            xml_filter_elem = self._build_filter(filter_=filter_, filter_type=filter_type)
             # insert filter element into parent get element
             get_element = xml_request.find("get-config")
             # insert *after* source, otherwise juniper seems to gripe, maybe/probably others as well
@@ -634,9 +654,7 @@ class NetconfBaseDriver(BaseDriver):
         )
         return response
 
-    def _pre_edit_config(
-        self, config: Union[str, List[str]], target: str = "running"
-    ) -> NetconfResponse:
+    def _pre_edit_config(self, config: str, target: str = "running") -> NetconfResponse:
         """
         Handle pre "edit_config" tasks for consistency between sync/async versions
 
@@ -892,7 +910,7 @@ class NetconfBaseDriver(BaseDriver):
         )
         return response
 
-    def _pre_rpc(self, filter_: str) -> NetconfResponse:
+    def _pre_rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
         Handle pre "rpc" tasks for consistency between sync/async versions
 
@@ -911,7 +929,10 @@ class NetconfBaseDriver(BaseDriver):
         xml_request = self._build_base_elem()
 
         # build filter element
-        xml_filter_elem = etree.fromstring(filter_, parser=self.xml_parser)
+        if isinstance(filter_, str):
+            xml_filter_elem = etree.fromstring(filter_, parser=self.xml_parser)
+        else:
+            xml_filter_elem = filter_
 
         # insert filter element
         xml_request.insert(0, xml_filter_elem)

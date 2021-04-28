@@ -4,7 +4,7 @@ from typing import Any, Callable
 from warnings import warn
 
 
-class DeprecateFilters:
+class DeprecateFilters:  # pragma: no cover
     warning = (
         "`filters` has been renamed `filter_` for consistency with `get` and `rpc` methods,  and "
         "no longer supports a list of strings. Please  pass a string payload here. `filters` will "

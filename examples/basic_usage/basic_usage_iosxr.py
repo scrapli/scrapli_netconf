@@ -1,5 +1,5 @@
 """basic_usage_iosxr"""
-from scrapli_netconf.driver import NetconfScrape
+from scrapli_netconf import NetconfDriver
 
 IOSXR_DEVICE = {
     "host": "172.18.0.13",
@@ -57,7 +57,7 @@ EDIT_BANNER = """
 def main():
     """Basic use example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
-    conn = NetconfScrape(**IOSXR_DEVICE)
+    conn = NetconfDriver(**IOSXR_DEVICE)
     conn.open()
 
     # lock the candidate config before starting because why not
@@ -72,9 +72,10 @@ def main():
     # print xml element result
     print(result.xml_result)
 
-    # get the whole config, but apply some filters (subtree filters)
+    # get the whole config, but apply some filters (subtree filters), we can simply join a handful
+    # of filters together; scrapli will place these into the subtree filter element for you
     filters = [INTERFACE_ACTIVE_FILTER, NETCONF_YANG_FILTER]
-    result = conn.get_config(filters=filters)
+    result = conn.get_config(filter_="".join(filters))
     print(result.result)
 
     # get something other than the config; note the `filter_` to not reuse builtins

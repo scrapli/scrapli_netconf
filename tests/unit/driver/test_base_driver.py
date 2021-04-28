@@ -228,14 +228,14 @@ def test_build_with_defaults_exception_unsupported(dummy_conn):
 
 def test_build_filters_exception_invalid_type(dummy_conn):
     with pytest.raises(ScrapliValueError) as exc:
-        dummy_conn._build_filters(filters=[], filter_type="tacocat")
+        dummy_conn._build_filter(filter_=[], filter_type="tacocat")
     assert str(exc.value) == "'filter_type' should be one of subtree|xpath, got 'tacocat'"
 
 
 def test_build_filters_exception_unsupported(dummy_conn):
     dummy_conn.server_capabilities = []
     with pytest.raises(CapabilityNotSupported) as exc:
-        dummy_conn._build_filters(filters=[], filter_type="xpath")
+        dummy_conn._build_filter(filter_=[], filter_type="xpath")
     assert str(exc.value) == "xpath filter requested, but is not supported by the server"
 
 
@@ -270,7 +270,7 @@ def test_pre_get_config(dummy_conn, capabilities):
     dummy_conn.readable_datastores = ["running"]
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
-    response = dummy_conn._pre_get_config(filters=[filter_])
+    response = dummy_conn._pre_get_config(filter_=filter_)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
 
@@ -290,7 +290,7 @@ def test_pre_get_config_with_default(dummy_conn, capabilities):
     expected_channel_input = capabilities[1]
     filter_ = """<netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"></netconf-yang>"""
     default_type_ = "report-all"
-    response = dummy_conn._pre_get_config(filters=[filter_], default_type=default_type_)
+    response = dummy_conn._pre_get_config(filter_=filter_, default_type=default_type_)
     assert isinstance(response, NetconfResponse)
     assert response.channel_input == expected_channel_input
 

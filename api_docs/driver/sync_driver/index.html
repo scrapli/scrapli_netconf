@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/driver/sync_driver/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -879,8 +877,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -903,8 +901,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -915,8 +913,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -1201,14 +1211,21 @@
 from typing import Any, Callable, Dict, List, Optional, Union
 from warnings import warn
 
+from lxml.etree import _Element
+
 from scrapli import Driver
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
 from scrapli_netconf.channel.sync_channel import NetconfChannel
+from scrapli_netconf.decorators import DeprecateFilters
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
 
 class NetconfDriver(Driver, NetconfBaseDriver):
+    # kinda hate this but need to tell mypy that channel in netconf land is in fact a channel of
+    # type `NetconfChannel`
+    channel: NetconfChannel
+
     def __init__(
         self,
         host: str,
@@ -1226,7 +1243,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -1237,6 +1254,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
         preferred_netconf_version: Optional[str] = None,
+        use_compressed_parser: bool = True,
     ) -> None:
         super().__init__(
             host=host,
@@ -1267,9 +1285,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         _preferred_netconf_version = self._determine_preferred_netconf_version(
             preferred_netconf_version=preferred_netconf_version
         )
-        self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=_preferred_netconf_version
+        _preferred_xml_parser = self._determine_preferred_xml_parser(
+            use_compressed_parser=use_compressed_parser
         )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=_preferred_netconf_version, xml_parser=_preferred_xml_parser
+        )
+
         self.channel = NetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,
@@ -1322,7 +1344,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         Netconf get operation
 
         Args:
-            filter_: string filter to apply to the get
+            filter_: filter to apply to the get
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -1337,10 +1359,11 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -1349,7 +1372,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -1361,7 +1384,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         """
         response = self._pre_get_config(
-            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+            source=source, filter_=filter_, filter_type=filter_type, default_type=default_type
         )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
@@ -1483,11 +1506,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    def rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices
+        Netconf "rpc" operation
 
-        You can also use this to build send your own payload in a more manual fashion
+        Typically used with juniper devices or if you want to build/send your own payload in a more
+        manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+        provide an lxml element yourself.
 
         Args:
             filter_: filter/rpc to execute
@@ -1533,10 +1558,10 @@ class NetconfScrape(NetconfDriver):
 
     def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
 
     def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
         return NetconfDriver(*args, **kwargs)
         </code>
     </pre>
@@ -1544,7 +1569,85 @@ class NetconfScrape(NetconfDriver):
 
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <h3 id="netconfdriver">NetconfDriver<a class="headerlink" href="#netconfdriver" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>BaseDriver Object
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>BaseDriver Object
 
 BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
 base driver classes can be used to provide a semi-pexpect like experience over top of
@@ -1574,8 +1677,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1614,6 +1715,8 @@ Args:
         these are not &quot;logs&quot; in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: &quot;write&quot;|&quot;append&quot;, all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -1624,7 +1727,7 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1632,6 +1735,10 @@ Raises:
     <pre>
         <code class="python">
 class NetconfDriver(Driver, NetconfBaseDriver):
+    # kinda hate this but need to tell mypy that channel in netconf land is in fact a channel of
+    # type `NetconfChannel`
+    channel: NetconfChannel
+
     def __init__(
         self,
         host: str,
@@ -1649,7 +1756,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -1660,6 +1767,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         channel_log: Union[str, bool] = False,
         channel_lock: bool = False,
         preferred_netconf_version: Optional[str] = None,
+        use_compressed_parser: bool = True,
     ) -> None:
         super().__init__(
             host=host,
@@ -1690,9 +1798,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         _preferred_netconf_version = self._determine_preferred_netconf_version(
             preferred_netconf_version=preferred_netconf_version
         )
-        self._netconf_base_channel_args = NetconfBaseChannelArgs(
-            netconf_version=_preferred_netconf_version
+        _preferred_xml_parser = self._determine_preferred_xml_parser(
+            use_compressed_parser=use_compressed_parser
         )
+        self._netconf_base_channel_args = NetconfBaseChannelArgs(
+            netconf_version=_preferred_netconf_version, xml_parser=_preferred_xml_parser
+        )
+
         self.channel = NetconfChannel(
             transport=self.transport,
             base_channel_args=self._base_channel_args,
@@ -1745,7 +1857,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         Netconf get operation
 
         Args:
-            filter_: string filter to apply to the get
+            filter_: filter to apply to the get
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -1760,10 +1872,11 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -1772,7 +1885,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -1784,7 +1897,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         """
         response = self._pre_get_config(
-            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+            source=source, filter_=filter_, filter_type=filter_type, default_type=default_type
         )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
@@ -1906,11 +2019,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    def rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices
+        Netconf "rpc" operation
 
-        You can also use this to build send your own payload in a more manual fashion
+        Typically used with juniper devices or if you want to build/send your own payload in a more
+        manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+        provide an lxml element yourself.
 
         Args:
             filter_: filter/rpc to execute
@@ -1960,15 +2075,20 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 <li>scrapli_netconf.driver.sync_driver.NetconfScrape</li>
 </ul>
 <h4 id="class-variables">Class variables<a class="headerlink" href="#class-variables" title="Permanent link">&para;</a></h4>
-<p><code>host: str</code></p>
-<p><code>readable_datastores: List[str]</code></p>
-<p><code>strict_datastores: bool</code></p>
-<p><code>strip_namespaces: bool</code></p>
-<p><code>writeable_datastores: List[str]</code></p>
+<p><code>channel: scrapli_netconf.channel.sync_channel.NetconfChannel</code></p>
 <h4 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h4>
 <h5 id="commit">commit<a class="headerlink" href="#commit" title="Permanent link">&para;</a></h5>
 <p><code>commit(self) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf commit config operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf commit config operation
 
 Args:
     N/A
@@ -1979,10 +2099,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="delete_config">delete_config<a class="headerlink" href="#delete_config" title="Permanent link">&para;</a></h5>
 <p><code>delete_config(self, target: str = 'candidate') ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf delete-config operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf delete-config operation
 
 Args:
     target: configuration source to target; startup|candidate
@@ -1993,10 +2122,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="discard">discard<a class="headerlink" href="#discard" title="Permanent link">&para;</a></h5>
 <p><code>discard(self) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf discard config operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf discard config operation
 
 Args:
     N/A
@@ -2007,10 +2145,20 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="edit_config">edit_config<a class="headerlink" href="#edit_config" title="Permanent link">&para;</a></h5>
 <p><code>edit_config(self, config: str, target: str = 'running') ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf get-config operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf get-config operation
 
 Args:
     config: configuration to send to device
@@ -2022,13 +2170,23 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="get">get<a class="headerlink" href="#get" title="Permanent link">&para;</a></h5>
 <p><code>get(self, filter_: str, filter_type: str = 'subtree') ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf get operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf get operation
 
 Args:
-    filter_: string filter to apply to the get
+    filter_: filter to apply to the get
     filter_type: type of filter; subtree|xpath
 
 Returns:
@@ -2037,14 +2195,26 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="get_config">get_config<a class="headerlink" href="#get_config" title="Permanent link">&para;</a></h5>
-<p><code>get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree', default_type: Optional[str] = None) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf get-config operation
+<p><code>get_config(self, source: str = 'running', filter_: Optional[str] = None, filter_type: str = 'subtree', default_type: Optional[str] = None) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf get-config operation
 
 Args:
     source: configuration source to get; typically one of running|startup|candidate
-    filters: string or list of strings of filters to apply to configuration
+    filter_: string of filter(s) to apply to configuration
     filter_type: type of filter; subtree|xpath
     default_type: string of with-default mode to apply when retrieving configuration
 
@@ -2054,10 +2224,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="lock">lock<a class="headerlink" href="#lock" title="Permanent link">&para;</a></h5>
 <p><code>lock(self, target: str) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf lock operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf lock operation
 
 Args:
     target: configuration source to target; running|startup|candidate
@@ -2068,10 +2247,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="open">open<a class="headerlink" href="#open" title="Permanent link">&para;</a></h5>
 <p><code>open(self) ‑&gt; NoneType</code></p>
-<div class="codehilite"><pre><span></span><code>Open netconf connection to server
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Open netconf connection to server
 
 Args:
     N/A
@@ -2082,12 +2270,27 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="rpc">rpc<a class="headerlink" href="#rpc" title="Permanent link">&para;</a></h5>
-<p><code>rpc(self, filter_: str) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf &quot;rpc&quot; operation; typically only used with juniper devices
+<p><code>rpc(self, filter_: Union[str, lxml.etree._Element]) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf &quot;rpc&quot; operation
 
-You can also use this to build send your own payload in a more manual fashion
+Typically used with juniper devices or if you want to build/send your own payload in a more
+manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+provide an lxml element yourself.
 
 Args:
     filter_: filter/rpc to execute
@@ -2098,10 +2301,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="unlock">unlock<a class="headerlink" href="#unlock" title="Permanent link">&para;</a></h5>
 <p><code>unlock(self, target: str) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf unlock operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf unlock operation
 
 Args:
     target: configuration source to target; running|startup|candidate
@@ -2112,10 +2324,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="validate">validate<a class="headerlink" href="#validate" title="Permanent link">&para;</a></h5>
 <p><code>validate(self, source: str) ‑&gt; scrapli_netconf.response.NetconfResponse</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf &quot;validate&quot; operation
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf &quot;validate&quot; operation
 
 Args:
     source: configuration source to validate; typically one of running|startup|candidate
@@ -2126,9 +2347,87 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h3 id="netconfscrape">NetconfScrape<a class="headerlink" href="#netconfscrape" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>BaseDriver Object
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>BaseDriver Object
 
 BaseDriver is the root for all Scrapli driver classes. The synchronous and asyncio driver
 base driver classes can be used to provide a semi-pexpect like experience over top of
@@ -2158,8 +2457,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -2198,6 +2495,8 @@ Args:
         these are not &quot;logs&quot; in the normal logging module sense, but only the output that is
         read from the channel. In other words, the output of the channel log should look
         similar to what you would see as a human connecting to a device
+    channel_log_mode: &quot;write&quot;|&quot;append&quot;, all other values will raise ValueError,
+        does what it sounds like it should by setting the channel log to the provided mode
     logging_uid: unique identifier (string) to associate to log messages; useful if you have
         multiple connections to the same device (i.e. one console, one ssh, or one to each
         supervisor module, etc.)
@@ -2208,7 +2507,7 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -2223,10 +2522,10 @@ class NetconfScrape(NetconfDriver):
 
     def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
 
     def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
         return NetconfDriver(*args, **kwargs)
         </code>
     </pre>
@@ -2240,12 +2539,8 @@ class NetconfScrape(NetconfDriver):
 <li>scrapli.driver.base.base_driver.BaseDriver</li>
 </ul>
 <h4 id="class-variables_1">Class variables<a class="headerlink" href="#class-variables_1" title="Permanent link">&para;</a></h4>
-<p><code>host: str</code></p>
-<p><code>readable_datastores: List[str]</code></p>
-<p><code>strict_datastores: bool</code></p>
-<p><code>strip_namespaces: bool</code></p>
+<p><code>channel: scrapli_netconf.channel.sync_channel.NetconfChannel</code></p>
 <p><code>warning</code></p>
-<p><code>writeable_datastores: List[str]</code></p>
                 
               
               

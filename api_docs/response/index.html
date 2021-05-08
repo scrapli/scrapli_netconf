@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/response/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -679,6 +677,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#class-variables" class="md-nav__link">
+    Class variables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     Methods
   </a>
@@ -787,8 +792,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -811,8 +816,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -823,8 +828,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -938,6 +955,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#class-variables" class="md-nav__link">
+    Class variables
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#methods" class="md-nav__link">
     Methods
   </a>
@@ -1043,6 +1067,9 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
 class NetconfResponse(Response):
+    # intentionally overriding base class' list of strings for failed when contains
+    failed_when_contains: List[bytes]  # type: ignore[assignment]
+
     def __init__(
         self,
         netconf_version: NetconfVersion,
@@ -1167,11 +1194,13 @@ class NetconfResponse(Response):
         in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
         RFC, the response for a netconf 1.1 response should look like this:
 
-        ```
-        ##XYZ
-        <somexml>
-        ##
-        ```
+        <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>##XYZ
+&lt;somexml&gt;
+##
+</code></pre></div>
+</td></tr></table>
 
         Where "XYZ" is an integer number of the count of chars in the following chunk (the chars up
         to the next "##" symbols), then the actual XML response, then a new line(!!!!) and a pair of
@@ -1359,7 +1388,26 @@ class NetconfResponse(Response):
 
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <h3 id="netconfresponse">NetconfResponse<a class="headerlink" href="#netconfresponse" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>Scrapli Netconf NetconfResponse
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Scrapli Netconf NetconfResponse
 
 Store channel_input, resulting output, and start/end/elapsed time information. Attempt to
 determine if command was successful or not and reflect that in a failed attribute.
@@ -1380,7 +1428,7 @@ Returns:
 Raises:
     ValueError: if invalid netconf_version string
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1388,6 +1436,9 @@ Raises:
     <pre>
         <code class="python">
 class NetconfResponse(Response):
+    # intentionally overriding base class' list of strings for failed when contains
+    failed_when_contains: List[bytes]  # type: ignore[assignment]
+
     def __init__(
         self,
         netconf_version: NetconfVersion,
@@ -1512,11 +1563,13 @@ class NetconfResponse(Response):
         in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
         RFC, the response for a netconf 1.1 response should look like this:
 
-        ```
-        ##XYZ
-        <somexml>
-        ##
-        ```
+        <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>##XYZ
+&lt;somexml&gt;
+##
+</code></pre></div>
+</td></tr></table>
 
         Where "XYZ" is an integer number of the count of chars in the following chunk (the chars up
         to the next "##" symbols), then the actual XML response, then a new line(!!!!) and a pair of
@@ -1706,10 +1759,21 @@ class NetconfResponse(Response):
 <ul>
 <li>scrapli.response.Response</li>
 </ul>
+<h4 id="class-variables">Class variables<a class="headerlink" href="#class-variables" title="Permanent link">&para;</a></h4>
+<p><code>failed_when_contains: List[bytes]</code></p>
 <h4 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h4>
 <h5 id="genie_parse_output">genie_parse_output<a class="headerlink" href="#genie_parse_output" title="Permanent link">&para;</a></h5>
 <p><code>genie_parse_output(self) ‑&gt; Union[Dict[str, Any], List[Any]]</code></p>
-<div class="codehilite"><pre><span></span><code>Override scrapli Response `genie_parse_output` method; not applicable for netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Override scrapli Response `genie_parse_output` method; not applicable for netconf
 
 Args:
     N/A
@@ -1720,10 +1784,19 @@ Returns:
 Raises:
     NotImplementedError: always
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="get_xml_elements">get_xml_elements<a class="headerlink" href="#get_xml_elements" title="Permanent link">&para;</a></h5>
-<p><code>get_xml_elements(self) ‑&gt; Dict[str, &lt;cyfunction Element at 0x7fdfe0198040&gt;]</code></p>
-<div class="codehilite"><pre><span></span><code>Parse each section under &quot;data&quot; into a dict of {tag: Element} for easy viewing/parsing
+<p><code>get_xml_elements(self) ‑&gt; Dict[str, &lt;cyfunction Element at 0x7feee01b9790&gt;]</code></p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Parse each section under &quot;data&quot; into a dict of {tag: Element} for easy viewing/parsing
 
 Args:
     N/A
@@ -1734,10 +1807,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="record_response">record_response<a class="headerlink" href="#record_response" title="Permanent link">&para;</a></h5>
 <p><code>record_response(self, result: bytes) ‑&gt; NoneType</code></p>
-<div class="codehilite"><pre><span></span><code>Record channel_input results and elapsed time of channel input/reading output
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Record channel_input results and elapsed time of channel input/reading output
 
 Args:
     result: bytes result of channel_input
@@ -1748,10 +1830,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="textfsm_parse_output">textfsm_parse_output<a class="headerlink" href="#textfsm_parse_output" title="Permanent link">&para;</a></h5>
 <p><code>textfsm_parse_output(self, to_dict: bool = True) ‑&gt; Union[Dict[str, Any], List[Any]]</code></p>
-<div class="codehilite"><pre><span></span><code>Override scrapli Response `textfsm_parse_output` method; not applicable for netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Override scrapli Response `textfsm_parse_output` method; not applicable for netconf
 
 Args:
     to_dict: ignore, only here to ensure compliance with supertype method
@@ -1762,6 +1853,7 @@ Returns:
 Raises:
     NotImplementedError: always
 </code></pre></div>
+</td></tr></table>
                 
               
               

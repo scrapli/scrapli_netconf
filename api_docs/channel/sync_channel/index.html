@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/channel/sync_channel/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -782,8 +780,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -806,8 +804,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -818,8 +816,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -1017,7 +1027,6 @@ from scrapli.exceptions import ScrapliAuthenticationFailed
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.transport.plugins.system.transport import NetconfSystemTransport
 
 HELLO_MATCH = re.compile(pattern=rb"<(\w+\:){0,1}hello", flags=re.I)
 
@@ -1052,6 +1061,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
+        # open in scrapli core is where we open channel log (if applicable), do that
+        self.open()
+
         raw_server_capabilities = self._get_server_capabilities()
 
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
@@ -1104,9 +1116,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         passphrase_count = 0
         authenticate_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while True:
                 buf = self.read()
 
@@ -1160,15 +1170,17 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
+        channel_fd = self.transport._get_channel_fd()  # type: ignore  # pylint: disable=W0212
         start = datetime.now().timestamp()
         while True:
             fd_ready, _, _ = select([channel_fd], [], [], 0)
             if channel_fd in fd_ready:
+                self.logger.debug("setting _server_echo to true")
                 self._server_echo = True
                 break
             interval_end = datetime.now().timestamp()
             if (interval_end - start) > echo_timeout:
+                self.logger.debug("setting _server_echo to false")
                 self._server_echo = False
                 break
 
@@ -1200,11 +1212,11 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        if isinstance(self.transport, NetconfSystemTransport):
-            self._server_echo = True
-            return
-        pool = ThreadPoolExecutor(max_workers=1)
-        pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
+        # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
+        # on the default scrapli timeout ops here
+        _timeout_ops = self._base_channel_args.timeout_ops or 30
+        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
+        pool.submit(self.__check_echo, _timeout_ops / 20)
 
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
@@ -1228,9 +1240,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # reset this to empty to avoid any confusion now that we are moving on
         self._capabilities_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while b"]]>]]>" not in capabilities_buf:
                 capabilities_buf += self.read()
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
@@ -1253,9 +1263,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
@@ -1315,12 +1323,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf: bytes
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
@@ -1340,7 +1346,17 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <h3 id="netconfchannel">NetconfChannel<a class="headerlink" href="#netconfchannel" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>BaseChannel Object -- provides convenience methods to both sync and async Channels
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>BaseChannel Object -- provides convenience methods to both sync and async Channels
 
 Args:
     transport: initialized scrapli Transport/AsyncTransport object
@@ -1352,7 +1368,7 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1389,6 +1405,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
+        # open in scrapli core is where we open channel log (if applicable), do that
+        self.open()
+
         raw_server_capabilities = self._get_server_capabilities()
 
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
@@ -1441,9 +1460,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         passphrase_count = 0
         authenticate_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while True:
                 buf = self.read()
 
@@ -1497,15 +1514,17 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
+        channel_fd = self.transport._get_channel_fd()  # type: ignore  # pylint: disable=W0212
         start = datetime.now().timestamp()
         while True:
             fd_ready, _, _ = select([channel_fd], [], [], 0)
             if channel_fd in fd_ready:
+                self.logger.debug("setting _server_echo to true")
                 self._server_echo = True
                 break
             interval_end = datetime.now().timestamp()
             if (interval_end - start) > echo_timeout:
+                self.logger.debug("setting _server_echo to false")
                 self._server_echo = False
                 break
 
@@ -1537,11 +1556,11 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        if isinstance(self.transport, NetconfSystemTransport):
-            self._server_echo = True
-            return
-        pool = ThreadPoolExecutor(max_workers=1)
-        pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
+        # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
+        # on the default scrapli timeout ops here
+        _timeout_ops = self._base_channel_args.timeout_ops or 30
+        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
+        pool.submit(self.__check_echo, _timeout_ops / 20)
 
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
@@ -1565,9 +1584,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # reset this to empty to avoid any confusion now that we are moving on
         self._capabilities_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while b"]]>]]>" not in capabilities_buf:
                 capabilities_buf += self.read()
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
@@ -1590,9 +1607,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
@@ -1652,12 +1667,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf: bytes
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
@@ -1684,7 +1697,18 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 <h4 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h4>
 <h5 id="channel_authenticate_netconf">channel_authenticate_netconf<a class="headerlink" href="#channel_authenticate_netconf" title="Permanent link">&para;</a></h5>
 <p><code>channel_authenticate_netconf(self, auth_password: str, auth_private_key_passphrase: str) ‑&gt; NoneType</code></p>
-<div class="codehilite"><pre><span></span><code>Handle SSH Authentication for transports that only operate &quot;in the channel&quot; (i.e. system)
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Handle SSH Authentication for transports that only operate &quot;in the channel&quot; (i.e. system)
 
 Args:
     auth_password: password to authenticate with
@@ -1697,10 +1721,19 @@ Raises:
     ScrapliAuthenticationFailed: if password prompt seen more than twice
     ScrapliAuthenticationFailed: if passphrase prompt seen more than twice
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="open_netconf">open_netconf<a class="headerlink" href="#open_netconf" title="Permanent link">&para;</a></h5>
 <p><code>open_netconf(self) ‑&gt; NoneType</code></p>
-<div class="codehilite"><pre><span></span><code>Open the netconf channel
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Open the netconf channel
 
 Args:
     N/A
@@ -1711,10 +1744,19 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <h5 id="send_input_netconf">send_input_netconf<a class="headerlink" href="#send_input_netconf" title="Permanent link">&para;</a></h5>
 <p><code>send_input_netconf(self, channel_input: str) ‑&gt; bytes</code></p>
-<div class="codehilite"><pre><span></span><code>Send inputs to netconf server
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Send inputs to netconf server
 
 Args:
     channel_input: string of the base xml message to send to netconf server
@@ -1725,6 +1767,7 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
+</td></tr></table>
                 
               
               

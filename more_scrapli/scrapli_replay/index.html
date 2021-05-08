@@ -18,7 +18,7 @@
     
     
       
-        <title>FAQ - Scrapli Netconf</title>
+        <title>Scrapli Replay - Scrapli Netconf</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#faq" class="md-skip">
+        <a href="#scrapli-replay" class="md-skip">
           Skip to content
         </a>
       
@@ -98,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              FAQ
+              Scrapli Replay
             
           </span>
         </div>
@@ -220,14 +220,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
       <label class="md-nav__link" for="__nav_2">
         User Guide
@@ -245,7 +243,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../quickstart/" class="md-nav__link">
+      <a href="../../user_guide/quickstart/" class="md-nav__link">
         Quick Start Guide
       </a>
     </li>
@@ -257,7 +255,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../project_details/" class="md-nav__link">
+      <a href="../../user_guide/project_details/" class="md-nav__link">
         Project Details
       </a>
     </li>
@@ -269,7 +267,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../versioning/" class="md-nav__link">
+      <a href="../../user_guide/versioning/" class="md-nav__link">
         Versioning
       </a>
     </li>
@@ -281,7 +279,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
+      <a href="../../user_guide/installation/" class="md-nav__link">
         Installation
       </a>
     </li>
@@ -293,7 +291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../basic_usage/" class="md-nav__link">
+      <a href="../../user_guide/basic_usage/" class="md-nav__link">
         Basic Usage
       </a>
     </li>
@@ -305,7 +303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../advanced_usage/" class="md-nav__link">
+      <a href="../../user_guide/advanced_usage/" class="md-nav__link">
         Advanced Usage
       </a>
     </li>
@@ -315,20 +313,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../user_guide/faq/" class="md-nav__link">
         FAQ
       </a>
-      
     </li>
   
 
@@ -666,12 +655,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
         More Scrapli
@@ -689,7 +680,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+      <a href="../scrapli/" class="md-nav__link">
         Scrapli
       </a>
     </li>
@@ -701,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_community/" class="md-nav__link">
+      <a href="../scrapli_community/" class="md-nav__link">
         Scrapli Community
       </a>
     </li>
@@ -713,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+      <a href="../scrapli_cfg/" class="md-nav__link">
         Scrapli Cfg
       </a>
     </li>
@@ -723,11 +714,20 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Scrapli Replay
       </a>
+      
     </li>
   
 
@@ -737,7 +737,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+      <a href="../nornir_scrapli/" class="md-nav__link">
         Nornir Scrapli
       </a>
     </li>
@@ -833,29 +833,11 @@
               
                 
                 
-                <h1 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">&para;</a></h1>
-<ul>
-<li>Question: Why build this? ncclient exists?<ul>
-<li>Answer: After building scrapli it was apparent that it could be fairly easily extended to handle netconf
-   connections, at the time dayjob$ had lots of netconf-y things with ncclient happening. I'm not a big fan of
-ncclient as I find it rather obtuse/hard to understand whats going on, and the dependency on paramiko is not
- super great. I figured I could support enough netconf things with system transport so... I did. Then it was
-  fairly trivial to add asyncssh to support netconf with asyncio!</li>
-</ul>
-</li>
-<li>Question: Is this better than ncclient?<ul>
-<li>Answer: Nope! Supporting asyncio may be a killer use case for some, but otherwise ncclient and scrapli_netconf
-   accomplish much of the same things -- probably with ncclient having a wider/deeper range of netconf rfc support
-   . Net/net though is they are just different! Use whichever you prefer! </li>
-</ul>
-</li>
-<li>Question: Is this easy to use?<ul>
-<li>Answer: Biased, but I think so! A big part of the goal of all of this was to have a consistent feel across ssh
-   and netconf both with sync and async support, and (again, biased) I think that has been achieved.</li>
-</ul>
-</li>
-<li>Other questions? Ask away!</li>
-</ul>
+                <h1 id="scrapli-replay">Scrapli Replay<a class="headerlink" href="#scrapli-replay" title="Permanent link">&para;</a></h1>
+<p><a href="https://github.com/scrapli/scrapli_replay">scrapli_replay</a> (<a href="https://scrapli.github.io/scrapli_replay/">docs</a>) 
+is a set of tools used to help test scrapli programs. scrapli_replay includes a utility to capture command 
+input/output from real life servers and replay them in a semi-interactive fashion, as well as a pytest plugin that 
+patches and records and replays session data (like <a href="https://github.com/kevin1024/vcrpy">vcr.py</a>) for scrapli connections. </p>
                 
               
               
@@ -873,7 +855,7 @@ ncclient as I find it rather obtuse/hard to understand whats going on, and the d
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../advanced_usage/" class="md-footer__link md-footer__link--prev" rel="prev">
+        <a href="../scrapli_cfg/" class="md-footer__link md-footer__link--prev" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -882,19 +864,19 @@ ncclient as I find it rather obtuse/hard to understand whats going on, and the d
               <span class="md-footer__direction">
                 Previous
               </span>
-              Advanced Usage
+              Scrapli Cfg
             </div>
           </div>
         </a>
       
       
-        <a href="../../api_docs/driver/base_driver/" class="md-footer__link md-footer__link--next" rel="next">
+        <a href="../nornir_scrapli/" class="md-footer__link md-footer__link--next" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Base Driver
+              Nornir Scrapli
             </div>
           </div>
           <div class="md-footer__button md-icon">

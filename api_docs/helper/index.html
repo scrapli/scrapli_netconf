@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/helper/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -621,9 +619,51 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Helper
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Helper
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remove_namespaces" class="md-nav__link">
+    remove_namespaces
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -691,8 +731,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -715,8 +755,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -727,8 +767,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -812,6 +864,34 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remove_namespaces" class="md-nav__link">
+    remove_namespaces
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -873,6 +953,37 @@ def remove_namespaces(tree: Element) -> Element:
         </code>
     </pre>
 </details>
+
+<h2 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h2>
+<h4 id="remove_namespaces">remove_namespaces<a class="headerlink" href="#remove_namespaces" title="Permanent link">&para;</a></h4>
+<p><code>remove_namespaces(tree: &lt;cyfunction Element at 0x7feee01b9790&gt;) ‑&gt; &lt;cyfunction Element at 0x7feee01b9790&gt;</code></p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Remove all namespace tags from Element object
+
+Replace element tags like: {http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper}connection-state
+With: connection-state
+
+Args:
+    tree: lxml Element
+
+Returns:
+    Element: lxml Element with namespaces stripped out
+
+Raises:
+    N/A
+</code></pre></div>
+</td></tr></table>
                 
               
               

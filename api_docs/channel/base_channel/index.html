@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/channel/base_channel/">
       
       <link rel="shortcut icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -775,8 +773,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -799,8 +797,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -811,8 +809,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -997,7 +1007,7 @@ from typing import List, Optional
 from lxml import etree
 
 from scrapli.channel.base_channel import BaseChannel
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
@@ -1006,6 +1016,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
 
 
 class BaseNetconfChannel(BaseChannel):
@@ -1023,7 +1034,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(
@@ -1114,28 +1125,6 @@ class BaseNetconfChannel(BaseChannel):
         _ = strip_prompt
         return buf
 
-    def _build_message(self, channel_input: str) -> str:
-        """
-        Build formatted message to send to netconf server
-
-        Args:
-            channel_input: string of the base xml message to send to netconf server
-
-        Returns:
-            str: string of formatted message to send to netconf server
-
-        Raises:
-            N/A
-
-        """
-        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
-            return channel_input
-
-        # format message for chunk (netconf 1.1) style message
-        msg_template = "#{}\n{}\n##"
-        final_channel_input = msg_template.format(len(channel_input), channel_input)
-        return final_channel_input
-
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
     ) -> bytes:
@@ -1152,11 +1141,10 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
         </code>
     </pre>
@@ -1164,7 +1152,17 @@ class BaseNetconfChannel(BaseChannel):
 
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <h3 id="basenetconfchannel">BaseNetconfChannel<a class="headerlink" href="#basenetconfchannel" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>BaseChannel Object -- provides convenience methods to both sync and async Channels
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>BaseChannel Object -- provides convenience methods to both sync and async Channels
 
 Args:
     transport: initialized scrapli Transport/AsyncTransport object
@@ -1176,7 +1174,7 @@ Returns:
 Raises:
     N/A
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1198,7 +1196,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(
@@ -1289,28 +1287,6 @@ class BaseNetconfChannel(BaseChannel):
         _ = strip_prompt
         return buf
 
-    def _build_message(self, channel_input: str) -> str:
-        """
-        Build formatted message to send to netconf server
-
-        Args:
-            channel_input: string of the base xml message to send to netconf server
-
-        Returns:
-            str: string of formatted message to send to netconf server
-
-        Raises:
-            N/A
-
-        """
-        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
-            return channel_input
-
-        # format message for chunk (netconf 1.1) style message
-        msg_template = "#{}\n{}\n##"
-        final_channel_input = msg_template.format(len(channel_input), channel_input)
-        return final_channel_input
-
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
     ) -> bytes:
@@ -1327,11 +1303,10 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities
         </code>
     </pre>
@@ -1347,9 +1322,9 @@ class BaseNetconfChannel(BaseChannel):
 <li>scrapli_netconf.channel.sync_channel.NetconfChannel</li>
 </ul>
 <h3 id="netconfbasechannelargs">NetconfBaseChannelArgs<a class="headerlink" href="#netconfbasechannelargs" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Optional[List[str]] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = &lt;NetconfClientCapabilities.UNKNOWN: &#39;unknown&#39;&gt;)
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>NetconfBaseChannelArgs(netconf_version: scrapli_netconf.constants.NetconfVersion, server_capabilities: Optional[List[str]] = None, client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities = &lt;NetconfClientCapabilities.UNKNOWN: &#39;unknown&#39;&gt;, xml_parser: scrapli_netconf.constants.XmlParserVersion = &lt;XmlParserVersion.COMPRESSED_PARSER: &#39;flat&#39;&gt;)
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1361,6 +1336,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
         </code>
     </pre>
 </details>
@@ -1369,6 +1345,7 @@ class NetconfBaseChannelArgs:
 <p><code>client_capabilities: scrapli_netconf.constants.NetconfClientCapabilities</code></p>
 <p><code>netconf_version: scrapli_netconf.constants.NetconfVersion</code></p>
 <p><code>server_capabilities: Optional[List[str]]</code></p>
+<p><code>xml_parser: scrapli_netconf.constants.XmlParserVersion</code></p>
                 
               
               

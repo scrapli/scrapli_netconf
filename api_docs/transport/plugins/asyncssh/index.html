@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/api_docs/transport/plugins/asyncssh/">
       
       <link rel="shortcut icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -770,8 +768,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -794,8 +792,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -806,8 +804,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -981,6 +991,7 @@
 import asyncio
 
 from asyncssh import connect
+from asyncssh.connection import SSHClientConnection
 from asyncssh.misc import ChannelOpenError, PermissionDenied
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionNotOpened
@@ -1028,7 +1039,7 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
         }
 
         try:
-            self.session = await asyncio.wait_for(
+            self.session: SSHClientConnection = await asyncio.wait_for(
                 connect(
                     client_keys=self.plugin_transport_args.auth_private_key,
                     password=self.plugin_transport_args.auth_password,
@@ -1083,10 +1094,11 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
 
 <h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
 <h3 id="netconfasyncsshtransport">NetconfAsyncsshTransport<a class="headerlink" href="#netconfasyncsshtransport" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code>Helper class that provides a standard way to create an ABC using
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Helper class that provides a standard way to create an ABC using
 inheritance.
 </code></pre></div>
-
+</td></tr></table>
 <details class="source">
     <summary>
         <span>Expand source code</span>
@@ -1131,7 +1143,7 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
         }
 
         try:
-            self.session = await asyncio.wait_for(
+            self.session: SSHClientConnection = await asyncio.wait_for(
                 connect(
                     client_keys=self.plugin_transport_args.auth_private_key,
                     password=self.plugin_transport_args.auth_password,
@@ -1194,7 +1206,19 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
 <h4 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h4>
 <h5 id="open_netconf">open_netconf<a class="headerlink" href="#open_netconf" title="Permanent link">&para;</a></h5>
 <p><code>open_netconf(self) ‑&gt; NoneType</code></p>
-<div class="codehilite"><pre><span></span><code>Netconf open method
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Netconf open method
 
 Simply calls the &quot;normal&quot; open method, but retaining an explicit &quot;netconf&quot; open for sanity
 
@@ -1208,6 +1232,7 @@ Raises:
     ScrapliAuthenticationFailed: if auth fails
     ScrapliConnectionNotOpened: if connection cant be opened (but is not an auth failure)
 </code></pre></div>
+</td></tr></table>
                 
               
               

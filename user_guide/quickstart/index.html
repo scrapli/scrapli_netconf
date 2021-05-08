@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/user_guide/quickstart/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -734,8 +732,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -758,8 +756,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -770,8 +768,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -899,11 +909,24 @@
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>In most cases installation via pip is the simplest and best way to install scrapli_netconf.
 See <a href="/user_guide/installation">here</a> for advanced installation details.</p>
-<div class="codehilite"><pre><span></span><code>pip install scrapli-netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>pip install scrapli-netconf
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="a-simple-example">A Simple Example<a class="headerlink" href="#a-simple-example" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">scrapli_netconf.driver</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">scrapli_netconf.driver</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
 
 <span class="n">my_device</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;172.18.0.13&quot;</span><span class="p">,</span>
@@ -918,31 +941,52 @@ See <a href="/user_guide/installation">here</a> for advanced installation detail
 <span class="n">response</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;running&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
-<div class="codehilite"><pre><span></span><code>$ python my_scrapli_script.py
-<span class="nt">&lt;rpc-reply</span> <span class="na">message-id=</span><span class="s">&quot;101&quot;</span><span class="nt">&gt;</span>
- <span class="nt">&lt;data&gt;</span>
-  <span class="nt">&lt;ssh&gt;</span>
-   <span class="nt">&lt;server&gt;</span>
-    <span class="nt">&lt;v2/&gt;</span>
-    <span class="nt">&lt;netconf&gt;</span>830<span class="nt">&lt;/netconf&gt;</span>
-    <span class="nt">&lt;netconf-vrf-table&gt;</span>
-     <span class="nt">&lt;vrf&gt;</span>
-      <span class="nt">&lt;vrf-name&gt;</span>default<span class="nt">&lt;/vrf-name&gt;</span>
-      <span class="nt">&lt;enable/&gt;</span>
-     <span class="nt">&lt;/vrf&gt;</span>
-    <span class="nt">&lt;/netconf-vrf-table&gt;</span>
-   <span class="nt">&lt;/server&gt;</span>
-  <span class="nt">&lt;/ssh&gt;</span>
-  <span class="nt">&lt;interface-configurations&gt;</span>
-   <span class="nt">&lt;interface-configuration&gt;</span>
-    <span class="nt">&lt;active&gt;</span>act<span class="nt">&lt;/active&gt;</span>
-    <span class="nt">&lt;interface-name&gt;</span>MgmtEth0/RP0/CPU0/0<span class="nt">&lt;/interface-name&gt;</span>
-<span class="nt">&lt;SNIP&gt;</span>
- <span class="nt">&lt;/data&gt;</span>
-<span class="nt">&lt;/rpc-reply&gt;</span>
+</td></tr></table>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>$ python my_scrapli_script.py
+&lt;rpc-reply message-id=&quot;101&quot;&gt;
+ &lt;data&gt;
+  &lt;ssh&gt;
+   &lt;server&gt;
+    &lt;v2/&gt;
+    &lt;netconf&gt;830&lt;/netconf&gt;
+    &lt;netconf-vrf-table&gt;
+     &lt;vrf&gt;
+      &lt;vrf-name&gt;default&lt;/vrf-name&gt;
+      &lt;enable/&gt;
+     &lt;/vrf&gt;
+    &lt;/netconf-vrf-table&gt;
+   &lt;/server&gt;
+  &lt;/ssh&gt;
+  &lt;interface-configurations&gt;
+   &lt;interface-configuration&gt;
+    &lt;active&gt;act&lt;/active&gt;
+    &lt;interface-name&gt;MgmtEth0/RP0/CPU0/0&lt;/interface-name&gt;
+&lt;SNIP&gt;
+ &lt;/data&gt;
+&lt;/rpc-reply&gt;
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="more-examples">More Examples<a class="headerlink" href="#more-examples" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="https://github.com/scrapli/scrapli_netconf/blob/master/examples/basic_usage/basic_usage_iosxr.py">Basic Operations IOS-XR</a></li>

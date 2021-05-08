@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/user_guide/advanced_usage/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -354,6 +352,13 @@
         <li class="md-nav__item">
   <a href="#using-a-different-transport" class="md-nav__link">
     Using a Different Transport
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-note-about-filters" class="md-nav__link">
+    A Note about Filters
   </a>
   
 </li>
@@ -734,8 +739,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -758,8 +763,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -770,8 +775,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -882,6 +899,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#a-note-about-filters" class="md-nav__link">
+    A Note about Filters
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -899,7 +923,19 @@
 <h2 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">&para;</a></h2>
 <p>Netconf capabilities are exchanged when the session is opened. scrapli_netconf stores the server's capabilities in
  the aptly named <code>server_capabilities</code> attribute of the driver.</p>
-<div class="codehilite"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">scrapli_netconf.driver</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">scrapli_netconf.driver</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
 <span class="o">&gt;&gt;&gt;</span> 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">my_device</span> <span class="o">=</span> <span class="p">{</span>
 <span class="o">...</span>     <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;172.18.0.13&quot;</span><span class="p">,</span>
@@ -913,7 +949,7 @@
 <span class="o">&gt;&gt;&gt;</span> <span class="n">conn</span><span class="o">.</span><span class="n">server_capabilities</span>
 <span class="p">[</span><span class="s1">&#39;urn:ietf:params:netconf:base:1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;urn:ietf:params:netconf:capability:candidate:1.0&#39;</span><span class="p">]</span>
 </code></pre></div>
-
+</td></tr></table>
 <p><em>Capabilities truncated for readability</em></p>
 <p>As for capabilities that scrapli_netconf <em>sends</em> to the server, that depends on the capabilities advertised from the
  server! If netconf base 1.1 is in the advertised capabilities then scrapli_netconf will advertise netconf 1.1
@@ -934,7 +970,18 @@
 <p>While it will be a goal to ensure that these other transport mechanisms are supported and useful, the focus of
  scrapli development will be on the "system" SSH transport.</p>
 <p>Example using <code>ssh2</code> as the transport:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">scrapli_netconf</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">scrapli_netconf</span> <span class="kn">import</span> <span class="n">NetconfDriver</span>
 
 <span class="n">my_device</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="s2">&quot;172.18.0.11&quot;</span><span class="p">,</span>
@@ -947,6 +994,48 @@
 <span class="k">with</span> <span class="n">NetconfDriver</span><span class="p">(</span><span class="o">**</span><span class="n">my_device</span><span class="p">)</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">conn</span><span class="o">.</span><span class="n">get_config</span><span class="p">())</span>
 </code></pre></div>
+</td></tr></table>
+<h2 id="a-note-about-filters">A Note about Filters<a class="headerlink" href="#a-note-about-filters" title="Permanent link">&para;</a></h2>
+<p>The <code>filter_</code> string value for the <code>get</code> and <code>get_config</code> methods may contain multiple xml elements at its "root" 
+(for subtree filters) -- when cast to an lxml etree object this would normally result in the first filter being the 
+only element in the resulting object. This is because <code>etree.fromstring</code> assumes (rather correctly) that this is the 
+root of the document, and it ignores the remaining filter elements. In example, given the following string data:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>&lt;interface-configurations xmlns=&quot;http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg&quot;&gt;
+    &lt;interface-configuration&gt;
+        &lt;active&gt;act&lt;/active&gt;
+    &lt;/interface-configuration&gt;
+&lt;/interface-configurations&gt;
+&lt;netconf-yang xmlns=&quot;http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg&quot;&gt;
+&lt;/netconf-yang&gt;
+</code></pre></div>
+</td></tr></table>
+<p>The resulting lxml object (when re-dumped back to string) would look like this:</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>&lt;interface-configurations xmlns=&quot;http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg&quot;&gt;
+    &lt;interface-configuration&gt;
+        &lt;active&gt;act&lt;/active&gt;
+    &lt;/interface-configuration&gt;
+&lt;/interface-configurations&gt;
+</code></pre></div>
+</td></tr></table>
+<p>This is.... shall we say not ideal if we want to pass in a string like the previous section to filter for multiple 
+things in our config. To cope with this scrapli_netconf will wrap the user provided string filter in a "tmp" tag, 
+which allows us to load up the filter with all element(s) intact; we then simply ditch the outer temp tag when 
+placing the filter element(s) into the final filter payload, allowing users to simply provide a big string 
+containing as many or few filters as they want.</p>
+<p>If you preferred to craft your payloads more... "correctly" shall we say, then you are welcome to do so, and 
+provide the valid lxml object to the <code>rpc</code> method. The <code>rpc</code> method does nothing but wrap the provided element in 
+the outer-most xml tags needed for a NETCONF payload, so your provided element would need to contain the 
+get/filter/edit/etc. tags as appropriate!</p>
                 
               
               

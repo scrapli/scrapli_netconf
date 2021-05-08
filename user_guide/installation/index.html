@@ -6,14 +6,12 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli">
+        <meta name="description" content="Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli">
       
       
       
         <meta name="author" content="Carl Montanari">
       
-      
-        <link rel="canonical" href="https://github.com/scrapli/scrapli_netconf/user_guide/installation/">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
@@ -81,7 +79,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -177,7 +175,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="https://github.com/scrapli/scrapli_netconf" title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -755,8 +753,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
-        Nornir Scrapli
+      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
+        Scrapli
       </a>
     </li>
   
@@ -779,8 +777,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli/" class="md-nav__link">
-        Scrapli
+      <a href="../../more_scrapli/scrapli_cfg/" class="md-nav__link">
+        Scrapli Cfg
       </a>
     </li>
   
@@ -791,8 +789,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../../more_scrapli/scrapli_stubs/" class="md-nav__link">
-        Scrapli Stubs
+      <a href="../../more_scrapli/scrapli_replay/" class="md-nav__link">
+        Scrapli Replay
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../more_scrapli/nornir_scrapli/" class="md-nav__link">
+        Nornir Scrapli
       </a>
     </li>
   
@@ -940,33 +950,35 @@
                 <h1 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h1>
 <h2 id="standard-installation">Standard Installation<a class="headerlink" href="#standard-installation" title="Permanent link">&para;</a></h2>
 <p>As outlined in the quick start, you should be able to pip install scrapli_netconf "normally":</p>
-<div class="codehilite"><pre><span></span><code>pip install scrapli_netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>pip install scrapli_netconf
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="installing-current-master-branch">Installing current master branch<a class="headerlink" href="#installing-current-master-branch" title="Permanent link">&para;</a></h2>
 <p>To install from the source repositories master branch:</p>
-<div class="codehilite"><pre><span></span><code>pip install git+https://github.com/scrapli/scrapli_netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>pip install git+https://github.com/scrapli/scrapli_netconf
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="installing-current-develop-branch">Installing current develop branch<a class="headerlink" href="#installing-current-develop-branch" title="Permanent link">&para;</a></h2>
 <p>To install from this repositories develop branch:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">pip</span><span class="w"> </span><span class="n">install</span><span class="w"> </span><span class="o">-</span><span class="n">e</span><span class="w"> </span><span class="n">git</span><span class="o">+</span><span class="nl">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="p">.</span><span class="n">com</span><span class="o">/</span><span class="n">scrapli</span><span class="o">/</span><span class="n">scrapli_netconf</span><span class="p">.</span><span class="n">git</span><span class="nv">@develop</span><span class="n">#egg</span><span class="o">=</span><span class="n">scrapli_netconf</span><span class="w"></span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>pip install -e git+https://github.com/scrapli/scrapli_netconf.git@develop#egg=scrapli_netconf
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="installation-from-source">Installation from Source<a class="headerlink" href="#installation-from-source" title="Permanent link">&para;</a></h2>
 <p>To install from source:</p>
-<div class="codehilite"><pre><span></span><code>git clone https://github.com/scrapli/scrapli_netconf
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>git clone https://github.com/scrapli/scrapli_netconf
 cd scrapli_netconf
 python setup.py install
 </code></pre></div>
-
+</td></tr></table>
 <h2 id="optional-extras">Optional Extras<a class="headerlink" href="#optional-extras" title="Permanent link">&para;</a></h2>
 <p>Just like scrapli "core" scrapli_netconf tries to have as few dependencies as possible. scrapli_netconf requires 
 scrapli (of course!) and <code>lxml</code>. If you would like to use any of the transport plugins that are not part of the 
 standard library you can install those as optional extras via pip:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">pip</span><span class="w"> </span><span class="n">install</span><span class="w"> </span><span class="n">scrapli_netconf</span><span class="o">[</span><span class="n">paramiko</span><span class="o">]</span><span class="w"></span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>pip install scrapli_netconf[paramiko]
 </code></pre></div>
-
+</td></tr></table>
 <p>The available optional installation extras options are:</p>
 <ul>
 <li>paramiko</li>

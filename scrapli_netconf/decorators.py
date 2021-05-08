@@ -35,7 +35,7 @@ class DeprecateFilters:  # pragma: no cover
             if filters is None:
                 return wrapped_func(*args, **kwargs)
 
-            warn(self.warning, DeprecationWarning, 2)
+            warn(self.warning, FutureWarning)
 
             if isinstance(filters, list):
                 filter_ = "".join(filters)

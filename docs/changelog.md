@@ -16,6 +16,8 @@ CHANGELOG
 - Smarter message building -- previously most of the final bytes payload that we send to the servers got built in 
   the base driver class, and then some more (1.1 encoding) got added in the channel base class -- silly! Fixed this, 
   so it is all done in the driver which eliminated a bunch of duplication (yay!).
+- Deprecating `comms_ansi` -- see also scrapli changelog for this release (2021.07.30) for more details. This was 
+  never used here in scrapli_netconf so should be a non issue, but will not be fully deprecated until 2022.01.30.
 
 
 # 2021.01.30

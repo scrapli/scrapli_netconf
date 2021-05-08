@@ -22,8 +22,6 @@ def test__authenticate_check_hello(dummy_conn, test_data):
 
 
 def test_channel_authenticate_netconf(monkeypatch, dummy_conn):
-    dummy_conn.channel._base_channel_args.comms_ansi = True
-
     _read_counter = 0
     _write_counter = 0
 

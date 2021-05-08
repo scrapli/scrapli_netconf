@@ -34,7 +34,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -349,8 +349,8 @@ class NetconfScrape(NetconfDriver):
 
     def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
 
     def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
         return NetconfDriver(*args, **kwargs)

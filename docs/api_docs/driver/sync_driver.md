@@ -32,9 +32,12 @@ scrapli_netconf.driver.sync_driver
 from typing import Any, Callable, Dict, List, Optional, Union
 from warnings import warn
 
+from lxml.etree import _Element
+
 from scrapli import Driver
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
 from scrapli_netconf.channel.sync_channel import NetconfChannel
+from scrapli_netconf.decorators import DeprecateFilters
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
@@ -61,7 +64,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -162,7 +165,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         Netconf get operation
 
         Args:
-            filter_: string filter to apply to the get
+            filter_: filter to apply to the get
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -177,10 +180,11 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -189,7 +193,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -201,7 +205,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         """
         response = self._pre_get_config(
-            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+            source=source, filter_=filter_, filter_type=filter_type, default_type=default_type
         )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
@@ -323,11 +327,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    def rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices
+        Netconf "rpc" operation
 
-        You can also use this to build send your own payload in a more manual fashion
+        Typically used with juniper devices or if you want to build/send your own payload in a more
+        manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+        provide an lxml element yourself.
 
         Args:
             filter_: filter/rpc to execute
@@ -373,10 +379,10 @@ class NetconfScrape(NetconfDriver):
 
     def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
 
     def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
         return NetconfDriver(*args, **kwargs)
         </code>
     </pre>
@@ -421,8 +427,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -502,7 +506,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         timeout_ops: float = 30.0,
         comms_prompt_pattern: str = r"^[a-z0-9.\-@()/:]{1,48}[#>$]\s*$",
         comms_return_char: str = "\n",
-        comms_ansi: bool = False,
+        comms_ansi: Optional[bool] = None,
         ssh_config_file: Union[str, bool] = False,
         ssh_known_hosts_file: Union[str, bool] = False,
         on_init: Optional[Callable[..., Any]] = None,
@@ -603,7 +607,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         Netconf get operation
 
         Args:
-            filter_: string filter to apply to the get
+            filter_: filter to apply to the get
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -618,10 +622,11 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
-        filters: Optional[Union[str, List[str]]] = None,
+        filter_: Optional[str] = None,
         filter_type: str = "subtree",
         default_type: Optional[str] = None,
     ) -> NetconfResponse:
@@ -630,7 +635,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         Args:
             source: configuration source to get; typically one of running|startup|candidate
-            filters: string or list of strings of filters to apply to configuration
+            filter_: string of filter(s) to apply to configuration
             filter_type: type of filter; subtree|xpath
             default_type: string of with-default mode to apply when retrieving configuration
 
@@ -642,7 +647,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
 
         """
         response = self._pre_get_config(
-            source=source, filters=filters, filter_type=filter_type, default_type=default_type
+            source=source, filter_=filter_, filter_type=filter_type, default_type=default_type
         )
         raw_response = self.channel.send_input_netconf(response.channel_input)
 
@@ -764,11 +769,13 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def rpc(self, filter_: str) -> NetconfResponse:
+    def rpc(self, filter_: Union[str, _Element]) -> NetconfResponse:
         """
-        Netconf "rpc" operation; typically only used with juniper devices
+        Netconf "rpc" operation
 
-        You can also use this to build send your own payload in a more manual fashion
+        Typically used with juniper devices or if you want to build/send your own payload in a more
+        manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+        provide an lxml element yourself.
 
         Args:
             filter_: filter/rpc to execute
@@ -913,7 +920,7 @@ Raises:
 Netconf get operation
 
 Args:
-    filter_: string filter to apply to the get
+    filter_: filter to apply to the get
     filter_type: type of filter; subtree|xpath
 
 Returns:
@@ -928,14 +935,14 @@ Raises:
     
 
 ##### get_config
-`get_config(self, source: str = 'running', filters: Union[str, List[str], NoneType] = None, filter_type: str = 'subtree', default_type: Optional[str] = None) ‑> scrapli_netconf.response.NetconfResponse`
+`get_config(self, source: str = 'running', filter_: Optional[str] = None, filter_type: str = 'subtree', default_type: Optional[str] = None) ‑> scrapli_netconf.response.NetconfResponse`
 
 ```text
 Netconf get-config operation
 
 Args:
     source: configuration source to get; typically one of running|startup|candidate
-    filters: string or list of strings of filters to apply to configuration
+    filter_: string of filter(s) to apply to configuration
     filter_type: type of filter; subtree|xpath
     default_type: string of with-default mode to apply when retrieving configuration
 
@@ -991,12 +998,14 @@ Raises:
     
 
 ##### rpc
-`rpc(self, filter_: str) ‑> scrapli_netconf.response.NetconfResponse`
+`rpc(self, filter_: Union[str, lxml.etree._Element]) ‑> scrapli_netconf.response.NetconfResponse`
 
 ```text
-Netconf "rpc" operation; typically only used with juniper devices
+Netconf "rpc" operation
 
-You can also use this to build send your own payload in a more manual fashion
+Typically used with juniper devices or if you want to build/send your own payload in a more
+manual fashion. You can provide a string that will be loaded as an lxml element, or you can
+provide an lxml element yourself.
 
 Args:
     filter_: filter/rpc to execute
@@ -1086,8 +1095,6 @@ Args:
         should be mostly sorted for you if using network drivers (i.e. `IOSXEDriver`).
         Lastly, the case insensitive is just a convenience factor so i can be lazy.
     comms_return_char: character to use to send returns to host
-    comms_ansi: True/False strip comms_ansi characters from output, generally the default
-        value of False should be fine
     ssh_config_file: string to path for ssh config file, True to use default ssh config file
         or False to ignore default ssh config file
     ssh_known_hosts_file: string to path for ssh known hosts file, True to use default known
@@ -1153,10 +1160,10 @@ class NetconfScrape(NetconfDriver):
 
     def __init_subclass__(cls) -> None:
         """Deprecate NetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
 
     def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
+        warn(cls.warning, FutureWarning)
         return NetconfDriver(*args, **kwargs)
         </code>
     </pre>

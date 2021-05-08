@@ -230,7 +230,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
         # on the default scrapli timeout ops here
         _timeout_ops = self._base_channel_args.timeout_ops or 30
-        pool = ThreadPoolExecutor(max_workers=1)
+        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
         pool.submit(self.__check_echo, _timeout_ops / 20)
 
     @ChannelTimeout(
@@ -338,13 +338,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
         buf: bytes
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
@@ -574,7 +571,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
         # on the default scrapli timeout ops here
         _timeout_ops = self._base_channel_args.timeout_ops or 30
-        pool = ThreadPoolExecutor(max_workers=1)
+        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
         pool.submit(self.__check_echo, _timeout_ops / 20)
 
     @ChannelTimeout(
@@ -682,13 +679,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
         buf: bytes
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the

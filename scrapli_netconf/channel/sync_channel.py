@@ -308,13 +308,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
         buf: bytes
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the

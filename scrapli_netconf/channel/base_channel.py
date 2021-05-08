@@ -124,28 +124,6 @@ class BaseNetconfChannel(BaseChannel):
         _ = strip_prompt
         return buf
 
-    def _build_message(self, channel_input: str) -> str:
-        """
-        Build formatted message to send to netconf server
-
-        Args:
-            channel_input: string of the base xml message to send to netconf server
-
-        Returns:
-            str: string of formatted message to send to netconf server
-
-        Raises:
-            N/A
-
-        """
-        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
-            return channel_input
-
-        # format message for chunk (netconf 1.1) style message
-        msg_template = "#{}\n{}\n##"
-        final_channel_input = msg_template.format(len(channel_input), channel_input)
-        return final_channel_input
-
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
     ) -> bytes:

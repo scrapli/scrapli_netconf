@@ -7,12 +7,15 @@ CHANGELOG
   from sending any command > 1024 chars.
 - Added `use_compressed_parser` argument to the driver constructor -- defaults to `True` which means we "squish" all 
   the whitespace out of any input we get from the user before sending it to the netconf server, generally this is no 
-  problem but some devices (looking at you NX-OS!) lock up and stop reading at some character counts (4096 in NX-OS 
+  problem, but some devices (looking at you NX-OS!) lock up and stop reading at some character counts (4096 in NX-OS 
   it seems) causing the connection to timeout and die. By *not* "squishing" whitespace out this does not happen.
 - Fixed some typing issues and pinned to scrapli pre-release to take advantage of updated typing/packaging setup  
 - Deprecate `filters` argument on `get_config` -- will be supported (by decorator) until 2022.01.30 (and 
   pre-releases). This was done to make the arguments consistent for `get`, `get_config`, and `rpc`.
 - Better handling of multiple filter elements in a filter string
+- Smarter message building -- previously most of the final bytes payload that we send to the servers got built in 
+  the base driver class, and then some more (1.1 encoding) got added in the channel base class -- silly! Fixed this, 
+  so it is all done in the driver which eliminated a bunch of duplication (yay!).
 
 
 # 2021.01.30

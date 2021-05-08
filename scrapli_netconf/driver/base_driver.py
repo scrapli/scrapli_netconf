@@ -524,6 +524,32 @@ class NetconfBaseDriver(BaseDriver):
             )
         return xml_with_defaults_element
 
+    def _finalize_channel_input(self, xml_request: _Element) -> bytes:
+        """
+        Create finalized channel input (as bytes)
+
+        Args:
+            xml_request: finalized xml element to cast to bytes and add declaration to
+
+        Returns:
+            bytes: finalized bytes input -- with 1.0 delimiter or 1.1 encoding
+
+        Raises:
+            N/A
+
+        """
+        channel_input: bytes = etree.tostring(
+            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
+        )
+
+        if self.netconf_version == NetconfVersion.VERSION_1_0:
+            channel_input = channel_input + b"\n]]>]]>"
+        else:
+            # format message for chunk (netconf 1.1) style message
+            channel_input = b"#%b\n" % str(len(channel_input)).encode() + channel_input + b"\n##"
+
+        return channel_input
+
     def _pre_get(self, filter_: str, filter_type: str = "subtree") -> NetconfResponse:
         """
         Handle pre "get" tasks for consistency between sync/async versions
@@ -569,12 +595,7 @@ class NetconfBaseDriver(BaseDriver):
         get_element = xml_request.find("get")
         get_element.insert(0, xml_filter_elem)
 
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -635,12 +656,7 @@ class NetconfBaseDriver(BaseDriver):
             get_element = xml_request.find("get-config")
             get_element.insert(2, xml_with_defaults_elem)
 
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -689,12 +705,7 @@ class NetconfBaseDriver(BaseDriver):
         edit_config_element = xml_request.find("edit-config")
         edit_config_element.insert(1, xml_config)
 
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -731,12 +742,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.DELETE_CONFIG.value.format(target=target), parser=self.xml_parser
         )
         xml_request.insert(0, xml_validate_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -771,10 +778,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.COMMIT.value, parser=self.xml_parser
         )
         xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(xml_request)
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -809,12 +814,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.DISCARD.value, parser=self.xml_parser
         )
         xml_request.insert(0, xml_commit_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -851,12 +852,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.LOCK.value.format(target=target), parser=self.xml_parser
         )
         xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -891,12 +888,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.UNLOCK.value.format(target=target, parser=self.xml_parser)
         )
         xml_request.insert(0, xml_lock_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -937,12 +930,7 @@ class NetconfBaseDriver(BaseDriver):
         # insert filter element
         xml_request.insert(0, xml_filter_elem)
 
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
-
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,
@@ -989,12 +977,8 @@ class NetconfBaseDriver(BaseDriver):
             NetconfBaseOperations.VALIDATE.value.format(source=source), parser=self.xml_parser
         )
         xml_request.insert(0, xml_validate_element)
-        channel_input = etree.tostring(
-            element_or_tree=xml_request, xml_declaration=True, encoding="utf-8"
-        )
 
-        if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
 
         response = NetconfResponse(
             host=self.host,

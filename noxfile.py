@@ -1,5 +1,6 @@
 """scrapli_netconf.noxfile"""
 import re
+import sys
 from pathlib import Path
 from typing import Dict, List
 
@@ -58,9 +59,14 @@ def parse_requirements(dev: bool = True) -> Dict[str, str]:
 
 REQUIREMENTS: Dict[str, str] = parse_requirements(dev=False)
 DEV_REQUIREMENTS: Dict[str, str] = parse_requirements(dev=True)
+PLATFORM: str = sys.platform
+SKIP_LIST: List[str] = [
+    "unit_tests-darwin-3.10",
+    "integration_tests-darwin-3.10",
+]
 
 
-@nox.session(python=["3.6", "3.7", "3.8", "3.9"])
+@nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10"])
 def unit_tests(session):
     """
     Nox run unit tests
@@ -75,6 +81,9 @@ def unit_tests(session):
         N/A
 
     """
+    if f"unit_tests-{PLATFORM}-{session.python}" in SKIP_LIST:
+        return
+
     session.install("-r", "requirements-dev.txt")
     session.install(".")
     session.run(

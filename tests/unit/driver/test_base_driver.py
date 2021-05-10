@@ -180,8 +180,27 @@ def test_build_base_elem(dummy_conn):
     )
 
 
-def test_build_filters():
-    pass
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (
+            "<filterme></filterme>",
+            b'<filter type="subtree"><filterme/></filter>',
+        ),
+        (
+            "<filterme></filterme><filtermeagain></filtermeagain>",
+            b'<filter type="subtree"><filterme/><filtermeagain/></filter>',
+        ),
+        (
+            "<filter><filterme></filterme></filter>",
+            b'<filter type="subtree"><filterme/></filter>',
+        ),
+    ],
+    ids=["single_filter", "multi_filter", "with_filter_tags"],
+)
+def test_build_subtree_filters(dummy_conn, test_data):
+    input_filter, expected_filter = test_data
+    assert etree.tostring(dummy_conn._build_filter(filter_=input_filter)) == expected_filter
 
 
 def test_build_with_defaults(dummy_conn):

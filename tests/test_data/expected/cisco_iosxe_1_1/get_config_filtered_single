@@ -1,0 +1,46 @@
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <data>
+        <interfaces xmlns="http://openconfig.net/yang/interfaces">
+            <interface>
+                <name>GigabitEthernet1</name>
+                <config>
+                    <name>GigabitEthernet1</name>
+                    <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">ianaift:ethernetCsmacd</type>
+                    <enabled>true</enabled>
+                </config>
+                <subinterfaces>
+                    <subinterface>
+                        <index>0</index>
+                        <config>
+                            <index>0</index>
+                            <enabled>true</enabled>
+                        </config>
+                        <ipv4 xmlns="http://openconfig.net/yang/interfaces/ip">
+                            <addresses>
+                                <address>
+                                    <ip>10.0.0.15</ip>
+                                    <config>
+                                        <ip>10.0.0.15</ip>
+                                        <prefix-length>24</prefix-length>
+                                    </config>
+                                </address>
+                            </addresses>
+                        </ipv4>
+                        <ipv6 xmlns="http://openconfig.net/yang/interfaces/ip">
+                            <config>
+                                <enabled>false</enabled>
+                            </config>
+                        </ipv6>
+                    </subinterface>
+                </subinterfaces>
+                <ethernet xmlns="http://openconfig.net/yang/interfaces/ethernet">
+                    <config>
+                        <mac-address>MAC_ADDRESS</mac-address>
+                        <auto-negotiate>true</auto-negotiate>
+                        <enable-flow-control>true</enable-flow-control>
+                    </config>
+                </ethernet>
+            </interface>
+        </interfaces>
+    </data>
+</rpc-reply>

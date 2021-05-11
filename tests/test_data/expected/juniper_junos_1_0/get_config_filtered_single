@@ -1,0 +1,28 @@
+<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+<data>
+<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" timestamp="TIMESTAMP" junos:commit-user="vrnetlab">
+    <interfaces>
+        <interface>
+            <name>fxp0</name>
+            <unit>
+                <name>0</name>
+                <family>
+                    <inet>
+                        <address>
+                            <name>10.0.0.15/24</name>
+                        </address>
+                    </inet>
+                </family>
+            </unit>
+        </interface>
+    </interfaces>
+    <system>
+        <services>
+            <ssh>
+                <protocol-version>v2</protocol-version>
+            </ssh>
+        </services>
+    </system>
+</configuration>
+</data>
+</rpc-reply>

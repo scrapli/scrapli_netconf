@@ -1,0 +1,14 @@
+<rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+    <data>
+        <cli-config-data>
+            <cmd>!</cmd>
+            <cmd>interface GigabitEthernet2</cmd>
+            <cmd>description scrapli was here!</cmd>
+            <cmd>no ip address</cmd>
+            <cmd>shutdown</cmd>
+            <cmd>negotiation auto</cmd>
+            <cmd>no mop enabled</cmd>
+            <cmd>no mop sysid</cmd>
+            <cmd>end</cmd></cli-config-data>
+    </data>
+</rpc-reply>

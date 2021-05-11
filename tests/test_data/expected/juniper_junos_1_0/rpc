@@ -1,8 +1,4 @@
-RPC_FILTER = """<get-zones-information><terse/></get-zones-information>"""
-
-RPC_ELEMENTS = []
-
-RPC_EXPECTED = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
     <zones-information xmlns="http://xml.juniper.net/junos/17.3R2/junos-zones" junos:style="terse">
         <zones-security>
             <zones-security-zonename>trust</zones-security-zonename>
@@ -30,4 +26,4 @@ RPC_EXPECTED = """<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/ju
             </zones-security-interfaces>
         </zones-security>
     </zones-information>
-</rpc-reply>"""
+</rpc-reply>

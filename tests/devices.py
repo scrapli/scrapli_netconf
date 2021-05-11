@@ -1,17 +1,13 @@
 import os
 from pathlib import Path
 
-import scrapli_netconf
-
-from ..helper import (
+from helper import (
     cisco_iosxe_replace_config_data,
     cisco_iosxr_replace_config_data,
     juniper_junos_replace_config_data,
 )
-from .inputs_and_outputs import cisco_iosxe_1_0 as cisco_iosxe_1_0_inputs_outputs
-from .inputs_and_outputs import cisco_iosxe_1_1 as cisco_iosxe_1_1_inputs_outputs
-from .inputs_and_outputs import cisco_iosxr_1_1 as cisco_iosxr_1_1_inputs_outputs
-from .inputs_and_outputs import juniper_junos_1_0 as juniper_junos_1_0_inputs_outputs
+
+import scrapli_netconf
 
 TEST_DATA_PATH = f"{Path(scrapli_netconf.__file__).parents[1]}/tests/test_data"
 
@@ -64,12 +60,4 @@ CONFIG_REPLACER = {
     "cisco_iosxe_1_1": cisco_iosxe_replace_config_data,
     "cisco_iosxr_1_1": cisco_iosxr_replace_config_data,
     "juniper_junos_1_0": juniper_junos_replace_config_data,
-}
-
-
-INPUTS_OUTPUTS = {
-    "cisco_iosxe_1_0": cisco_iosxe_1_0_inputs_outputs,
-    "cisco_iosxe_1_1": cisco_iosxe_1_1_inputs_outputs,
-    "cisco_iosxr_1_1": cisco_iosxr_1_1_inputs_outputs,
-    "juniper_junos_1_0": juniper_junos_1_0_inputs_outputs,
 }

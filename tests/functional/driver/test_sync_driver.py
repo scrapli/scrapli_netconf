@@ -2,11 +2,8 @@ import pytest
 
 from scrapli_netconf.response import NetconfResponse
 
-from ...helper import xmldiffs
-from ...test_data.devices import CONFIG_REPLACER, INPUTS_OUTPUTS
 
-
-def test_get_filter_subtree(sync_conn):
+def test_get_filter_subtree(sync_conn, test_cases, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -15,9 +12,11 @@ def test_get_filter_subtree(sync_conn):
 
     conn.open()
 
-    expected_config_elements = INPUTS_OUTPUTS[device_type].GET_SUBTREE_ELEMENTS
-    expected_result = INPUTS_OUTPUTS[device_type].GET_SUBTREE_RESULT
-    filter_ = INPUTS_OUTPUTS[device_type].GET_SUBTREE_FILTER
+    expected_config_elements = test_cases[device_type]["get_filter_subtree"][
+        "expected_config_elements"
+    ]
+    expected_result = test_cases[device_type]["get_filter_subtree"]["expected_output"]
+    filter_ = test_cases[device_type]["get_filter_subtree"]["filter_"]
 
     response = conn.get(filter_=filter_, filter_type="subtree")
 
@@ -26,10 +25,10 @@ def test_get_filter_subtree(sync_conn):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(response.result, expected_result)
+    assert not xmldiffer(response.result, expected_result)
 
 
-def test_get_filter_xpath(sync_conn):
+def test_get_filter_xpath(sync_conn, test_cases, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -40,9 +39,11 @@ def test_get_filter_xpath(sync_conn):
 
     conn.open()
 
-    expected_config_elements = INPUTS_OUTPUTS[device_type].GET_XPATH_ELEMENTS
-    expected_result = INPUTS_OUTPUTS[device_type].GET_XPATH_RESULT
-    filter_ = INPUTS_OUTPUTS[device_type].GET_XPATH_FILTER
+    expected_config_elements = test_cases[device_type]["get_filter_xpath"][
+        "expected_config_elements"
+    ]
+    expected_result = test_cases[device_type]["get_filter_xpath"]["expected_output"]
+    filter_ = test_cases[device_type]["get_filter_xpath"]["filter_"]
 
     response = conn.get(filter_=filter_, filter_type="xpath")
 
@@ -51,17 +52,17 @@ def test_get_filter_xpath(sync_conn):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(response.result, expected_result)
+    assert not xmldiffer(response.result, expected_result)
 
 
-def test_get_config(sync_conn):
+def test_get_config(sync_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
     conn.open()
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    expected_config_elements = INPUTS_OUTPUTS[device_type].FULL_GET_CONFIG_ELEMENTS
-    expected_result = INPUTS_OUTPUTS[device_type].FULL_GET_CONFIG_RESULT
+    config_replacer = config_replacer_dict[device_type]
+    expected_config_elements = test_cases[device_type]["get_config"]["expected_config_elements"]
+    expected_result = test_cases[device_type]["get_config"]["expected_output"]
 
     response = conn.get_config()
 
@@ -70,18 +71,22 @@ def test_get_config(sync_conn):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(config_replacer(response.result), expected_result)
+    assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-def test_get_config_filtered_single_filter_subtree(sync_conn):
+def test_get_config_filtered_single_filter_subtree(
+    sync_conn, test_cases, config_replacer_dict, xmldiffer
+):
     conn = sync_conn[0]
     device_type = sync_conn[1]
     conn.open()
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE_GET_CONFIG_ELEMENTS
-    filter_ = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE
-    expected_result = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_SINGLE_GET_CONFIG_RESULT
+    config_replacer = config_replacer_dict[device_type]
+    expected_config_elements = test_cases[device_type]["get_config_filtered_single"][
+        "expected_config_elements"
+    ]
+    expected_result = test_cases[device_type]["get_config_filtered_single"]["expected_output"]
+    filter_ = test_cases[device_type]["get_config_filtered_single"]["filter_"]
 
     response = conn.get_config(filter_=filter_, filter_type="subtree")
 
@@ -90,21 +95,24 @@ def test_get_config_filtered_single_filter_subtree(sync_conn):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(config_replacer(response.result), expected_result)
+    assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-def test_get_config_filtered_multi_filter_subtree(sync_conn_1_1):
+def test_get_config_filtered_multi_filter_subtree(
+    sync_conn_1_1, test_cases, config_replacer_dict, xmldiffer
+):
     # only testing the "multi" filter on 1.1 devices
     conn = sync_conn_1_1[0]
     device_type = sync_conn_1_1[1]
 
     conn.open()
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    expected_config_elements = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_ELEMENTS
-    filters = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI
-    filter_ = "".join(filters)
-    expected_result = INPUTS_OUTPUTS[device_type].CONFIG_FILTER_MULTI_GET_CONFIG_RESULT
+    config_replacer = config_replacer_dict[device_type]
+    expected_config_elements = test_cases[device_type]["get_config_filtered_multi"][
+        "expected_config_elements"
+    ]
+    expected_result = test_cases[device_type]["get_config_filtered_multi"]["expected_output"]
+    filter_ = test_cases[device_type]["get_config_filtered_multi"]["filter_"]
 
     response = conn.get_config(filter_=filter_, filter_type="subtree")
 
@@ -113,10 +121,10 @@ def test_get_config_filtered_multi_filter_subtree(sync_conn_1_1):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(config_replacer(response.result), expected_result)
+    assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-def test_get_config_filter_single_filter_xpath(sync_conn_1_1):
+def test_get_config_filter_single_filter_xpath(sync_conn_1_1, test_cases, xmldiffer):
     conn = sync_conn_1_1[0]
     device_type = sync_conn_1_1[1]
 
@@ -127,9 +135,11 @@ def test_get_config_filter_single_filter_xpath(sync_conn_1_1):
 
     conn.open()
 
-    expected_config_elements = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_ELEMENTS
-    expected_result = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_RESULT
-    filter_ = INPUTS_OUTPUTS[device_type].GET_CONFIG_XPATH_FILTER
+    expected_config_elements = test_cases[device_type]["get_config_filtered_xpath"][
+        "expected_config_elements"
+    ]
+    expected_result = test_cases[device_type]["get_config_filtered_xpath"]["expected_output"]
+    filter_ = test_cases[device_type]["get_config_filtered_xpath"]["filter_"]
 
     response = conn.get_config(filter_=filter_, filter_type="xpath")
 
@@ -138,20 +148,20 @@ def test_get_config_filter_single_filter_xpath(sync_conn_1_1):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(response.result, expected_result)
+    assert not xmldiffer(response.result, expected_result)
 
 
-def test_edit_config_and_discard(sync_conn):
+def test_edit_config_and_discard(sync_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
     if device_type in ["cisco_iosxe_1_0", "cisco_iosxe_1_1"]:
         pytest.skip("skipping for platforms with no candidate config")
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
-    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_FILTER
-    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
+    config_replacer = config_replacer_dict[device_type]
+    config = test_cases[device_type]["edit_config"]["config"]
+    expected_result = test_cases[device_type]["edit_config"]["expected_output"]
+    validate_filter = test_cases[device_type]["edit_config"]["validate_config_filter"]
 
     conn.open()
     conn.get_config()
@@ -159,7 +169,7 @@ def test_edit_config_and_discard(sync_conn):
     response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
-    assert not xmldiffs(
+    assert not xmldiffer(
         config_replacer(response.result),
         """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
     )
@@ -169,22 +179,22 @@ def test_edit_config_and_discard(sync_conn):
     )
     assert isinstance(validation_response, NetconfResponse)
     assert validation_response.failed is False
-    assert not xmldiffs(config_replacer(validation_response.result), expected_result)
+    assert not xmldiffer(config_replacer(validation_response.result), expected_result)
 
     discard_response = conn.discard()
     assert isinstance(discard_response, NetconfResponse)
     assert discard_response.failed is False
 
 
-def test_edit_config_and_commit(sync_conn):
+def test_edit_config_and_commit(sync_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
-    remove_config = INPUTS_OUTPUTS[device_type].REMOVE_EDIT_CONFIG
-    validate_filter = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_FILTER
-    expected_result = INPUTS_OUTPUTS[device_type].EDIT_CONFIG_VALIDATE_EXPECTED
+    config_replacer = config_replacer_dict[device_type]
+    config = test_cases[device_type]["edit_config"]["config"]
+    remove_config = test_cases[device_type]["edit_config"]["remove_config"]
+    expected_result = test_cases[device_type]["edit_config"]["expected_output"]
+    validate_filter = test_cases[device_type]["edit_config"]["validate_config_filter"]
 
     conn.open()
 
@@ -195,7 +205,7 @@ def test_edit_config_and_commit(sync_conn):
     response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
-    assert not xmldiffs(
+    assert not xmldiffer(
         config_replacer(response.result),
         """<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">\n <ok/>\n</rpc-reply>""",
     )
@@ -211,7 +221,7 @@ def test_edit_config_and_commit(sync_conn):
     )
     assert isinstance(validation_response, NetconfResponse)
     assert validation_response.failed is False
-    assert not xmldiffs(config_replacer(validation_response.result), expected_result)
+    assert not xmldiffer(config_replacer(validation_response.result), expected_result)
 
     response = conn.edit_config(config=remove_config, target=target)
     assert isinstance(response, NetconfResponse)
@@ -224,7 +234,7 @@ def test_edit_config_and_commit(sync_conn):
         assert commit_response.failed is False
 
 
-def test_delete_config(sync_conn):
+def test_delete_config(sync_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -234,8 +244,8 @@ def test_delete_config(sync_conn):
             "iosxr version used in vrnetlab test environment does not support delete-config"
         )
 
-    config_replacer = CONFIG_REPLACER[device_type]
-    config = INPUTS_OUTPUTS[device_type].EDIT_CONFIG
+    config_replacer = config_replacer_dict[device_type]
+    config = test_cases[device_type]["edit_config"]["config"]
 
     conn.strip_namespaces = True
     conn.open()
@@ -247,7 +257,7 @@ def test_delete_config(sync_conn):
     response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
-    assert not xmldiffs(
+    assert not xmldiffer(
         config_replacer(response.result),
         """<rpc-reply message-id="101">\n <ok/>\n</rpc-reply>""",
     )
@@ -262,7 +272,7 @@ def test_delete_config(sync_conn):
     conn.discard()
 
 
-def test_lock_unlock(sync_conn):
+def test_lock_unlock(sync_conn, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
@@ -277,23 +287,23 @@ def test_lock_unlock(sync_conn):
     response = conn.lock(target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
-    assert not xmldiffs(response.result, """<rpc-reply message-id="101"><ok/></rpc-reply>""")
+    assert not xmldiffer(response.result, """<rpc-reply message-id="101"><ok/></rpc-reply>""")
 
     response = conn.unlock(target=target)
     assert isinstance(response, NetconfResponse)
     assert response.failed is False
-    assert not xmldiffs(response.result, """<rpc-reply message-id="102"><ok/></rpc-reply>""")
+    assert not xmldiffer(response.result, """<rpc-reply message-id="102"><ok/></rpc-reply>""")
 
 
-def test_rpc(sync_conn):
+def test_rpc(sync_conn, test_cases, xmldiffer):
     conn = sync_conn[0]
     device_type = sync_conn[1]
 
     conn.open()
 
-    expected_config_elements = INPUTS_OUTPUTS[device_type].RPC_ELEMENTS
-    expected_result = INPUTS_OUTPUTS[device_type].RPC_EXPECTED
-    filter_ = INPUTS_OUTPUTS[device_type].RPC_FILTER
+    expected_config_elements = test_cases[device_type]["rpc"]["expected_config_elements"]
+    expected_result = test_cases[device_type]["rpc"]["expected_output"]
+    filter_ = test_cases[device_type]["rpc"]["filter_"]
 
     response = conn.rpc(filter_=filter_)
 
@@ -302,4 +312,4 @@ def test_rpc(sync_conn):
     assert all(
         elem in list(response.get_xml_elements().keys()) for elem in expected_config_elements
     )
-    assert not xmldiffs(response.result, expected_result)
+    assert not xmldiffer(response.result, expected_result)

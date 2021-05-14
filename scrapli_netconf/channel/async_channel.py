@@ -83,7 +83,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
                 "Determined that server echoes inputs on stdout, setting `_server_echo` to `True`"
             )
             self._server_echo = True
-        except asyncio.exceptions.TimeoutError:
+        except asyncio.TimeoutError:
             pass
         return
 

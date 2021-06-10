@@ -61,7 +61,6 @@ REQUIREMENTS: Dict[str, str] = parse_requirements(dev=False)
 DEV_REQUIREMENTS: Dict[str, str] = parse_requirements(dev=True)
 PLATFORM: str = sys.platform
 SKIP_LIST: List[str] = [
-    "unit_tests-darwin-3.10",
     "integration_tests-darwin-3.10",
 ]
 

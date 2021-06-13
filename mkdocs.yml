@@ -2,6 +2,7 @@
 site_name: Scrapli Netconf
 site_description: Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli
 site_author: Carl Montanari
+site_url: https://scrapli.github.io/
 
 repo_name: scrapli/scrapli_netconf
 repo_url: https://github.com/scrapli/scrapli_netconf

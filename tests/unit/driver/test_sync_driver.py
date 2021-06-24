@@ -18,7 +18,7 @@ def test_get(monkeypatch, dummy_conn):
     assert actual_response.raw_result == b"<sent!>"
     assert (
         actual_response.channel_input
-        == """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get><filter type="subtree"><interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg"><interface-configuration><active>act</active></interface-configuration></interface-configurations></filter></get></rpc>\n]]>]]>"""
+        == """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get><filter type="subtree"><interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg"><interface-configuration><active>act</active></interface-configuration></interface-configurations></filter></get></rpc>]]>]]>"""
     )
 
 
@@ -33,5 +33,5 @@ def test_get_config(monkeypatch, dummy_conn):
     assert actual_response.raw_result == b"<sent!>"
     assert (
         actual_response.channel_input
-        == """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source></get-config></rpc>\n]]>]]>"""
+        == """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><get-config><source><running/></source></get-config></rpc>]]>]]>"""
     )

@@ -45,7 +45,7 @@
             <enable>
                 <secret>
                     <type>9</type>
-                    <secret>$9$h6Ayg86tb/EImk$2T6Ns.ke08cAlZ2TbMf3YRCYr7ngDGzgAxZB0YMe7lQ</secret>
+                    <secret>$9$xvWnx8Fe35f8xE$E9ijp7GM/V48P5y1Uz3IEPtotXgwkJKYJmN0q3q2E92</secret>
                 </secret>
             </enable>
             <archive>
@@ -59,11 +59,11 @@
                 <path>bootflash:</path>
             </archive>
             <username>
-                <name>vrnetlab</name>
+                <name>boxen</name>
                 <privilege>15</privilege>
                 <password>
                     <encryption>0</encryption>
-                    <password>VR-netlab9</password>
+                    <password>b0x3N-b0x3N</password>
                 </password>
             </username>
             <ip>
@@ -89,7 +89,7 @@
                 <ssh>
                     <pubkey-chain>
                         <username>
-                            <name>vrnetlab</name>
+                            <name>boxen</name>
                             <key-hash>
                                 <key-type>ssh-rsa</key-type>
                                 <key-hash-value>5CC74A68B18B026A1709FB09D1F44E2F</key-hash-value>

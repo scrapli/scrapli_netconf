@@ -18,6 +18,7 @@ CHANGELOG
   so it is all done in the driver which eliminated a bunch of duplication (yay!).
 - Deprecating `comms_ansi` -- see also scrapli changelog for this release (2021.07.30) for more details. This was 
   never used here in scrapli_netconf so should be a non issue, but will not be fully deprecated until 2022.01.30.
+- Re-fix #10... see #68 -- now there is a test with a comment so I don't break this again :)
 
 
 # 2021.01.30

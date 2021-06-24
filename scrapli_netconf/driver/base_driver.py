@@ -551,7 +551,7 @@ class NetconfBaseDriver(BaseDriver):
         )
 
         if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+            channel_input = channel_input + b"]]>]]>"
         else:
             # format message for chunk (netconf 1.1) style message
             channel_input = b"#%b\n" % str(len(channel_input)).encode() + channel_input + b"\n##"

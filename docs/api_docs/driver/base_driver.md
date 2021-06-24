@@ -475,7 +475,8 @@ class NetconfBaseDriver(BaseDriver):
         ```
 
         Args:
-            filter_: strings of filters to build into a filter element
+            filter_: strings of filters to build into a filter element or (for subtree) a full
+                filter string (in filter tags)
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -487,19 +488,26 @@ class NetconfBaseDriver(BaseDriver):
 
         """
         if filter_type == "subtree":
-            xml_filter_elem = etree.fromstring(
-                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
-            )
             # tmp tags to place the users kinda not valid xml filter into
             _filter_ = f"<tmp>{filter_}</tmp>"
             # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
             tmp_xml_filter_element = etree.fromstring(_filter_, parser=self.xml_parser)
 
-            # iterate through the children inside the tmp tags and insert *those* elements into the
-            # actual final filter payload
-            for xml_filter_element in tmp_xml_filter_element:
-                # insert the subtree filter into the parent filter element
-                xml_filter_elem.insert(1, xml_filter_element)
+            if tmp_xml_filter_element.getchildren()[0].tag == "filter":
+                # if the user filter was already wrapped in filter tags we'll end up here, we will
+                # blindly reuse the users filter but we'll make sure that the filter "type" is set
+                xml_filter_elem = tmp_xml_filter_element.getchildren()[0]
+                xml_filter_elem.attrib["type"] = "subtree"
+            else:
+                xml_filter_elem = etree.fromstring(
+                    NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
+                )
+
+                # iterate through the children inside the tmp tags and insert *those* elements into
+                # the actual final filter payload
+                for xml_filter_element in tmp_xml_filter_element:
+                    # insert the subtree filter into the parent filter element
+                    xml_filter_elem.insert(1, xml_filter_element)
 
         elif filter_type == "xpath":
             if "urn:ietf:params:netconf:capability:xpath:1.0" not in self.server_capabilities:
@@ -573,7 +581,7 @@ class NetconfBaseDriver(BaseDriver):
         )
 
         if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+            channel_input = channel_input + b"]]>]]>"
         else:
             # format message for chunk (netconf 1.1) style message
             channel_input = b"#%b\n" % str(len(channel_input)).encode() + channel_input + b"\n##"
@@ -1527,7 +1535,8 @@ class NetconfBaseDriver(BaseDriver):
         ```
 
         Args:
-            filter_: strings of filters to build into a filter element
+            filter_: strings of filters to build into a filter element or (for subtree) a full
+                filter string (in filter tags)
             filter_type: type of filter; subtree|xpath
 
         Returns:
@@ -1539,19 +1548,26 @@ class NetconfBaseDriver(BaseDriver):
 
         """
         if filter_type == "subtree":
-            xml_filter_elem = etree.fromstring(
-                NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
-            )
             # tmp tags to place the users kinda not valid xml filter into
             _filter_ = f"<tmp>{filter_}</tmp>"
             # "validate" subtree filter by forcing it into xml, parser "flattens" it as well
             tmp_xml_filter_element = etree.fromstring(_filter_, parser=self.xml_parser)
 
-            # iterate through the children inside the tmp tags and insert *those* elements into the
-            # actual final filter payload
-            for xml_filter_element in tmp_xml_filter_element:
-                # insert the subtree filter into the parent filter element
-                xml_filter_elem.insert(1, xml_filter_element)
+            if tmp_xml_filter_element.getchildren()[0].tag == "filter":
+                # if the user filter was already wrapped in filter tags we'll end up here, we will
+                # blindly reuse the users filter but we'll make sure that the filter "type" is set
+                xml_filter_elem = tmp_xml_filter_element.getchildren()[0]
+                xml_filter_elem.attrib["type"] = "subtree"
+            else:
+                xml_filter_elem = etree.fromstring(
+                    NetconfBaseOperations.FILTER_SUBTREE.value.format(filter_type=filter_type),
+                )
+
+                # iterate through the children inside the tmp tags and insert *those* elements into
+                # the actual final filter payload
+                for xml_filter_element in tmp_xml_filter_element:
+                    # insert the subtree filter into the parent filter element
+                    xml_filter_elem.insert(1, xml_filter_element)
 
         elif filter_type == "xpath":
             if "urn:ietf:params:netconf:capability:xpath:1.0" not in self.server_capabilities:
@@ -1625,7 +1641,7 @@ class NetconfBaseDriver(BaseDriver):
         )
 
         if self.netconf_version == NetconfVersion.VERSION_1_0:
-            channel_input = channel_input + b"\n]]>]]>"
+            channel_input = channel_input + b"]]>]]>"
         else:
             # format message for chunk (netconf 1.1) style message
             channel_input = b"#%b\n" % str(len(channel_input)).encode() + channel_input + b"\n##"

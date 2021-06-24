@@ -22,7 +22,7 @@
    <usernames xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-aaa-locald-cfg">
     <username>
      <ordering-index>0</ordering-index>
-     <name>vrnetlab</name>
+     <name>boxen</name>
      <usergroup-under-usernames>
       <usergroup-under-username>
        <name>root-lr</name>
@@ -31,7 +31,7 @@
        <name>cisco-support</name>
       </usergroup-under-username>
      </usergroup-under-usernames>
-     <secret>$1$5aFx$Ul43RjEjA7C4LFsghgQCu0</secret>
+     <secret>$1$ERrP$IwIygdqbJGkqrXZDtaWVI0</secret>
     </username>
    </usernames>
   </aaa>
@@ -738,12 +738,12 @@
    <authentication>
     <users>
      <user>
-      <name>vrnetlab</name>
+      <name>boxen</name>
       <uid>9000</uid>
       <gid>100</gid>
       PASSWORD
-      <ssh_keydir>/var/confd/homes/vrnetlab/.ssh</ssh_keydir>
-      <homedir>/var/confd/homes/vrnetlab</homedir>
+      <ssh_keydir>/var/confd/homes/boxen/.ssh</ssh_keydir>
+      <homedir>/var/confd/homes/boxen</homedir>
      </user>
     </users>
     <groups>
@@ -760,7 +760,7 @@
      <group>
       <name>root-system</name>
       <gid>100</gid>
-      <users>%%__system_user__%% vrnetlab</users>
+      <users>%%__system_user__%% boxen</users>
      </group>
     </groups>
    </authentication>

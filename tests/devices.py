@@ -11,44 +11,44 @@ import scrapli_netconf
 
 TEST_DATA_PATH = f"{Path(scrapli_netconf.__file__).parents[1]}/tests/test_data"
 
-FUNCTIONAL_USERNAME = "vrnetlab"
-FUNCTIONAL_PASSWORD = "VR-netlab9"
+VRNETLAB_MODE = bool(os.environ.get("SCRAPLI_VRNETLAB", False))
+USERNAME = "boxen" if not VRNETLAB_MODE else "vrnetlab"
+PASSWORD = "b0x3N-b0x3N" if not VRNETLAB_MODE else "VR-netlab9"
 PRIVATE_KEY = f"{TEST_DATA_PATH}/files/vrnetlab_key"
 INVALID_PRIVATE_KEY = f"{TEST_DATA_PATH}/files/invalid_key"
-VROUTER_MODE = bool(os.environ.get("SCRAPLI_VROUTER", False))
 
 DEVICES = {
     "cisco_iosxe_1_0": {
-        "auth_username": FUNCTIONAL_USERNAME,
-        "auth_password": FUNCTIONAL_PASSWORD,
+        "auth_username": USERNAME,
+        "auth_password": PASSWORD,
         "auth_strict_key": False,
-        "host": "localhost" if VROUTER_MODE else "172.18.0.11",
-        "port": 21022 if VROUTER_MODE else 22,
+        "host": "localhost" if not VRNETLAB_MODE else "172.18.0.11",
+        "port": 21022 if not VRNETLAB_MODE else 22,
         "strip_namespaces": False,
     },
     "cisco_iosxe_1_1": {
-        "auth_username": FUNCTIONAL_USERNAME,
-        "auth_password": FUNCTIONAL_PASSWORD,
+        "auth_username": USERNAME,
+        "auth_password": PASSWORD,
         "auth_strict_key": False,
-        "host": "localhost" if VROUTER_MODE else "172.18.0.11",
-        "port": 21830 if VROUTER_MODE else 830,
+        "host": "localhost" if not VRNETLAB_MODE else "172.18.0.11",
+        "port": 21830 if not VRNETLAB_MODE else 830,
         "strip_namespaces": False,
     },
     "cisco_iosxr_1_1": {
-        "auth_username": FUNCTIONAL_USERNAME,
-        "auth_password": FUNCTIONAL_PASSWORD,
+        "auth_username": USERNAME,
+        "auth_password": PASSWORD,
         "auth_strict_key": False,
-        "host": "localhost" if VROUTER_MODE else "172.18.0.13",
-        "port": 23830 if VROUTER_MODE else 830,
+        "host": "localhost" if not VRNETLAB_MODE else "172.18.0.13",
+        "port": 23830 if not VRNETLAB_MODE else 830,
         "strip_namespaces": False,
         "timeout_transport": 30,
     },
     "juniper_junos_1_0": {
-        "auth_username": FUNCTIONAL_USERNAME,
-        "auth_password": FUNCTIONAL_PASSWORD,
+        "auth_username": USERNAME,
+        "auth_password": PASSWORD,
         "auth_strict_key": False,
-        "host": "localhost" if VROUTER_MODE else "172.18.0.15",
-        "port": 25022 if VROUTER_MODE else 22,
+        "host": "localhost" if not VRNETLAB_MODE else "172.18.0.15",
+        "port": 25022 if not VRNETLAB_MODE else 22,
         "strip_namespaces": False,
         # commits takes a long time and transport gets nothing during this time
         "timeout_transport": 30,

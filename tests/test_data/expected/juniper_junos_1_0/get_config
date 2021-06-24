@@ -1,6 +1,6 @@
 <rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
 <data>
-<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" timestamp="TIMESTAMP" junos:commit-user="vrnetlab">
+<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" timestamp="TIMESTAMP" junos:commit-user="boxen">
     <version>17.3R2.10</version>
     <system>
         <root-authentication>
@@ -8,7 +8,7 @@
         </root-authentication>
         <login>
             <user>
-                <name>vrnetlab</name>
+                <name>boxen</name>
                 <uid>2000</uid>
                 <class>super-user</class>
                 <authentication>

@@ -30,6 +30,8 @@ RPC_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmln
 RPC_CHANNEL_INPUT_1_1 = """#192\n<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><netconf-yang xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-man-netconf-cfg"/></rpc>\n##"""
 VALIDATE_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>]]>]]>"""
 VALIDATE_CHANNEL_INPUT_1_1 = """#165\n<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><validate><source><candidate/></source></validate></rpc>\n##"""
+COPY_CONFIG_CHANNEL_INPUT_1_0 = """<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><copy-config><source><running/></source><target><startup/></target></copy-config></rpc>]]>]]>"""
+COPY_CONFIG_CHANNEL_INPUT_1_1 = """#196\n<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<rpc xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101"><copy-config><source><running/></source><target><startup/></target></copy-config></rpc>\n##"""
 
 
 def test_set_netconf_version_exception(dummy_conn):
@@ -483,3 +485,22 @@ def test_pre_validate_no_capability(dummy_conn):
     with pytest.raises(CapabilityNotSupported) as exc:
         dummy_conn._pre_validate(source="candidate")
     assert str(exc.value) == "validate requested, but is not supported by the server"
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, COPY_CONFIG_CHANNEL_INPUT_1_0),
+        (NetconfVersion.VERSION_1_1, COPY_CONFIG_CHANNEL_INPUT_1_1),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_copy_config(dummy_conn, capabilities):
+    dummy_conn.server_capabilities = ["urn:ietf:params:netconf:capability:validate:1.0"]
+    dummy_conn.writeable_datastores = ["startup"]
+    dummy_conn.readable_datastores = ["running"]
+    dummy_conn.netconf_version = capabilities[0]
+    expected_channel_input = capabilities[1]
+    response = dummy_conn._pre_copy_config(source="running", target="startup")
+    assert isinstance(response, NetconfResponse)
+    assert response.channel_input == expected_channel_input

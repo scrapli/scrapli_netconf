@@ -329,6 +329,26 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    async def copy_config(self, source: str, target: str) -> NetconfResponse:
+        """
+        Netconf "copy-config" operation
+
+        Args:
+            source: configuration, url, or datastore to copy into the target datastore
+            target: destination to copy the source to
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
+        response = self._pre_copy_config(source=source, target=target)
+        raw_response = await self.channel.send_input_netconf(response.channel_input)
+        response.record_response(raw_response)
+        return response
+
 
 # remove in future releases, retaining this to not break end user scripts for now
 class AsyncNetconfScrape(AsyncNetconfDriver):

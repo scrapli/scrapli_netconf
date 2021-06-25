@@ -31,6 +31,9 @@ class NetconfBaseOperations(Enum):
     GET_CONFIG = "<get-config><source><{source}/></source></get-config>"
     EDIT_CONFIG = "<edit-config><target><{target}/></target></edit-config>"
     DELETE_CONFIG = "<delete-config><target><{target}/></target></delete-config>"
+    COPY_CONFIG = (
+        "<copy-config><target><{target}/></target><source><{source}/></source></copy-config>"
+    )
     COMMIT = "<commit/>"
     DISCARD = "<discard-changes/>"
     LOCK = "<lock><target><{target}/></target></lock>"
@@ -997,5 +1000,49 @@ class NetconfBaseDriver(BaseDriver):
         )
         self.logger.debug(
             f"Built payload for 'validate' operation. Payload: {channel_input.decode()}"
+        )
+        return response
+
+    def _pre_copy_config(self, source: str, target: str) -> NetconfResponse:
+        """
+        Handle pre "copy_config" tasks for consistency between sync/async versions
+
+        Note that source is not validated/checked since it could be a url or a full configuration
+        element itself.
+
+        Args:
+            source: configuration, url, or datastore to copy into the target datastore
+            target: copy config destination/target; typically one of running|startup|candidate
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
+                channel inputs (string and xml)
+
+        Raises:
+            N/A
+
+        """
+        self.logger.debug("Building payload for 'copy_config' operation.")
+
+        self._validate_edit_config_target(target=target)
+
+        xml_request = self._build_base_elem()
+        xml_validate_element = etree.fromstring(
+            NetconfBaseOperations.COPY_CONFIG.value.format(source=source, target=target),
+            parser=self.xml_parser,
+        )
+        xml_request.insert(0, xml_validate_element)
+
+        channel_input = self._finalize_channel_input(xml_request=xml_request)
+
+        response = NetconfResponse(
+            host=self.host,
+            channel_input=channel_input.decode(),
+            xml_input=xml_request,
+            netconf_version=self.netconf_version,
+            strip_namespaces=self.strip_namespaces,
+        )
+        self.logger.debug(
+            f"Built payload for 'copy-config' operation. Payload: {channel_input.decode()}"
         )
         return response

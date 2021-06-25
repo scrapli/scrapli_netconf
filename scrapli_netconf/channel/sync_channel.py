@@ -8,7 +8,7 @@ from typing import Optional
 from scrapli.channel import Channel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
@@ -318,7 +318,17 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = self._read_until_prompt(buf=buf)
+        try:
+            buf = self._read_until_prompt(buf=buf)
+        except ScrapliTimeout as exc:
+            if len(channel_input) >= 4096:
+                msg = (
+                    "timed out finding prompt after sending input, input is greater than 4096 "
+                    "chars, try setting `use_compressed_parser` to False"
+                )
+                self.logger.info(msg)
+                raise ScrapliTimeout(msg) from exc
+            raise ScrapliTimeout from exc
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here

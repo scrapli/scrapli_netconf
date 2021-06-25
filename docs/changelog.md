@@ -20,6 +20,9 @@ CHANGELOG
   never used here in scrapli_netconf so should be a non issue, but will not be fully deprecated until 2022.01.30.
 - Re-fix #10... see #68 -- now there is a test with a comment so I don't break this again :)
 - Added `copy_config` method, thanks to Roman Dodin for adding this in scrapligo first!
+- Added handling/warning about `use_compressed_parser` if we catch a timeout exception when looking for prompt after 
+  writing inputs -- since I don't know (can't know?) which platforms may require this flag set to False this seems 
+  like a reasonable way to let users know and point them in the right direction to get things working!
 
 
 # 2021.01.30

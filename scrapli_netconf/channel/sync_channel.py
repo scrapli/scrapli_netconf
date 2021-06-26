@@ -305,7 +305,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes: bytes result of message sent to netconf server
 
         Raises:
-            N/A
+            ScrapliTimeout: re-raises channel timeouts with additional message if channel input may
+                be big enough to require setting `use_compressed_parser` to false -- note that this
+                has only been seen as an issue with NXOS so far.
 
         """
         bytes_final_channel_input = channel_input.encode()

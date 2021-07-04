@@ -66,9 +66,12 @@ def sync_conn_1_0(
     yield conn, device_type_1_0
     if conn.isalive():
         conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type_1_0:
+            # doubly true for xr vm!
+            time.sleep(2)
 
 
 @pytest.fixture(scope="function")
@@ -82,9 +85,12 @@ async def async_conn_1_0(test_devices_dict, real_valid_ssh_key_path, device_type
     yield conn, device_type_1_0
     if conn.isalive():
         await conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type_1_0:
+            # doubly true for xr vm!
+            time.sleep(2)
 
 
 @pytest.fixture(scope="function")
@@ -99,9 +105,12 @@ def sync_conn_1_1(
     yield conn, device_type_1_1
     if conn.isalive():
         conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type_1_1:
+            # doubly true for xr vm!
+            time.sleep(2)
 
 
 @pytest.fixture(scope="function")
@@ -115,9 +124,12 @@ async def async_conn_1_1(test_devices_dict, real_valid_ssh_key_path, device_type
     yield conn, device_type_1_1
     if conn.isalive():
         await conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type_1_1:
+            # doubly true for xr vm!
+            time.sleep(2)
 
 
 @pytest.fixture(scope="function")
@@ -137,9 +149,12 @@ def sync_conn(
     yield conn, device_type
     if conn.isalive():
         conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type:
+            # doubly true for xr vm!
+            time.sleep(2)
 
 
 @pytest.fixture(scope="function")
@@ -153,6 +168,9 @@ async def async_conn(test_devices_dict, real_valid_ssh_key_path, device_type, au
     yield conn, device_type
     if conn.isalive():
         await conn.close()
-        # at the very least iosxr vm seems to not handle back to back to back connections very well
-        # a small sleep seems to appease it
+        # slow down connections since the lab vms can be slow sometimes
         time.sleep(1)
+
+        if "cisco_iosxr" in device_type:
+            # doubly true for xr vm!
+            time.sleep(2)

@@ -1,6 +1,4 @@
 """scrapli_netconf.channel.async_channel"""
-import asyncio
-
 from scrapli.channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
@@ -43,49 +41,8 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         self.open()
 
         raw_server_capabilities = await self._get_server_capabilities()
-
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
-
-        await self._check_echo()
         await self._send_client_capabilities()
-
-    async def _check_echo(self) -> None:
-        """
-        Determine if inputs are "echoed" back on stdout
-
-        At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
-        input commands back to the client. In the case of "normal" scrapli netconf with the system
-        transport this happens anyway because we combine the stdin and stdout fds into a single pty,
-        however for other transports we have an actual stdin and stdout fd to read/write. It seems
-        that at the very least IOSXE with NETCONF 1.1 seems to want to echo inputs back onto to the
-        stdout for the channel. This is totally ok and we can deal with it, we just need to *know*
-        that it is happening and that gives us somewhat of a dilemma... we want to give the device
-        time to echo this data back to us, but we also dont want to just arbitrarily wait
-        (especially in the more common case where the device is *not* echoing anything back). So we
-        take 1/20th of the transport timeout and we wait that long to see -- if we get echo, we
-        return immediately of course, otherwise there is an unfortunate slight delay here :(
-
-        See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
-
-        Args:
-            N/A
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        try:
-            await asyncio.wait_for(self.read(), timeout=self._base_channel_args.timeout_ops / 20)
-            self.logger.info(
-                "Determined that server echoes inputs on stdout, setting `_server_echo` to `True`"
-            )
-            self._server_echo = True
-        except asyncio.TimeoutError:
-            pass
-        return
 
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
@@ -154,7 +111,9 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         """
         output = b""
 
-        if self._server_echo is False:
+        if self._server_echo is None or self._server_echo is False:
+            # if server_echo is `None` we dont know if the server echoes yet, so just return nothing
+            # if its False we know it doesnt echo and we can return empty byte string anyway
             return output
 
         if not channel_input:
@@ -195,6 +154,37 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             buf = buf.split(bytes_final_channel_input)[1]
 
         buf = await self._read_until_prompt(buf=buf)
+
+        if self._server_echo is None:
+            # At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT
+            # echo the input commands back to the client. In the case of "normal" scrapli netconf
+            # with the system transport this happens anyway because we combine the stdin and stdout
+            # fds into a single pty, however for other transports we have an actual stdin and
+            # stdout fd to read/write. It seems that at the very least IOSXE with NETCONF 1.1 seems
+            # to want to echo inputs back onto to the stdout for the channel. This is totally ok
+            # and we can deal with it, we just need to *know* that it is happening, so while the
+            # _server_echo attribute is still `None`, we can go ahead and see if the input we sent
+            # is in the output we read off the channel. If it is *not* we know the server does *not*
+            # echo and we can move on. If it *is* in the output, we know the server echoes, and we
+            # also have one additional step in that we need to read "until prompt" again in order to
+            # capture the reply to our rpc.
+            #
+            # See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
+
+            self.logger.debug("server echo is unset, determining if server echoes inputs now")
+
+            if bytes_final_channel_input in buf:
+                self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
+                self._server_echo = True
+
+                # since echo is True and we only read until our input (because our inputs always end
+                # with a "prompt" that we read until) we need to once again read until prompt, this
+                # read will read all the way up through the *reply* to the prompt at end of the
+                # reply message
+                buf = await self._read_until_prompt(buf=b"")
+            else:
+                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
+                self._server_echo = False
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here

@@ -46,26 +46,6 @@ class NetconfSystemTransport(SystemTransport):
         """
         self.open()
 
-    def _get_channel_fd(self) -> int:
-        """
-        Function to get the fd to check for "echo" with
-
-        Args:
-             N/A
-
-        Returns:
-            int: fd of the channel
-
-        Raises:
-            ScrapliConnectionNotOpened: if session is not assigned
-
-        """
-        if not self.session:
-            raise ScrapliConnectionNotOpened
-
-        channel_fd: int = self.session.fd
-        return channel_fd
-
     def write(self, channel_input: bytes) -> None:
         if not self.session:
             raise ScrapliConnectionNotOpened

@@ -145,6 +145,6 @@ def test_send_input_netconf(monkeypatch, dummy_conn):
     monkeypatch.setattr(
         "scrapli_netconf.transport.plugins.system.transport.NetconfSystemTransport.write", _write
     )
-
+    dummy_conn.channel._server_echo = True
     actual_buf = dummy_conn.channel.send_input_netconf(channel_input=channel_input)
     assert actual_buf == expected_buf

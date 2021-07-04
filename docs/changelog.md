@@ -23,6 +23,7 @@ CHANGELOG
 - Added handling/warning about `use_compressed_parser` if we catch a timeout exception when looking for prompt after 
   writing inputs -- since I don't know (can't know?) which platforms may require this flag set to False this seems 
   like a reasonable way to let users know and point them in the right direction to get things working!
+- Reswizzled the echo check to be like the scrapligo version -- much simpler/less moving parts, so should be good!
 
 
 # 2021.01.30

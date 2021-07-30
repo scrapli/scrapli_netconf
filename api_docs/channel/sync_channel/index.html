@@ -13,8 +13,10 @@
         <meta name="author" content="Carl Montanari">
       
       
-      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.0.4">
+        <link rel="canonical" href="https://scrapli.github.io/api_docs/channel/sync_channel/">
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.1">
     
     
       
@@ -22,10 +24,10 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.77f3fd56.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.1118c9be.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.7fa14f5b.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ba0d045b.min.css">
         
           
           
@@ -46,6 +48,8 @@
     
     
       
+
+
     
     
   </head>
@@ -57,8 +61,9 @@
     
     
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="black" data-md-color-accent="teal">
-      
   
+    
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -75,11 +80,9 @@
       
     </div>
     
-      
-
-<header class="md-header" data-md-component="header">
+      <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-header__button md-logo" aria-label="Scrapli Netconf" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -104,9 +107,8 @@
         </div>
       </div>
     </div>
-    <div class="md-header__options">
-      
-    </div>
+    
+    
     
       <label class="md-header__button md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
@@ -116,14 +118,18 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -171,11 +177,9 @@
                     
 
 
-
-
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf">
+    <a href="../../.." title="Scrapli Netconf" class="md-nav__button md-logo" aria-label="Scrapli Netconf" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -462,6 +466,7 @@
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
+      
         
       
       
@@ -476,6 +481,7 @@
       
         
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -910,6 +916,7 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
     
   
   
@@ -1015,15 +1022,12 @@
         <code class="python">
 """scrapli_netconf.channel.sync_channel"""
 import re
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from select import select
 from typing import Optional
 
 from scrapli.channel import Channel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
@@ -1065,10 +1069,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         self.open()
 
         raw_server_capabilities = self._get_server_capabilities()
-
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
-
-        self._check_echo()
         self._send_client_capabilities()
 
     @staticmethod
@@ -1153,71 +1154,6 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                     )
                     return
 
-    def __check_echo(self, echo_timeout: float) -> None:
-        """
-        Function to drop into check echo thread
-
-        In the case of asyncio we just have a coroutine on the loop to check if the device echos
-        the inputs back to us
-
-        Args:
-            echo_timeout: duration to check echo for
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        channel_fd = self.transport._get_channel_fd()  # type: ignore  # pylint: disable=W0212
-        start = datetime.now().timestamp()
-        while True:
-            fd_ready, _, _ = select([channel_fd], [], [], 0)
-            if channel_fd in fd_ready:
-                self.logger.debug("setting _server_echo to true")
-                self._server_echo = True
-                break
-            interval_end = datetime.now().timestamp()
-            if (interval_end - start) > echo_timeout:
-                self.logger.debug("setting _server_echo to false")
-                self._server_echo = False
-                break
-
-    def _check_echo(self) -> None:
-        """
-        Determine if inputs are "echoed" back on stdout
-
-        At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
-        input commands back to the client. In the case of "normal" scrapli netconf with the system
-        transport this happens anyway because we combine the stdin and stdout fds into a single pty,
-        however for other transports we have an actual stdin and stdout fd to read/write. It seems
-        that at the very least IOSXE with NETCONF 1.1 seems to want to echo inputs back onto to the
-        stdout for the channel. This is totally ok and we can deal with it, we just need to *know*
-        that it is happening and that gives us somewhat of a dilemma... we want to give the device
-        time to echo this data back to us, but we also dont want to just arbitrarily wait
-        (especially in the more common case where the device is *not* echoing anything back). So we
-        take 1/20th of the transport timeout and we wait that long to see -- if we get echo, we
-        return immediately of course, otherwise there is an unfortunate slight delay here :(
-
-        See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
-
-        Args:
-            N/A
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
-        # on the default scrapli timeout ops here
-        _timeout_ops = self._base_channel_args.timeout_ops or 30
-        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
-        pool.submit(self.__check_echo, _timeout_ops / 20)
-
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
     )
@@ -1267,15 +1203,8 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
-
-            # in case of "system" transport we'll always want to read off the hello message inputs
-            if self._server_echo is True:
-                self._read_until_input(channel_input=bytes_client_capabilities)
-
+            self._read_until_input(channel_input=bytes_client_capabilities)
             self.send_return()
-
-            while self._server_echo is None:
-                pass
 
     def _read_until_input(self, channel_input: bytes) -> bytes:
         """
@@ -1293,7 +1222,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         """
         output = b""
 
-        if self._server_echo is False:
+        if self._server_echo is None or self._server_echo is False:
+            # if server_echo is `None` we dont know if the server echoes yet, so just return nothing
+            # if its False we know it doesnt echo and we can return empty byte string anyway
             return output
 
         if not channel_input:
@@ -1320,7 +1251,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes: bytes result of message sent to netconf server
 
         Raises:
-            N/A
+            ScrapliTimeout: re-raises channel timeouts with additional message if channel input may
+                be big enough to require setting `use_compressed_parser` to false -- note that this
+                has only been seen as an issue with NXOS so far.
 
         """
         bytes_final_channel_input = channel_input.encode()
@@ -1333,7 +1266,48 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = self._read_until_prompt(buf=buf)
+        try:
+            buf = self._read_until_prompt(buf=buf)
+        except ScrapliTimeout as exc:
+            if len(channel_input) >= 4096:
+                msg = (
+                    "timed out finding prompt after sending input, input is greater than 4096 "
+                    "chars, try setting 'use_compressed_parser' to False"
+                )
+                self.logger.info(msg)
+                raise ScrapliTimeout(msg) from exc
+            raise ScrapliTimeout from exc
+
+        if self._server_echo is None:
+            # At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT
+            # echo the input commands back to the client. In the case of "normal" scrapli netconf
+            # with the system transport this happens anyway because we combine the stdin and stdout
+            # fds into a single pty, however for other transports we have an actual stdin and
+            # stdout fd to read/write. It seems that at the very least IOSXE with NETCONF 1.1 seems
+            # to want to echo inputs back onto to the stdout for the channel. This is totally ok
+            # and we can deal with it, we just need to *know* that it is happening, so while the
+            # _server_echo attribute is still `None`, we can go ahead and see if the input we sent
+            # is in the output we read off the channel. If it is *not* we know the server does *not*
+            # echo and we can move on. If it *is* in the output, we know the server echoes, and we
+            # also have one additional step in that we need to read "until prompt" again in order to
+            # capture the reply to our rpc.
+            #
+            # See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
+
+            self.logger.debug("server echo is unset, determining if server echoes inputs now")
+
+            if bytes_final_channel_input in buf:
+                self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
+                self._server_echo = True
+
+                # since echo is True and we only read until our input (because our inputs always end
+                # with a "prompt" that we read until) we need to once again read until prompt, this
+                # read will read all the way up through the *reply* to the prompt at end of the
+                # reply message
+                buf = self._read_until_prompt(buf=b"")
+            else:
+                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
+                self._server_echo = False
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here
@@ -1409,10 +1383,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         self.open()
 
         raw_server_capabilities = self._get_server_capabilities()
-
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
-
-        self._check_echo()
         self._send_client_capabilities()
 
     @staticmethod
@@ -1497,71 +1468,6 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                     )
                     return
 
-    def __check_echo(self, echo_timeout: float) -> None:
-        """
-        Function to drop into check echo thread
-
-        In the case of asyncio we just have a coroutine on the loop to check if the device echos
-        the inputs back to us
-
-        Args:
-            echo_timeout: duration to check echo for
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        channel_fd = self.transport._get_channel_fd()  # type: ignore  # pylint: disable=W0212
-        start = datetime.now().timestamp()
-        while True:
-            fd_ready, _, _ = select([channel_fd], [], [], 0)
-            if channel_fd in fd_ready:
-                self.logger.debug("setting _server_echo to true")
-                self._server_echo = True
-                break
-            interval_end = datetime.now().timestamp()
-            if (interval_end - start) > echo_timeout:
-                self.logger.debug("setting _server_echo to false")
-                self._server_echo = False
-                break
-
-    def _check_echo(self) -> None:
-        """
-        Determine if inputs are "echoed" back on stdout
-
-        At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
-        input commands back to the client. In the case of "normal" scrapli netconf with the system
-        transport this happens anyway because we combine the stdin and stdout fds into a single pty,
-        however for other transports we have an actual stdin and stdout fd to read/write. It seems
-        that at the very least IOSXE with NETCONF 1.1 seems to want to echo inputs back onto to the
-        stdout for the channel. This is totally ok and we can deal with it, we just need to *know*
-        that it is happening and that gives us somewhat of a dilemma... we want to give the device
-        time to echo this data back to us, but we also dont want to just arbitrarily wait
-        (especially in the more common case where the device is *not* echoing anything back). So we
-        take 1/20th of the transport timeout and we wait that long to see -- if we get echo, we
-        return immediately of course, otherwise there is an unfortunate slight delay here :(
-
-        See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
-
-        Args:
-            N/A
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        # for users who set timeout ops to 0 to avoid the overhead of the timeout threads we'll rely
-        # on the default scrapli timeout ops here
-        _timeout_ops = self._base_channel_args.timeout_ops or 30
-        pool = ThreadPoolExecutor(max_workers=1)  # pylint: disable=R1732
-        pool.submit(self.__check_echo, _timeout_ops / 20)
-
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
     )
@@ -1611,15 +1517,8 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
-
-            # in case of "system" transport we'll always want to read off the hello message inputs
-            if self._server_echo is True:
-                self._read_until_input(channel_input=bytes_client_capabilities)
-
+            self._read_until_input(channel_input=bytes_client_capabilities)
             self.send_return()
-
-            while self._server_echo is None:
-                pass
 
     def _read_until_input(self, channel_input: bytes) -> bytes:
         """
@@ -1637,7 +1536,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         """
         output = b""
 
-        if self._server_echo is False:
+        if self._server_echo is None or self._server_echo is False:
+            # if server_echo is `None` we dont know if the server echoes yet, so just return nothing
+            # if its False we know it doesnt echo and we can return empty byte string anyway
             return output
 
         if not channel_input:
@@ -1664,7 +1565,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes: bytes result of message sent to netconf server
 
         Raises:
-            N/A
+            ScrapliTimeout: re-raises channel timeouts with additional message if channel input may
+                be big enough to require setting `use_compressed_parser` to false -- note that this
+                has only been seen as an issue with NXOS so far.
 
         """
         bytes_final_channel_input = channel_input.encode()
@@ -1677,7 +1580,48 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = self._read_until_prompt(buf=buf)
+        try:
+            buf = self._read_until_prompt(buf=buf)
+        except ScrapliTimeout as exc:
+            if len(channel_input) >= 4096:
+                msg = (
+                    "timed out finding prompt after sending input, input is greater than 4096 "
+                    "chars, try setting 'use_compressed_parser' to False"
+                )
+                self.logger.info(msg)
+                raise ScrapliTimeout(msg) from exc
+            raise ScrapliTimeout from exc
+
+        if self._server_echo is None:
+            # At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT
+            # echo the input commands back to the client. In the case of "normal" scrapli netconf
+            # with the system transport this happens anyway because we combine the stdin and stdout
+            # fds into a single pty, however for other transports we have an actual stdin and
+            # stdout fd to read/write. It seems that at the very least IOSXE with NETCONF 1.1 seems
+            # to want to echo inputs back onto to the stdout for the channel. This is totally ok
+            # and we can deal with it, we just need to *know* that it is happening, so while the
+            # _server_echo attribute is still `None`, we can go ahead and see if the input we sent
+            # is in the output we read off the channel. If it is *not* we know the server does *not*
+            # echo and we can move on. If it *is* in the output, we know the server echoes, and we
+            # also have one additional step in that we need to read "until prompt" again in order to
+            # capture the reply to our rpc.
+            #
+            # See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
+
+            self.logger.debug("server echo is unset, determining if server echoes inputs now")
+
+            if bytes_final_channel_input in buf:
+                self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
+                self._server_echo = True
+
+                # since echo is True and we only read until our input (because our inputs always end
+                # with a "prompt" that we read until) we need to once again read until prompt, this
+                # read will read all the way up through the *reply* to the prompt at end of the
+                # reply message
+                buf = self._read_until_prompt(buf=b"")
+            else:
+                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
+                self._server_echo = False
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here
@@ -1756,7 +1700,9 @@ Raises:
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Send inputs to netconf server
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>Send inputs to netconf server
 
 Args:
     channel_input: string of the base xml message to send to netconf server
@@ -1765,7 +1711,9 @@ Returns:
     bytes: bytes result of message sent to netconf server
 
 Raises:
-    N/A
+    ScrapliTimeout: re-raises channel timeouts with additional message if channel input may
+        be big enough to require setting `use_compressed_parser` to false -- note that this
+        has only been seen as an issue with NXOS so far.
 </code></pre></div>
 </td></tr></table>
                 
@@ -1778,6 +1726,7 @@ Raises:
             </article>
           </div>
         </div>
+        
       </main>
       
         
@@ -1785,7 +1734,8 @@ Raises:
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../base_channel/" class="md-footer__link md-footer__link--prev" rel="prev">
+        
+        <a href="../base_channel/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Base Channel" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1800,7 +1750,8 @@ Raises:
         </a>
       
       
-        <a href="../async_channel/" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="../async_channel/" class="md-footer__link md-footer__link--next" aria-label="Next: Async Channel" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
@@ -1824,6 +1775,7 @@ Raises:
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs
         </a>
+        
       </div>
       
   <div class="md-footer-social">
@@ -1874,10 +1826,10 @@ Raises:
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../../assets/javascripts/workers/search.fb4a9340.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.53c85856.min.js", "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.9b151c6a.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.716f8af4.min.js"></script>
       
     
   </body>

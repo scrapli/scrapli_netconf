@@ -22,8 +22,6 @@ def test__authenticate_check_hello(dummy_conn, test_data):
 
 
 def test_channel_authenticate_netconf(monkeypatch, dummy_conn):
-    dummy_conn.channel._base_channel_args.comms_ansi = True
-
     _read_counter = 0
     _write_counter = 0
 
@@ -57,7 +55,9 @@ def test_channel_authenticate_netconf(monkeypatch, dummy_conn):
         pass
 
     monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
-    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
+    monkeypatch.setattr(
+        "scrapli_netconf.transport.plugins.system.transport.NetconfSystemTransport.write", _write
+    )
 
     dummy_conn.channel.channel_authenticate_netconf(
         auth_password="scrapli", auth_private_key_passphrase="scrapli_key"
@@ -74,8 +74,6 @@ def test_check_echo():
 
 def test_check_echo_system_transport(dummy_conn):
     assert dummy_conn.channel._server_echo is None
-    dummy_conn.channel._check_echo()
-    assert dummy_conn.channel._server_echo is True
 
 
 def test_get_server_capabilities(monkeypatch, dummy_conn):
@@ -144,7 +142,9 @@ def test_send_input_netconf(monkeypatch, dummy_conn):
         pass
 
     monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
-    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
-
+    monkeypatch.setattr(
+        "scrapli_netconf.transport.plugins.system.transport.NetconfSystemTransport.write", _write
+    )
+    dummy_conn.channel._server_echo = True
     actual_buf = dummy_conn.channel.send_input_netconf(channel_input=channel_input)
     assert actual_buf == expected_buf

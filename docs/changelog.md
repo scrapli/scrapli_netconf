@@ -1,6 +1,31 @@
 CHANGELOG
 =========
 
+## 2021.07.30
+
+- Force system transport ssh connections to allocate a tty (-tt); fixes issue that would prevent system transport 
+  from sending any command > 1024 chars.
+- Added `use_compressed_parser` argument to the driver constructor -- defaults to `True` which means we "squish" all 
+  the whitespace out of any input we get from the user before sending it to the netconf server, generally this is no 
+  problem, but some devices (looking at you NX-OS!) lock up and stop reading at some character counts (4096 in NX-OS 
+  it seems) causing the connection to timeout and die. By *not* "squishing" whitespace out this does not happen.
+- Fixed some typing issues and pinned to scrapli pre-release to take advantage of updated typing/packaging setup  
+- Deprecate `filters` argument on `get_config` -- will be supported (by decorator) until 2022.01.30 (and 
+  pre-releases). This was done to make the arguments consistent for `get`, `get_config`, and `rpc`.
+- Better handling of multiple filter elements in a filter string
+- Smarter message building -- previously most of the final bytes payload that we send to the servers got built in 
+  the base driver class, and then some more (1.1 encoding) got added in the channel base class -- silly! Fixed this, 
+  so it is all done in the driver which eliminated a bunch of duplication (yay!).
+- Deprecating `comms_ansi` -- see also scrapli changelog for this release (2021.07.30) for more details. This was 
+  never used here in scrapli_netconf so should be a non issue, but will not be fully deprecated until 2022.01.30.
+- Re-fix #10... see #68 -- now there is a test with a comment so I don't break this again :)
+- Added `copy_config` method, thanks to Roman Dodin for adding this in scrapligo first!
+- Added handling/warning about `use_compressed_parser` if we catch a timeout exception when looking for prompt after 
+  writing inputs -- since I don't know (can't know?) which platforms may require this flag set to False this seems 
+  like a reasonable way to let users know and point them in the right direction to get things working!
+- Reswizzled the echo check to be like the scrapligo version -- much simpler/less moving parts, so should be good!
+
+
 # 2021.01.30
 
 - Big overhaul in line with the scrapli core overhaul... mostly this was about reconciliation of the channel and 

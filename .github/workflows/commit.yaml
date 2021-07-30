@@ -47,15 +47,15 @@ jobs:
           TERM: xterm
         run: python -m nox -s unit_tests
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2.0.2
 
   build_posix:
     runs-on: ${{ matrix.os }}
     strategy:
-      max-parallel: 9
+      max-parallel: 12
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [3.6, 3.7, 3.8, 3.9]
+        version: [3.6, 3.7, 3.8, 3.9, 3.10.0-beta.4]
     steps:
       - uses: actions/checkout@v2
       - name: set up python ${{ matrix.version }}
@@ -67,8 +67,8 @@ jobs:
         # version we are targeting with nox, while still having versions like 3.9.0a4
         run: |
           echo "FRIENDLY_PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")" >> $GITHUB_ENV
-      - name: install libxml2 and libxslt seems to only be needed for 3.9 image for some reason
-        if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9'
+      - name: install libxml2 and libxslt seems to only be needed for 3.9+ image for some reason
+        if: matrix.os == 'ubuntu-latest' && matrix.version == '3.9' || matrix.os == 'ubuntu-latest' && matrix.version == '3.10.0-beta.4'
         run: |
           sudo apt install libxml2-dev
           sudo apt install libxslt-dev
@@ -82,3 +82,13 @@ jobs:
           # needed to make the terminal a tty (i think? without this system ssh is super broken)
           TERM: xterm
         run: python -m nox -p $FRIENDLY_PYTHON_VERSION -k "not darglint"
+
+  docs-test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker run -v $(pwd):/docs --entrypoint "" squidfunk/mkdocs-material:latest ash -c 'pip install mdx_gh_links && mkdocs build --clean --strict'
+      - name: htmltest
+        run: |
+          curl https://htmltest.wjdp.uk | bash
+          ./bin/htmltest -c docs/htmltest.yml

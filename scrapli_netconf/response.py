@@ -26,6 +26,9 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
 class NetconfResponse(Response):
+    # intentionally overriding base class' list of strings for failed when contains
+    failed_when_contains: List[bytes]  # type: ignore[assignment]
+
     def __init__(
         self,
         netconf_version: NetconfVersion,

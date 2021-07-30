@@ -55,7 +55,7 @@ See the [docs](https://scrapli.github.io/scrapli_netconf/user_guide/installation
 
 
 
-## A simple Example
+## A Simple Example
 
 ```python
 from scrapli_netconf.driver import NetconfDriver

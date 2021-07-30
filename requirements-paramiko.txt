@@ -1,1 +1,1 @@
-scrapli[paramiko]>=2021.01.30
+paramiko>=2.6.0,<3.0.0

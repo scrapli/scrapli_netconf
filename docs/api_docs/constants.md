@@ -32,6 +32,11 @@ scrapli_netconf.constants
 from enum import Enum
 
 
+class XmlParserVersion(Enum):
+    COMPRESSED_PARSER = "flat"
+    STANDARD_PARSER = "standard"
+
+
 class NetconfVersion(Enum):
     UNKNOWN = "unknown"
     VERSION_1_0 = "1.0"
@@ -57,6 +62,7 @@ class NetconfClientCapabilities(Enum):
         </code>
     </pre>
 </details>
+
 
 
 
@@ -160,3 +166,42 @@ class NetconfVersion(Enum):
 
     
 `VERSION_1_1`
+
+
+
+
+
+
+### XmlParserVersion
+
+
+```text
+An enumeration.
+```
+
+<details class="source">
+    <summary>
+        <span>Expand source code</span>
+    </summary>
+    <pre>
+        <code class="python">
+class XmlParserVersion(Enum):
+    COMPRESSED_PARSER = "flat"
+    STANDARD_PARSER = "standard"
+        </code>
+    </pre>
+</details>
+
+
+#### Ancestors (in MRO)
+- enum.Enum
+#### Class variables
+
+    
+`COMPRESSED_PARSER`
+
+
+
+
+    
+`STANDARD_PARSER`

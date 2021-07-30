@@ -44,6 +44,7 @@ class CapabilityNotSupported(ScrapliException):
 
 
 
+
 ## Classes
 
 ### CapabilityNotSupported

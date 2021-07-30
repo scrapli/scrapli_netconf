@@ -78,26 +78,10 @@ class NetconfParamikoTransport(ParamikoTransport):
         # we *do* still want it to be a pty though!
         self.session_channel.get_pty()
         self.session_channel.invoke_subsystem("netconf")
-
-    def _get_channel_fd(self) -> int:
-        """
-        Function to get the fd to check for "echo" with
-
-        Args:
-             N/A
-
-        Returns:
-            int: fd of the channel
-
-        Raises:
-            N/A
-
-        """
-        channel_fd: int = self.session_channel.fileno()
-        return channel_fd
         </code>
     </pre>
 </details>
+
 
 
 
@@ -159,23 +143,6 @@ class NetconfParamikoTransport(ParamikoTransport):
         # we *do* still want it to be a pty though!
         self.session_channel.get_pty()
         self.session_channel.invoke_subsystem("netconf")
-
-    def _get_channel_fd(self) -> int:
-        """
-        Function to get the fd to check for "echo" with
-
-        Args:
-             N/A
-
-        Returns:
-            int: fd of the channel
-
-        Raises:
-            N/A
-
-        """
-        channel_fd: int = self.session_channel.fileno()
-        return channel_fd
         </code>
     </pre>
 </details>

@@ -1,18 +1,14 @@
 """scrapli_netconf.channel.sync_channel"""
 import re
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
-from select import select
 from typing import Optional
 
 from scrapli.channel import Channel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import ChannelTimeout
-from scrapli.exceptions import ScrapliAuthenticationFailed
+from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliTimeout
 from scrapli.transport.base import Transport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
-from scrapli_netconf.transport.plugins.system.transport import NetconfSystemTransport
 
 HELLO_MATCH = re.compile(pattern=rb"<(\w+\:){0,1}hello", flags=re.I)
 
@@ -47,11 +43,11 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
+        # open in scrapli core is where we open channel log (if applicable), do that
+        self.open()
+
         raw_server_capabilities = self._get_server_capabilities()
-
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
-
-        self._check_echo()
         self._send_client_capabilities()
 
     @staticmethod
@@ -99,9 +95,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         passphrase_count = 0
         authenticate_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while True:
                 buf = self.read()
 
@@ -138,69 +132,6 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                     )
                     return
 
-    def __check_echo(self, echo_timeout: float) -> None:
-        """
-        Function to drop into check echo thread
-
-        In the case of asyncio we just have a coroutine on the loop to check if the device echos
-        the inputs back to us
-
-        Args:
-            echo_timeout: duration to check echo for
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        channel_fd = self.transport._get_channel_fd()  # pylint: disable=W0212
-        start = datetime.now().timestamp()
-        while True:
-            fd_ready, _, _ = select([channel_fd], [], [], 0)
-            if channel_fd in fd_ready:
-                self._server_echo = True
-                break
-            interval_end = datetime.now().timestamp()
-            if (interval_end - start) > echo_timeout:
-                self._server_echo = False
-                break
-
-    def _check_echo(self) -> None:
-        """
-        Determine if inputs are "echoed" back on stdout
-
-        At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT echo the
-        input commands back to the client. In the case of "normal" scrapli netconf with the system
-        transport this happens anyway because we combine the stdin and stdout fds into a single pty,
-        however for other transports we have an actual stdin and stdout fd to read/write. It seems
-        that at the very least IOSXE with NETCONF 1.1 seems to want to echo inputs back onto to the
-        stdout for the channel. This is totally ok and we can deal with it, we just need to *know*
-        that it is happening and that gives us somewhat of a dilemma... we want to give the device
-        time to echo this data back to us, but we also dont want to just arbitrarily wait
-        (especially in the more common case where the device is *not* echoing anything back). So we
-        take 1/20th of the transport timeout and we wait that long to see -- if we get echo, we
-        return immediately of course, otherwise there is an unfortunate slight delay here :(
-
-        See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
-
-        Args:
-            N/A
-
-        Returns:
-            None
-
-        Raises:
-            N/A
-
-        """
-        if isinstance(self.transport, NetconfSystemTransport):
-            self._server_echo = True
-            return
-        pool = ThreadPoolExecutor(max_workers=1)
-        pool.submit(self.__check_echo, self._base_channel_args.timeout_ops / 20)
-
     @ChannelTimeout(
         "timed out determining if session is authenticated/getting server capabilities",
     )
@@ -223,9 +154,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # reset this to empty to avoid any confusion now that we are moving on
         self._capabilities_buf = b""
 
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             while b"]]>]]>" not in capabilities_buf:
                 capabilities_buf += self.read()
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
@@ -248,21 +177,12 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             N/A
 
         """
-        # not sure why scrapli core is happy w/ the type stubs for all this but scrapli netconf
-        # is furious... fix this at some point!
-        with self._channel_lock():  # type: ignore
+        with self._channel_lock():
             bytes_client_capabilities = self._pre_send_client_capabilities(
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
-
-            # in case of "system" transport we'll always want to read off the hello message inputs
-            if self._server_echo is True:
-                self._read_until_input(channel_input=bytes_client_capabilities)
-
+            self._read_until_input(channel_input=bytes_client_capabilities)
             self.send_return()
-
-            while self._server_echo is None:
-                pass
 
     def _read_until_input(self, channel_input: bytes) -> bytes:
         """
@@ -280,7 +200,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         """
         output = b""
 
-        if self._server_echo is False:
+        if self._server_echo is None or self._server_echo is False:
+            # if server_echo is `None` we dont know if the server echoes yet, so just return nothing
+            # if its False we know it doesnt echo and we can return empty byte string anyway
             return output
 
         if not channel_input:
@@ -307,22 +229,63 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             bytes: bytes result of message sent to netconf server
 
         Raises:
-            N/A
+            ScrapliTimeout: re-raises channel timeouts with additional message if channel input may
+                be big enough to require setting `use_compressed_parser` to false -- note that this
+                has only been seen as an issue with NXOS so far.
 
         """
-        final_channel_input = self._build_message(channel_input)
-        bytes_final_channel_input = final_channel_input.encode()
+        bytes_final_channel_input = channel_input.encode()
 
-        buf, _ = super().send_input(
-            channel_input=final_channel_input, strip_prompt=False, eager=True
-        )
+        buf: bytes
+        buf, _ = super().send_input(channel_input=channel_input, strip_prompt=False, eager=True)
 
         if bytes_final_channel_input in buf:
             # if we got the input AND the rpc-reply we can strip out our inputs so we just have the
             # reply remaining
             buf = buf.split(bytes_final_channel_input)[1]
 
-        buf = self._read_until_prompt(buf=buf)
+        try:
+            buf = self._read_until_prompt(buf=buf)
+        except ScrapliTimeout as exc:
+            if len(channel_input) >= 4096:
+                msg = (
+                    "timed out finding prompt after sending input, input is greater than 4096 "
+                    "chars, try setting 'use_compressed_parser' to False"
+                )
+                self.logger.info(msg)
+                raise ScrapliTimeout(msg) from exc
+            raise ScrapliTimeout from exc
+
+        if self._server_echo is None:
+            # At least per early drafts of the netconf over ssh rfcs the netconf servers MUST NOT
+            # echo the input commands back to the client. In the case of "normal" scrapli netconf
+            # with the system transport this happens anyway because we combine the stdin and stdout
+            # fds into a single pty, however for other transports we have an actual stdin and
+            # stdout fd to read/write. It seems that at the very least IOSXE with NETCONF 1.1 seems
+            # to want to echo inputs back onto to the stdout for the channel. This is totally ok
+            # and we can deal with it, we just need to *know* that it is happening, so while the
+            # _server_echo attribute is still `None`, we can go ahead and see if the input we sent
+            # is in the output we read off the channel. If it is *not* we know the server does *not*
+            # echo and we can move on. If it *is* in the output, we know the server echoes, and we
+            # also have one additional step in that we need to read "until prompt" again in order to
+            # capture the reply to our rpc.
+            #
+            # See: https://tools.ietf.org/html/draft-ietf-netconf-ssh-02 (search for "echo")
+
+            self.logger.debug("server echo is unset, determining if server echoes inputs now")
+
+            if bytes_final_channel_input in buf:
+                self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
+                self._server_echo = True
+
+                # since echo is True and we only read until our input (because our inputs always end
+                # with a "prompt" that we read until) we need to once again read until prompt, this
+                # read will read all the way up through the *reply* to the prompt at end of the
+                # reply message
+                buf = self._read_until_prompt(buf=b"")
+            else:
+                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
+                self._server_echo = False
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here

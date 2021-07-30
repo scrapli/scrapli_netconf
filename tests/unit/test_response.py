@@ -211,8 +211,11 @@ def test_response_init(response_setup):
     assert str(response.start_time)[:-7] == response_start_time
     assert response.failed is True
     assert bool(response) is True
-    assert repr(response) == "Response <Success: False>"
-    assert str(response) == "Response <Success: False>"
+    assert (
+        repr(response)
+        == "NetconfResponse(host='localhost',channel_input='<something/>',textfsm_platform='',genie_platform='',failed_when_contains=[b'<rpc-error>'])"
+    )
+    assert str(response) == "NetconfResponse <Success: False>"
     assert response.failed_when_contains == [b"<rpc-error>"]
     with pytest.raises(ScrapliCommandFailure):
         response.raise_for_status()

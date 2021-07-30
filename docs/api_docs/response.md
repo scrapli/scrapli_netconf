@@ -56,6 +56,9 @@ PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
 class NetconfResponse(Response):
+    # intentionally overriding base class' list of strings for failed when contains
+    failed_when_contains: List[bytes]  # type: ignore[assignment]
+
     def __init__(
         self,
         netconf_version: NetconfVersion,
@@ -372,6 +375,7 @@ class NetconfResponse(Response):
 
 
 
+
 ## Classes
 
 ### NetconfResponse
@@ -407,6 +411,9 @@ Raises:
     <pre>
         <code class="python">
 class NetconfResponse(Response):
+    # intentionally overriding base class' list of strings for failed when contains
+    failed_when_contains: List[bytes]  # type: ignore[assignment]
+
     def __init__(
         self,
         netconf_version: NetconfVersion,
@@ -724,6 +731,13 @@ class NetconfResponse(Response):
 
 #### Ancestors (in MRO)
 - scrapli.response.Response
+#### Class variables
+
+    
+`failed_when_contains: List[bytes]`
+
+
+
 #### Methods
 
     
@@ -749,7 +763,7 @@ Raises:
     
 
 ##### get_xml_elements
-`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f82c0169d40>]`
+`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f85c00de860>]`
 
 ```text
 Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing

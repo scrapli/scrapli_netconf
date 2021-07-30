@@ -1,15 +1,15 @@
 """basic_usage_junos"""
-from scrapli_netconf.driver import NetconfScrape
+from scrapli_netconf import NetconfDriver
 
 JUNOS_DEVICE = {
     "host": "172.18.0.15",
+    "port": 22,
     "auth_username": "vrnetlab",
     "auth_password": "VR-netlab9",
     "auth_strict_key": False,
     "transport": "system",
     "timeout_ops": 10,
     "timeout_transport": 10,
-    "port": 22,
 }
 
 
@@ -74,7 +74,7 @@ EDIT_MULTIPLE = """
 def main():
     """Basic use example"""
     # create scrapli_netconf connection just like with scrapli, open the connection
-    conn = NetconfScrape(**JUNOS_DEVICE)
+    conn = NetconfDriver(**JUNOS_DEVICE)
     conn.open()
 
     # lock the candidate config before starting because why not
@@ -89,10 +89,8 @@ def main():
     # print xml element result
     print(result.xml_result)
 
-    # get the whole config, but apply some filters (subtree filters) in the case of junos since its
-    # just a config, not a model and we are filtering for things under `configuration` this has to
-    # live in a single filter unlike iosxr
-    result = conn.get_config(filters=CONFIG_FILTER)
+    # get the whole config, but apply some filters (subtree filters)
+    result = conn.get_config(filter_=CONFIG_FILTER)
     print(result.result)
 
     # get some operational data via "rpc" for juniper style rpc calls; note the `filter_` to

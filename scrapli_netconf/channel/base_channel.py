@@ -6,7 +6,7 @@ from typing import List, Optional
 from lxml import etree
 
 from scrapli.channel.base_channel import BaseChannel
-from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion
+from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
 
@@ -15,6 +15,7 @@ class NetconfBaseChannelArgs:
     netconf_version: NetconfVersion
     server_capabilities: Optional[List[str]] = None
     client_capabilities: NetconfClientCapabilities = NetconfClientCapabilities.UNKNOWN
+    xml_parser: XmlParserVersion = XmlParserVersion.COMPRESSED_PARSER
 
 
 class BaseNetconfChannel(BaseChannel):
@@ -32,7 +33,7 @@ class BaseNetconfChannel(BaseChannel):
 
         Raises:
             CapabilityNotSupported: if user has provided a preferred netconf version but it is not
-                available in servers offered capabilites
+                available in servers offered capabilities
 
         """
         server_capabilities = self._parse_server_capabilities(
@@ -123,28 +124,6 @@ class BaseNetconfChannel(BaseChannel):
         _ = strip_prompt
         return buf
 
-    def _build_message(self, channel_input: str) -> str:
-        """
-        Build formatted message to send to netconf server
-
-        Args:
-            channel_input: string of the base xml message to send to netconf server
-
-        Returns:
-            str: string of formatted message to send to netconf server
-
-        Raises:
-            N/A
-
-        """
-        if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_0:
-            return channel_input
-
-        # format message for chunk (netconf 1.1) style message
-        msg_template = "#{}\n{}\n##"
-        final_channel_input = msg_template.format(len(channel_input), channel_input)
-        return final_channel_input
-
     def _pre_send_client_capabilities(
         self, client_capabilities: NetconfClientCapabilities
     ) -> bytes:
@@ -161,9 +140,8 @@ class BaseNetconfChannel(BaseChannel):
             N/A
 
         """
-        self.logger.info("Sending client capabilities")
+        self.logger.info("sending client capabilities")
         bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
-        self.logger.debug(f"Attempting to send capabilities: {client_capabilities}")
+        self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
-        self.logger.debug(f"Write: {repr(client_capabilities.value)}")
         return bytes_client_capabilities

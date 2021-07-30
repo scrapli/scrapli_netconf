@@ -79,26 +79,10 @@ class NetconfSsh2Transport(Ssh2Transport):
         # we *do* still want it to be a pty though!
         self.session_channel.pty()
         self.session_channel.subsystem("netconf")
-
-    def _get_channel_fd(self) -> int:
-        """
-        Function to get the fd to check for "echo" with
-
-        Args:
-             N/A
-
-        Returns:
-            int: fd of the channel
-
-        Raises:
-            N/A
-
-        """
-        channel_fd: int = self.socket.sock.fileno()
-        return channel_fd
         </code>
     </pre>
 </details>
+
 
 
 
@@ -161,23 +145,6 @@ class NetconfSsh2Transport(Ssh2Transport):
         # we *do* still want it to be a pty though!
         self.session_channel.pty()
         self.session_channel.subsystem("netconf")
-
-    def _get_channel_fd(self) -> int:
-        """
-        Function to get the fd to check for "echo" with
-
-        Args:
-             N/A
-
-        Returns:
-            int: fd of the channel
-
-        Raises:
-            N/A
-
-        """
-        channel_fd: int = self.socket.sock.fileno()
-        return channel_fd
         </code>
     </pre>
 </details>

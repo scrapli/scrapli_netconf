@@ -1,8 +1,8 @@
 ---
 site_name: Scrapli Netconf
-site_url: https://github.com/scrapli/scrapli_netconf
-site_description: "Scrapli Netconf: fast, flexible, sync or async, Netconf client built on top of scrapli"
+site_description: Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli
 site_author: Carl Montanari
+site_url: https://scrapli.github.io/
 
 repo_name: scrapli/scrapli_netconf
 repo_url: https://github.com/scrapli/scrapli_netconf
@@ -47,10 +47,11 @@ nav:
     - Response: api_docs/response.md
   - Changelog: changelog.md
   - More Scrapli:
-    - Nornir Scrapli: more_scrapli/nornir_scrapli.md
-    - Scrapli Community: more_scrapli/scrapli_community.md
     - Scrapli: more_scrapli/scrapli.md
-    - Scrapli Stubs: more_scrapli/scrapli_stubs.md
+    - Scrapli Community: more_scrapli/scrapli_community.md
+    - Scrapli Cfg: more_scrapli/scrapli_cfg.md
+    - Scrapli Replay: more_scrapli/scrapli_replay.md
+    - Nornir Scrapli: more_scrapli/nornir_scrapli.md
   - Other:
     - Contributing: about/contributing.md
     - Code of Conduct: about/code_of_conduct.md
@@ -64,11 +65,15 @@ markdown_extensions:
     - mdx_gh_links:
         user: mkdocs
         repo: mkdocs
+    - pymdownx.superfences
+    - pymdownx.highlight:
+        use_pygments: True
+        linenums: True
 
 extra:
     social:
         - icon: fontawesome/brands/github-alt
-          link: 'https://github.com/carlmontanari/scrapli'
+          link: 'https://github.com/carlmontanari/'
         - icon: fontawesome/brands/twitter
           link: 'https://twitter.com/carlrmontanari'
         - icon: fontawesome/brands/linkedin

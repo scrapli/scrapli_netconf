@@ -116,20 +116,6 @@ def test_parse_server_capabilities_exception(dummy_conn):
     assert "failed to parse server capabilities" in str(exc.value)
 
 
-@pytest.mark.parametrize(
-    "test_data",
-    [
-        (NetconfVersion.VERSION_1_0, "<tacocat/>", "<tacocat/>"),
-        (NetconfVersion.VERSION_1_1, "<tacocat/>", "#10\n<tacocat/>\n##"),
-    ],
-    ids=["1.0", "1.1"],
-)
-def test_build_message(dummy_conn, test_data):
-    dummy_conn.netconf_version, channel_input, expected_final_channel_input = test_data
-    final_channel_input = dummy_conn.channel._build_message(channel_input=channel_input)
-    assert final_channel_input == expected_final_channel_input
-
-
 def test_process_output(dummy_conn):
     output = dummy_conn.channel._process_output(buf=b"tacocat", strip_prompt=True)
     assert output == b"tacocat"
@@ -147,7 +133,9 @@ def test_pre_send_client_capabilities(monkeypatch, dummy_conn):
 </hello>]]>]]>"""
         )
 
-    monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.write", _write)
+    monkeypatch.setattr(
+        "scrapli_netconf.transport.plugins.system.transport.NetconfSystemTransport.write", _write
+    )
 
     dummy_conn.channel._pre_send_client_capabilities(
         client_capabilities=NetconfClientCapabilities.CAPABILITIES_1_0

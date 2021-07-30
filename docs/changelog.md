@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-## (in development) 2021.07.30
+## 2021.07.30
 
 - Force system transport ssh connections to allocate a tty (-tt); fixes issue that would prevent system transport 
   from sending any command > 1024 chars.

@@ -369,6 +369,26 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
+    def copy_config(self, source: str, target: str) -> NetconfResponse:
+        """
+        Netconf "copy-config" operation
+
+        Args:
+            source: configuration, url, or datastore to copy into the target datastore
+            target: destination to copy the source to
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
+        response = self._pre_copy_config(source=source, target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response.record_response(raw_response)
+        return response
+
 
 # remove in future releases, retaining this to not break end user scripts for now
 class NetconfScrape(NetconfDriver):
@@ -810,6 +830,26 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
+
+    def copy_config(self, source: str, target: str) -> NetconfResponse:
+        """
+        Netconf "copy-config" operation
+
+        Args:
+            source: configuration, url, or datastore to copy into the target datastore
+            target: destination to copy the source to
+
+        Returns:
+            NetconfResponse: scrapli_netconf NetconfResponse object
+
+        Raises:
+            N/A
+
+        """
+        response = self._pre_copy_config(source=source, target=target)
+        raw_response = self.channel.send_input_netconf(response.channel_input)
+        response.record_response(raw_response)
+        return response
         </code>
     </pre>
 </details>
@@ -840,6 +880,27 @@ Netconf commit config operation
 
 Args:
     N/A
+
+Returns:
+    NetconfResponse: scrapli_netconf NetconfResponse object
+
+Raises:
+    N/A
+```
+
+
+
+    
+
+##### copy_config
+`copy_config(self, source: str, target: str) ‑> scrapli_netconf.response.NetconfResponse`
+
+```text
+Netconf "copy-config" operation
+
+Args:
+    source: configuration, url, or datastore to copy into the target datastore
+    target: destination to copy the source to
 
 Returns:
     NetconfResponse: scrapli_netconf NetconfResponse object

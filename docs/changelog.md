@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+## (in development) 2022.01.30
+
+- Removed deprecated `filters` argument
+- Removed deprecated `NetconfScrape` and `AsyncNetconfScrape`
+
+
 ## 2021.07.30
 
 - Force system transport ssh connections to allocate a tty (-tt); fixes issue that would prevent system transport 

@@ -1,14 +1,7 @@
 """scrapli_netconf"""
-from scrapli_netconf.driver import (
-    AsyncNetconfDriver,
-    AsyncNetconfScrape,
-    NetconfDriver,
-    NetconfScrape,
-)
+from scrapli_netconf.driver import AsyncNetconfDriver, NetconfDriver
 
 __all__ = (
-    "NetconfScrape",
-    "AsyncNetconfScrape",
     "NetconfDriver",
     "AsyncNetconfDriver",
 )

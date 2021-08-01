@@ -1,13 +1,11 @@
 """scrapli_netconf.driver.sync_driver"""
 from typing import Any, Callable, Dict, List, Optional, Union
-from warnings import warn
 
 from lxml.etree import _Element
 
 from scrapli import Driver
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
 from scrapli_netconf.channel.sync_channel import NetconfChannel
-from scrapli_netconf.decorators import DeprecateFilters
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
@@ -150,7 +148,6 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    @DeprecateFilters()
     def get_config(
         self,
         source: str = "running",
@@ -358,19 +355,3 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
-
-
-# remove in future releases, retaining this to not break end user scripts for now
-class NetconfScrape(NetconfDriver):
-    warning = (
-        "`NetconfScrape` has been renamed `NetconfDriver`, `NetconfScrape` will be deprecated in "
-        "future releases!"
-    )
-
-    def __init_subclass__(cls) -> None:
-        """Deprecate NetconfScrape"""
-        warn(cls.warning, FutureWarning)
-
-    def __new__(cls, *args, **kwargs) -> "NetconfDriver":  # type: ignore
-        warn(cls.warning, FutureWarning)
-        return NetconfDriver(*args, **kwargs)

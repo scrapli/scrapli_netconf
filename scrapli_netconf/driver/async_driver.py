@@ -1,13 +1,11 @@
 """scrapli_netconf.driver.async_driver"""
 from typing import Any, Callable, Dict, List, Optional, Union
-from warnings import warn
 
 from lxml.etree import _Element
 
 from scrapli import AsyncDriver
 from scrapli_netconf.channel.async_channel import AsyncNetconfChannel
 from scrapli_netconf.channel.base_channel import NetconfBaseChannelArgs
-from scrapli_netconf.decorators import DeprecateFilters
 from scrapli_netconf.driver.base_driver import NetconfBaseDriver
 from scrapli_netconf.response import NetconfResponse
 
@@ -140,7 +138,6 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    @DeprecateFilters()
     async def get_config(
         self,
         source: str = "running",
@@ -348,19 +345,3 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         raw_response = await self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response
-
-
-# remove in future releases, retaining this to not break end user scripts for now
-class AsyncNetconfScrape(AsyncNetconfDriver):
-    warning = (
-        "`NetconfScrape` has been renamed `NetconfDriver`, `NetconfScrape` will be deprecated in "
-        "future releases!"
-    )
-
-    def __init_subclass__(cls) -> None:
-        """Deprecate AsyncNetconfScrape"""
-        warn(cls.warning, DeprecationWarning, 2)
-
-    def __new__(cls, *args, **kwargs) -> "AsyncNetconfDriver":  # type: ignore
-        warn(cls.warning, DeprecationWarning, 2)
-        return AsyncNetconfDriver(*args, **kwargs)

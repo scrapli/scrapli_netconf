@@ -164,7 +164,7 @@ def test_edit_config_and_discard(sync_conn, test_cases, config_replacer_dict, xm
     validate_filter = test_cases[device_type]["edit_config"]["validate_config_filter"]
 
     conn.open()
-    conn.get_config()
+
     target = "candidate"
     response = conn.edit_config(config=config, target=target)
     assert isinstance(response, NetconfResponse)

@@ -45,7 +45,4 @@ class NetconfSsh2Transport(Ssh2Transport):
             raise ScrapliConnectionNotOpened
 
         self.session_channel = self.session.open_session()
-        # unlike "normal" ssh2 -- we do *not* need to enable the "shell" on the channel...
-        # we *do* still want it to be a pty though!
-        self.session_channel.pty()
         self.session_channel.subsystem("netconf")

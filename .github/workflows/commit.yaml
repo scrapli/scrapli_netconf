@@ -72,8 +72,9 @@ jobs:
         run: |
           sudo apt install libxml2-dev
           sudo apt install libxslt-dev
-      - name: test macos fix
-        if: matrix.os == 'macos-latest' && matrix.version == '3.6'
+      - name: ensure openssl installed for macos
+        # openssl missing/being linked incorrectly causes ssh2-python install failures
+        if: matrix.os == 'macos-latest'
         run: |
           brew install openssl
       - name: setup test env

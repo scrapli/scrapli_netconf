@@ -144,6 +144,52 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+Asyncssh transport plugin.
+
+Important note: some ssh servers may refuse connections if too many ssh host key algorithms
+are passed to it during the connection opening -- Asyncssh sends a bunch by default! If you
+encounter this issue, you can simply update your SSH config file to set a smaller (or one)
+number of ssh host key algorithms to work around this like so:
+
+```
+Host *
+    HostKeyAlgorithms ssh-rsa
+```
+
+Thank you to @davaeron [https://github.com/davaeron] for reporting this in #173, see also
+asyncssh #323 here: https://github.com/ronf/asyncssh/issues/323.
+
+This transport supports some additional `transport_options` to control behavior --
+`asyncssh` is a dictionary that contains options that are passed directly to asyncssh during
+connection creation, you can find the SSH Client options of asyncssh here:
+https://asyncssh.readthedocs.io/en/latest/api.html#sshclientconnectionoptions. Below is an
+example of passing in options to modify kex and encryption algorithms
+
+```
+device = {
+    "host": "localhost",
+    "transport_options": {
+        "asyncssh": {
+            "kex_algs": ["diffie-hellman-group14-sha1", "diffie-hellman-group1-sha1"],
+            "encryption_algs": ["aes256-cbc", "aes192-cbc", "aes256-ctr", "aes192-ctr"],
+        }
+    },
+    "platform": "cisco_iosxe"
+}
+
+conn = Scrapli(**device)
+```
+
+Args:
+    base_transport_args: scrapli base transport plugin arguments
+    plugin_transport_args: asyncssh ssh specific transport plugin arguments
+
+Returns:
+    N/A
+
+Raises:
+    N/A
 ```
 
 <details class="source">

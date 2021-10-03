@@ -50,11 +50,17 @@ class NetconfSystemTransport(SystemTransport):
 
     def _build_open_cmd(self) -> None:
         super()._build_open_cmd()
-        # adding `-tt` forces tty allocation which lets us send a string greater than 1024 chars;
-        # without this we are basically capped at 1024 chars and scrapli will/the connection will
-        # die. it *may* be possible to alter ptyprocess vendor'd code to add `stty -icanon` which
-        # should also have a similar affect, though this seems simpler.
-        self.open_cmd.extend(["-tt"])
+
+        # JunOS devices do not allocate pty on port 830 on some (all?) platforms, users can cause
+        # system transport to *not* force the pty (forcing pty is *default behavior*) by setting the
+        # transport arg `netconf_force_pty` to `False`. This defaults to `True` (forcing a pty) as
+        # that has been the default behavior for a while and seems to work in almost all cases,
+        # additionally without this -- in pytest (only in pytest for some reason?) output seems to
+        # come from devices out of order causing all the echo check logic to break... with this pty
+        # being forced that seems to never occur. Worth digging into more at some point...
+        if self._base_transport_args.transport_options.get("netconf_force_pty", True) is True:
+            self.open_cmd.append("-tt")
+
         self.open_cmd.extend(["-s", "netconf"])
         self.logger.debug(f"final open_cmd: {self.open_cmd}")
 
@@ -105,6 +111,31 @@ class NetconfSystemTransport(SystemTransport):
 ```text
 Helper class that provides a standard way to create an ABC using
 inheritance.
+
+System (i.e. /bin/ssh) transport plugin.
+
+This transport supports some additional `transport_options` to control behavior --
+
+`ptyprocess` is a dictionary that has the following options:
+    rows: integer number of rows for ptyprocess "window"
+    cols: integer number of cols for ptyprocess "window"
+    echo: defaults to `True`, passing `False` disables echo in the ptyprocess; should only
+        be used with scrapli-netconf, will break scrapli!
+
+`netconf_force_pty` is a scrapli-netconf only argument. This setting defaults to `True` and
+    allows you to *not* force a pty. This setting seems to only be necessary when connecting
+    to juniper devices on port 830 as junos decides to not allocate a pty on that port for
+    some reason!
+
+Args:
+    base_transport_args: scrapli base transport plugin arguments
+    plugin_transport_args: system ssh specific transport plugin arguments
+
+Returns:
+    N/A
+
+Raises:
+    ScrapliUnsupportedPlatform: if system is windows
 ```
 
 <details class="source">
@@ -124,11 +155,17 @@ class NetconfSystemTransport(SystemTransport):
 
     def _build_open_cmd(self) -> None:
         super()._build_open_cmd()
-        # adding `-tt` forces tty allocation which lets us send a string greater than 1024 chars;
-        # without this we are basically capped at 1024 chars and scrapli will/the connection will
-        # die. it *may* be possible to alter ptyprocess vendor'd code to add `stty -icanon` which
-        # should also have a similar affect, though this seems simpler.
-        self.open_cmd.extend(["-tt"])
+
+        # JunOS devices do not allocate pty on port 830 on some (all?) platforms, users can cause
+        # system transport to *not* force the pty (forcing pty is *default behavior*) by setting the
+        # transport arg `netconf_force_pty` to `False`. This defaults to `True` (forcing a pty) as
+        # that has been the default behavior for a while and seems to work in almost all cases,
+        # additionally without this -- in pytest (only in pytest for some reason?) output seems to
+        # come from devices out of order causing all the echo check logic to break... with this pty
+        # being forced that seems to never occur. Worth digging into more at some point...
+        if self._base_transport_args.transport_options.get("netconf_force_pty", True) is True:
+            self.open_cmd.append("-tt")
+
         self.open_cmd.extend(["-s", "netconf"])
         self.logger.debug(f"final open_cmd: {self.open_cmd}")
 

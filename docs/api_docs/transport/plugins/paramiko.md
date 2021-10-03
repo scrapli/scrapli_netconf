@@ -74,9 +74,6 @@ class NetconfParamikoTransport(ParamikoTransport):
 
         self.session_channel = self.session.open_session()
         self._set_timeout(self._base_transport_args.timeout_transport)
-        # unlike "normal" paramiko -- we do *not* need to enable the "shell" on the channel...
-        # we *do* still want it to be a pty though!
-        self.session_channel.get_pty()
         self.session_channel.invoke_subsystem("netconf")
         </code>
     </pre>
@@ -139,9 +136,6 @@ class NetconfParamikoTransport(ParamikoTransport):
 
         self.session_channel = self.session.open_session()
         self._set_timeout(self._base_transport_args.timeout_transport)
-        # unlike "normal" paramiko -- we do *not* need to enable the "shell" on the channel...
-        # we *do* still want it to be a pty though!
-        self.session_channel.get_pty()
         self.session_channel.invoke_subsystem("netconf")
         </code>
     </pre>

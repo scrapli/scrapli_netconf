@@ -402,3 +402,40 @@ def test_parse_error_messages(response_data):
     )
     response.record_response(result=response_output.encode())
     assert response.error_messages == expected_errors
+
+
+@pytest.mark.parametrize(
+    "response_data",
+    [
+        (SINGLE_ERROR, ["error message 1"]),
+        (MULTIPLE_ERRORS, ["error message 1", "error message 2"]),
+        (RESPONSE_1_1, []),
+    ],
+    ids=[
+        "single_error",
+        "multiple_errors",
+        "no_errors",
+    ],
+)
+def test_raise_for_status(response_data):
+    response_output = response_data[0]
+    expected_errors = response_data[1]
+
+    channel_input = "<something/>"
+    xml_input = etree.fromstring(text=channel_input)
+    response = NetconfResponse(
+        host="localhost",
+        channel_input=channel_input,
+        xml_input=xml_input,
+        netconf_version=NetconfVersion.VERSION_1_1,
+    )
+    response.record_response(result=response_output.encode())
+
+    if not expected_errors:
+        assert not response.error_messages
+        return
+
+    with pytest.raises(ScrapliCommandFailure) as exc:
+        response.raise_for_status()
+
+    assert str(exc.value) == f"operation failed, reported rpc errors: {expected_errors}"

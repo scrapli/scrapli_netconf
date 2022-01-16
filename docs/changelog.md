@@ -5,6 +5,9 @@ CHANGELOG
 
 - Removed deprecated `filters` argument
 - Removed deprecated `NetconfScrape` and `AsyncNetconfScrape`
+- Improved `raise_for_status` exception messages, see #92 and #90
+- Dropped Python3.6 support as it is now EOL! Of course, scrapli probably still works just fine with 3.6 (if you 
+  install the old 3.6 requirements), but we won't test/support it anymore.
 
 
 ## 2021.07.30

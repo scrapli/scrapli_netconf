@@ -1,17 +1,14 @@
 import pytest
 
 
-@pytest.mark.asyncio
 async def test_open_netconf():
     pass
 
 
-@pytest.mark.asyncio
 async def test_check_echo():
     pass
 
 
-@pytest.mark.asyncio
 async def test_get_server_capabilities(monkeypatch, dummy_async_conn):
     read_counter = 0
 
@@ -30,12 +27,10 @@ async def test_get_server_capabilities(monkeypatch, dummy_async_conn):
     assert await dummy_async_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf]]>]]>"
 
 
-@pytest.mark.asyncio
 async def test_send_client_capabilities():
     pass
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "test_data",
     ((b"blah", b"blah"), (b"", b""), (b"blah", b"rpc>")),
@@ -60,13 +55,11 @@ async def test_read_until_input(monkeypatch, dummy_async_conn, test_data):
     )
 
 
-@pytest.mark.asyncio
 async def test_read_until_input_no_echo(dummy_async_conn):
     dummy_async_conn.channel._server_echo = False
     assert await dummy_async_conn.channel._read_until_input(channel_input=b"blah") == b""
 
 
-@pytest.mark.asyncio
 async def test_send_input_netconf(monkeypatch, dummy_async_conn):
     _read_counter = 0
 

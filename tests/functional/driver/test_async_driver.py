@@ -5,7 +5,6 @@ import pytest
 from scrapli_netconf.response import NetconfResponse
 
 
-@pytest.mark.asyncio
 async def test_get_filter_subtree(async_conn, test_cases, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -32,7 +31,6 @@ async def test_get_filter_subtree(async_conn, test_cases, xmldiffer):
     assert not xmldiffer(response.result, expected_result)
 
 
-@pytest.mark.asyncio
 async def test_get_filter_xpath(async_conn, test_cases, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -60,7 +58,6 @@ async def test_get_filter_xpath(async_conn, test_cases, xmldiffer):
     assert not xmldiffer(response.result, expected_result)
 
 
-@pytest.mark.asyncio
 async def test_get_config(async_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -80,7 +77,6 @@ async def test_get_config(async_conn, test_cases, config_replacer_dict, xmldiffe
     assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-@pytest.mark.asyncio
 async def test_get_config_filtered_single_filter_subtree(
     async_conn, test_cases, config_replacer_dict, xmldiffer
 ):
@@ -105,7 +101,6 @@ async def test_get_config_filtered_single_filter_subtree(
     assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-@pytest.mark.asyncio
 async def test_get_config_filtered_multi_filter_subtree(
     async_conn_1_1, test_cases, config_replacer_dict, xmldiffer
 ):
@@ -132,7 +127,6 @@ async def test_get_config_filtered_multi_filter_subtree(
     assert not xmldiffer(config_replacer(response.result), expected_result)
 
 
-@pytest.mark.asyncio
 async def test_get_config_filter_single_filter_xpath(async_conn_1_1, test_cases, xmldiffer):
     conn = async_conn_1_1[0]
     device_type = async_conn_1_1[1]
@@ -160,7 +154,6 @@ async def test_get_config_filter_single_filter_xpath(async_conn_1_1, test_cases,
     assert not xmldiffer(response.result, expected_result)
 
 
-@pytest.mark.asyncio
 async def test_edit_config_and_discard(async_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -196,7 +189,6 @@ async def test_edit_config_and_discard(async_conn, test_cases, config_replacer_d
     assert discard_response.failed is False
 
 
-@pytest.mark.asyncio
 async def test_edit_config_and_commit(async_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -245,7 +237,6 @@ async def test_edit_config_and_commit(async_conn, test_cases, config_replacer_di
         assert commit_response.failed is False
 
 
-@pytest.mark.asyncio
 async def test_delete_config(async_conn, test_cases, config_replacer_dict, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]
@@ -284,7 +275,6 @@ async def test_delete_config(async_conn, test_cases, config_replacer_dict, xmldi
     await conn.discard()
 
 
-@pytest.mark.asyncio
 async def test_lock_unlock(async_conn, xmldiffer):
     # seems that after the previous config change the virtual iosxe device wants to fail to auth
     # connections, sleep a tick to maybe let it chill
@@ -311,7 +301,6 @@ async def test_lock_unlock(async_conn, xmldiffer):
     assert not xmldiffer(response.result, """<rpc-reply message-id="102"><ok/></rpc-reply>""")
 
 
-@pytest.mark.asyncio
 async def test_rpc(async_conn, test_cases, xmldiffer):
     conn = async_conn[0]
     device_type = async_conn[1]

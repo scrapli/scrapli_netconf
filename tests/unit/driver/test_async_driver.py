@@ -1,9 +1,6 @@
-import pytest
-
 from scrapli_netconf.constants import NetconfVersion
 
 
-@pytest.mark.asyncio
 async def test_get(monkeypatch, dummy_async_conn):
     async def dummy_send_input_netconf(cls, channel_input):
         return b"<sent!>"
@@ -28,7 +25,6 @@ async def test_get(monkeypatch, dummy_async_conn):
     )
 
 
-@pytest.mark.asyncio
 async def test_get_config(monkeypatch, dummy_async_conn):
     async def dummy_send_input_netconf(cls, channel_input):
         return b"<sent!>"

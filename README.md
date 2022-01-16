@@ -38,7 +38,7 @@ but for NETCONF connections.
 
 ## Requirements
 
-MacOS or \*nix<sup>1</sup>, Python 3.6+
+MacOS or \*nix<sup>1</sup>, Python 3.7+
 
 scrapli_netconf's only requirements are `scrapli`, of course, and `lxml`.
 

@@ -31,8 +31,7 @@ scrapli_netconf.transport.plugins.asyncssh.transport
 """scrapli_netconf.transport.plugins.asyncssh.transport"""
 import asyncio
 
-from asyncssh import connect
-from asyncssh.connection import SSHClientConnection
+from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ChannelOpenError, PermissionDenied
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionNotOpened
@@ -300,7 +299,7 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
     
 
 ##### open_netconf
-`open_netconf(self) ‑> NoneType`
+`open_netconf(self) ‑> None`
 
 ```text
 Netconf open method

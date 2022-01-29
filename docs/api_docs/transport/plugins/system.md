@@ -216,7 +216,7 @@ class NetconfSystemTransport(SystemTransport):
     
 
 ##### open_netconf
-`open_netconf(self) ‑> NoneType`
+`open_netconf(self) ‑> None`
 
 ```text
 Netconf open method
@@ -238,7 +238,7 @@ Raises:
     
 
 ##### write
-`write(self, channel_input: bytes) ‑> NoneType`
+`write(self, channel_input: bytes) ‑> None`
 
 ```text
 Write bytes into the transport session

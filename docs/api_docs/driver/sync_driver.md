@@ -1013,7 +1013,7 @@ Raises:
     
 
 ##### open
-`open(self) ‑> NoneType`
+`open(self) ‑> None`
 
 ```text
 Open netconf connection to server

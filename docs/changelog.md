@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-## (in development) 2022.01.30
+## 2022.01.30
 
 - Removed deprecated `filters` argument
 - Removed deprecated `NetconfScrape` and `AsyncNetconfScrape`

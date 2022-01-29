@@ -806,7 +806,7 @@ Raises:
     
 
 ##### get_xml_elements
-`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7fb6601c6790>]`
+`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f9eb0218ad0>]`
 
 ```text
 Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing
@@ -826,7 +826,7 @@ Raises:
     
 
 ##### raise_for_status
-`raise_for_status(self) ‑> NoneType`
+`raise_for_status(self) ‑> None`
 
 ```text
 Raise a `ScrapliCommandFailure` if any elements are failed
@@ -848,7 +848,7 @@ Raises:
     
 
 ##### record_response
-`record_response(self, result: bytes) ‑> NoneType`
+`record_response(self, result: bytes) ‑> None`
 
 ```text
 Record channel_input results and elapsed time of channel input/reading output

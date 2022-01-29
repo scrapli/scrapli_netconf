@@ -62,8 +62,8 @@ from scrapli_netconf.driver import NetconfDriver
 
 my_device = {
     "host": "172.18.0.13",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "port": 830
 }

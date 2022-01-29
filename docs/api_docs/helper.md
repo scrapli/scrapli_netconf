@@ -72,7 +72,7 @@ def remove_namespaces(tree: Element) -> Element:
     
 
 #### remove_namespaces
-`remove_namespaces(tree: <cyfunction Element at 0x7f9af87a6790>) ‑> <cyfunction Element at 0x7f9af87a6790>`
+`remove_namespaces(tree: <cyfunction Element at 0x7f9eb0218ad0>) ‑> <cyfunction Element at 0x7f9eb0218ad0>`
 
 ```text
 Remove all namespace tags from Element object

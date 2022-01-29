@@ -152,7 +152,7 @@ class NetconfParamikoTransport(ParamikoTransport):
     
 
 ##### open_netconf
-`open_netconf(self) ‑> NoneType`
+`open_netconf(self) ‑> None`
 
 ```text
 Netconf open method

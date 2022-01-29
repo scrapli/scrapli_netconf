@@ -37,6 +37,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from lxml import etree
 from lxml.etree import Element
 
+from scrapli.exceptions import ScrapliCommandFailure
 from scrapli.response import Response
 from scrapli_netconf.constants import NetconfVersion
 from scrapli_netconf.helper import remove_namespaces
@@ -369,6 +370,27 @@ class NetconfResponse(Response):
 
         """
         raise NotImplementedError("No genie parsing for netconf output!")
+
+    def raise_for_status(self) -> None:
+        """
+        Raise a `ScrapliCommandFailure` if any elements are failed
+
+        Overrides scrapli core Response.raise_for_status to include rpc error message(s).
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliCommandFailure: if any elements are failed
+
+        """
+        if self.failed:
+            raise ScrapliCommandFailure(
+                f"operation failed, reported rpc errors: {self.error_messages}"
+            )
         </code>
     </pre>
 </details>
@@ -724,6 +746,27 @@ class NetconfResponse(Response):
 
         """
         raise NotImplementedError("No genie parsing for netconf output!")
+
+    def raise_for_status(self) -> None:
+        """
+        Raise a `ScrapliCommandFailure` if any elements are failed
+
+        Overrides scrapli core Response.raise_for_status to include rpc error message(s).
+
+        Args:
+            N/A
+
+        Returns:
+            None
+
+        Raises:
+            ScrapliCommandFailure: if any elements are failed
+
+        """
+        if self.failed:
+            raise ScrapliCommandFailure(
+                f"operation failed, reported rpc errors: {self.error_messages}"
+            )
         </code>
     </pre>
 </details>
@@ -763,7 +806,7 @@ Raises:
     
 
 ##### get_xml_elements
-`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f9af87a6790>]`
+`get_xml_elements(self) ‑> Dict[str, <cyfunction Element at 0x7f9eb0218ad0>]`
 
 ```text
 Parse each section under "data" into a dict of {tag: Element} for easy viewing/parsing
@@ -782,8 +825,30 @@ Raises:
 
     
 
+##### raise_for_status
+`raise_for_status(self) ‑> None`
+
+```text
+Raise a `ScrapliCommandFailure` if any elements are failed
+
+Overrides scrapli core Response.raise_for_status to include rpc error message(s).
+
+Args:
+    N/A
+
+Returns:
+    None
+
+Raises:
+    ScrapliCommandFailure: if any elements are failed
+```
+
+
+
+    
+
 ##### record_response
-`record_response(self, result: bytes) ‑> NoneType`
+`record_response(self, result: bytes) ‑> None`
 
 ```text
 Record channel_input results and elapsed time of channel input/reading output

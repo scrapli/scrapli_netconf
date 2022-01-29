@@ -38,7 +38,7 @@ but for NETCONF connections.
 
 ## Requirements
 
-MacOS or \*nix<sup>1</sup>, Python 3.6+
+MacOS or \*nix<sup>1</sup>, Python 3.7+
 
 scrapli_netconf's only requirements are `scrapli`, of course, and `lxml`.
 
@@ -62,8 +62,8 @@ from scrapli_netconf.driver import NetconfDriver
 
 my_device = {
     "host": "172.18.0.13",
-    "auth_username": "vrnetlab",
-    "auth_password": "VR-netlab9",
+    "auth_username": "scrapli",
+    "auth_password": "scrapli",
     "auth_strict_key": False,
     "port": 830
 }

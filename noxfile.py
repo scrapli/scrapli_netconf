@@ -26,7 +26,7 @@ def parse_requirements(dev: bool = True) -> Dict[str, str]:
 
     """
     requirements = {}
-    requirements_file = "requirements.txt" if dev is False else "requirements-dev.txt"
+    requirements_file = "requirements.txt" if not dev else "requirements-dev.txt"
 
     with open(requirements_file, "r", encoding="utf-8") as f:
         requirements_file_lines = f.readlines()
@@ -65,7 +65,7 @@ SKIP_LIST: List[str] = [
 ]
 
 
-@nox.session(python=["3.6", "3.7", "3.8", "3.9", "3.10"])
+@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
 def unit_tests(session):
     """
     Nox run unit tests
@@ -99,7 +99,7 @@ def unit_tests(session):
     )
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def isort(session):
     """
     Nox run isort
@@ -118,7 +118,7 @@ def isort(session):
     session.run("python", "-m", "isort", "-c", ".")
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def black(session):
     """
     Nox run black
@@ -137,7 +137,7 @@ def black(session):
     session.run("python", "-m", "black", "--check", ".")
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def pylama(session):
     """
     Nox run pylama
@@ -156,7 +156,7 @@ def pylama(session):
     session.run("python", "-m", "pylama", ".")
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def pydocstyle(session):
     """
     Nox run pydocstyle
@@ -175,7 +175,7 @@ def pydocstyle(session):
     session.run("python", "-m", "pydocstyle", ".")
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def mypy(session):
     """
     Nox run mypy
@@ -195,7 +195,7 @@ def mypy(session):
     session.run("python", "-m", "mypy", "--strict", "scrapli_netconf/")
 
 
-@nox.session(python=["3.9"])
+@nox.session(python=["3.10"])
 def darglint(session):
     """
     Nox run darglint

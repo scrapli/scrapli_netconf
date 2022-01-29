@@ -1,8 +1,7 @@
 """scrapli_netconf.transport.plugins.asyncssh.transport"""
 import asyncio
 
-from asyncssh import connect
-from asyncssh.connection import SSHClientConnection
+from asyncssh.connection import SSHClientConnection, connect
 from asyncssh.misc import ChannelOpenError, PermissionDenied
 
 from scrapli.exceptions import ScrapliAuthenticationFailed, ScrapliConnectionNotOpened

@@ -451,7 +451,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
     
 
 ##### open_netconf
-`open_netconf(self) ‑> NoneType`
+`open_netconf(self) ‑> None`
 
 ```text
 Open the netconf channel

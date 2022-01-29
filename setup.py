@@ -4,7 +4,7 @@ from pathlib import Path
 
 import setuptools
 
-__version__ = "2021.07.30"
+__version__ = "2022.01.30"
 __author__ = "Carl Montanari"
 
 with open("README.md", "r", encoding="utf-8") as f:
@@ -21,7 +21,11 @@ EXTRAS_REQUIRE = {
 
 for extra in EXTRAS_REQUIRE:
     with open(f"requirements-{extra}.txt", "r", encoding="utf-8") as f:
-        EXTRAS_REQUIRE[extra] = f.read().splitlines()
+        # drops the version cap on pins but lets us keep it in the extras requirements files
+        # such that CI can be more deterministic and dependabot notifications are more useful
+        pins = [pin.partition(",<")[0] if ",<" in pin else pin for pin in f.read().splitlines()]
+
+        EXTRAS_REQUIRE[extra] = pins
 
 full_requirements = [requirement for extra in EXTRAS_REQUIRE.values() for requirement in extra]
 EXTRAS_REQUIRE["full"] = full_requirements
@@ -58,7 +62,6 @@ setuptools.setup(
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -66,7 +69,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     # zip_safe False for mypy
     # https://mypy.readthedocs.io/en/stable/installed_packages.html
     zip_safe=False,

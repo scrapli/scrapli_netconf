@@ -647,7 +647,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
     
 
 ##### channel_authenticate_netconf
-`channel_authenticate_netconf(self, auth_password: str, auth_private_key_passphrase: str) ‑> NoneType`
+`channel_authenticate_netconf(self, auth_password: str, auth_private_key_passphrase: str) ‑> None`
 
 ```text
 Handle SSH Authentication for transports that only operate "in the channel" (i.e. system)
@@ -669,7 +669,7 @@ Raises:
     
 
 ##### open_netconf
-`open_netconf(self) ‑> NoneType`
+`open_netconf(self) ‑> None`
 
 ```text
 Open the netconf channel

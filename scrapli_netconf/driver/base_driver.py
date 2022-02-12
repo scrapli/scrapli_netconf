@@ -795,7 +795,9 @@ class NetconfBaseDriver(BaseDriver):
                 channel inputs (string and xml)
 
         Raises:
-            N/A
+            ScrapliValueError: if persist and persist_id are provided (cannot combine)
+            ScrapliValueError: if confirmed and persist_id are provided (cannot combine)
+            CapabilityNotSupported: if device does not have confirmed-commit capability
 
         """
         self.logger.debug("Building payload for 'commit' operation")
@@ -813,7 +815,7 @@ class NetconfBaseDriver(BaseDriver):
                 "Invalid combination - 'confirmed' cannot be present with 'persist-id'"
             )
 
-        if confirmed:
+        if confirmed or persist_id:
             if not any(
                 cap in self.server_capabilities
                 for cap in (
@@ -825,6 +827,7 @@ class NetconfBaseDriver(BaseDriver):
                 self.logger.exception(msg)
                 raise CapabilityNotSupported(msg)
 
+        if confirmed:
             xml_confirmed_element = etree.fromstring(
                 NetconfBaseOperations.COMMIT_CONFIRMED.value, parser=self.xml_parser
             )
@@ -845,19 +848,6 @@ class NetconfBaseDriver(BaseDriver):
                 xml_commit_element.append(xml_persist_element)
 
         if persist_id is not None:
-            if not any(
-                cap in self.server_capabilities
-                for cap in (
-                    "urn:ietf:params:netconf:capability:confirmed-commit:1.0",
-                    "urn:ietf:params:netconf:capability:confirmed-commit:1.1",
-                )
-            ):
-                msg = (
-                    "commit with 'persist-id' requested, but 'confirmed-commit' is not supported "
-                    "by the server"
-                )
-                self.logger.exception(msg)
-                raise CapabilityNotSupported(msg)
             xml_persist_id_element = etree.fromstring(
                 NetconfBaseOperations.COMMIT_PERSIST_ID.value.format(persist_id=persist_id),
                 parser=self.xml_parser,

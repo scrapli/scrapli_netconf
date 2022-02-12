@@ -776,8 +776,8 @@ class NetconfBaseDriver(BaseDriver):
         self,
         confirmed: bool = False,
         timeout: Optional[int] = None,
-        persist: Optional[int] = None,
-        persist_id: Optional[int] = None,
+        persist: Optional[Union[int, str]] = None,
+        persist_id: Optional[Union[int, str]] = None,
     ) -> NetconfResponse:
         """
         Handle pre "commit" tasks for consistency between sync/async versions

@@ -210,8 +210,8 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
         self,
         confirmed: bool = False,
         timeout: Optional[int] = None,
-        persist: Optional[int] = None,
-        persist_id: Optional[int] = None,
+        persist: Optional[Union[int, str]] = None,
+        persist_id: Optional[Union[int, str]] = None,
     ) -> NetconfResponse:
         """
         Netconf commit config operation

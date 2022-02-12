@@ -1,4 +1,6 @@
 """
+basic_usage_iosxr_commit_confirm
+
 Script to verify commit confirm functionality using Cisco always on IOSXR
 sandbox device.
 
@@ -7,30 +9,36 @@ Sample terminal output:
 # --------------------------------------------------
 # Test commit confirmed within same session
 # --------------------------------------------------
-    
+
 IOSXR OPEN
-IOSXR LOCK:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR LOCK:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
-IOSXR EDIT:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+IOSXR EDIT:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
   <ok/>
 </rpc-reply>
 
-IOSXR COMMIT CONFIRMED:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+IOSXR COMMIT CONFIRMED:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
   <ok/>
 </rpc-reply>
 
-IOSXR COMMIT:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+IOSXR COMMIT:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
   <ok/>
 </rpc-reply>
 
-IOSXR UNLOCK:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="105">
+IOSXR UNLOCK:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="105">
   <ok/>
 </rpc-reply>
 
 IOSXR CHECK description is 'Configured by scrapli-netconf, random int - 7570'
-IOSXR INTERFACE CONFIG <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="106">
+IOSXR INTERFACE CONFIG
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="106">
   <data>
     <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
       <interface-configuration>
@@ -46,27 +54,31 @@ IOSXR INTERFACE CONFIG <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0
 IOSXR CLOSED
 
 # --------------------------------------------------
-# Test commit confirmed within another session 
+# Test commit confirmed within another session
 # using persist-id
 # --------------------------------------------------
-    
+
 IOSXR OPEN
-IOSXR EDIT:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR EDIT:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
-IOSXR COMMIT CONFIRMED WITH PERSIST:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR COMMIT CONFIRMED WITH PERSIST:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
 IOSXR CLOSED
 IOSXR OPEN AGAIN
-IOSXR COMMIT PERSIST-ID:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR COMMIT PERSIST-ID:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
 IOSXR CHECK description is 'Configured by scrapli-netconf, random int - 5811'
-IOSXR INTERFACE CONFIG <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
+IOSXR INTERFACE CONFIG
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="102">
   <data>
     <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
       <interface-configuration>
@@ -84,18 +96,21 @@ IOSXR CLOSED
 # --------------------------------------------------
 # Test commit confirmed with timeout
 # --------------------------------------------------
-    
+
 IOSXR OPEN
-IOSXR EDIT:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR EDIT:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
-IOSXR COMMIT CONFIRMED TIMEOUT 10s:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR COMMIT CONFIRMED TIMEOUT 10s:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <ok/>
 </rpc-reply>
 
 IOSXR CHECK description is 'Configured by scrapli-netconf, random int - 5644'
-IOSXR INTERFACE CONFIG:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="103">
+IOSXR INTERFACE CONFIG:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="103">
   <data>
     <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
       <interface-configuration>
@@ -112,7 +127,8 @@ IOSXR CLOSED
 IOSXR sleeping 15 seconds for commit to timeout
 IOSXR OPEN AGAIN
 IOSXR CHECK description is not 'Configured by scrapli-netconf, random int - 5644'
-IOSXR INTERFACE CONFIG after timeout:  <rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+IOSXR INTERFACE CONFIG after timeout:
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
   <data>
     <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
       <interface-configuration>
@@ -127,9 +143,10 @@ IOSXR INTERFACE CONFIG after timeout:  <rpc-reply xmlns="urn:ietf:params:xml:ns:
 
 IOSXR CLOSED
 """
-from scrapli_netconf.driver import NetconfDriver
 import random
 import time
+
+from scrapli_netconf.driver import NetconfDriver
 
 iosxr1 = {
     "host": "sandbox-iosxr-1.cisco.com",
@@ -172,9 +189,7 @@ def test_iosxr_commit_confirmed_in_same_session():
 # --------------------------------------------------
     """
     )
-    description = "Configured by scrapli-netconf, random int - {}".format(
-        random.randrange(1, 10000)
-    )
+    description = f"Configured by scrapli-netconf, random int - {random.randrange(1, 10000)}"
     iosxr1_conn = NetconfDriver(**iosxr1)
     iosxr1_conn.open()
     print("IOSXR OPEN")
@@ -196,7 +211,7 @@ def test_iosxr_commit_confirmed_in_same_session():
     result = iosxr1_conn.unlock(target="candidate")
     print("IOSXR UNLOCK: ", result.result)
 
-    print("IOSXR CHECK description is '{}'".format(description))
+    print(f"IOSXR CHECK description is '{description}'")
     result = iosxr1_conn.get_config(source="running", filter_=IOS_XR_FILTER)
     print("IOSXR INTERFACE CONFIG", result.result)
 
@@ -208,14 +223,12 @@ def test_iosxr_commit_confirmed_in_another_session():
     print(
         """
 # --------------------------------------------------
-# Test commit confirmed within another session 
+# Test commit confirmed within another session
 # using persist-id
 # --------------------------------------------------
     """
     )
-    description = "Configured by scrapli-netconf, random int - {}".format(
-        random.randrange(1, 10000)
-    )
+    description = f"Configured by scrapli-netconf, random int - {random.randrange(1, 10000)}"
     iosxr1_conn = NetconfDriver(**iosxr1)
     iosxr1_conn.open()
     print("IOSXR OPEN")
@@ -238,7 +251,7 @@ def test_iosxr_commit_confirmed_in_another_session():
     iosxr1_conn.commit(persist_id="foobar1234")
     print("IOSXR COMMIT PERSIST-ID: ", result.result)
 
-    print("IOSXR CHECK description is '{}'".format(description))
+    print(f"IOSXR CHECK description is '{description}'")
     result = iosxr1_conn.get_config(source="running", filter_=IOS_XR_FILTER)
     print("IOSXR INTERFACE CONFIG", result.result)
 
@@ -254,9 +267,7 @@ def test_iosxr_commit_confirmed_timeout():
 # --------------------------------------------------
     """
     )
-    description = "Configured by scrapli-netconf, random int - {}".format(
-        random.randrange(1, 10000)
-    )
+    description = f"Configured by scrapli-netconf, random int - {random.randrange(1, 10000)}"
     iosxr1_conn = NetconfDriver(**iosxr1)
     iosxr1_conn.open()
     print("IOSXR OPEN")
@@ -269,7 +280,7 @@ def test_iosxr_commit_confirmed_timeout():
     iosxr1_conn.commit(confirmed=True, timeout=10)
     print("IOSXR COMMIT CONFIRMED TIMEOUT 10s: ", result.result)
 
-    print("IOSXR CHECK description is '{}'".format(description))
+    print(f"IOSXR CHECK description is '{description}'")
     result = iosxr1_conn.get_config(source="running", filter_=IOS_XR_FILTER)
     print("IOSXR INTERFACE CONFIG: ", result.result)
 
@@ -283,7 +294,7 @@ def test_iosxr_commit_confirmed_timeout():
     iosxr1_conn.open()
     print("IOSXR OPEN AGAIN")
 
-    print("IOSXR CHECK description is not '{}'".format(description))
+    print(f"IOSXR CHECK description is not '{description}'")
     result = iosxr1_conn.get_config(source="running", filter_=IOS_XR_FILTER)
     print("IOSXR INTERFACE CONFIG after timeout: ", result.result)
 
@@ -291,6 +302,12 @@ def test_iosxr_commit_confirmed_timeout():
     print("IOSXR CLOSED")
 
 
-test_iosxr_commit_confirmed_in_same_session()
-test_iosxr_commit_confirmed_in_another_session()
-test_iosxr_commit_confirmed_timeout()
+def main():
+    """Run commit confirmed examples"""
+    test_iosxr_commit_confirmed_in_same_session()
+    test_iosxr_commit_confirmed_in_another_session()
+    test_iosxr_commit_confirmed_timeout()
+
+
+if __name__ == "__main__":
+    main()

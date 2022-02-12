@@ -35,6 +35,10 @@ class NetconfBaseOperations(Enum):
         "<copy-config><target><{target}/></target><source><{source}/></source></copy-config>"
     )
     COMMIT = "<commit/>"
+    COMMIT_CONFIRMED = "<confirmed/>"
+    COMMIT_CONFIRMED_TIMEOUT = "<confirm-timeout>{timeout}</confirm-timeout>"
+    COMMIT_CONFIRMED_PERSIST = "<persist>{persist}</persist>"
+    COMMIT_PERSIST_ID = "<persist-id>{persist_id}</persist-id>"
     DISCARD = "<discard-changes/>"
     LOCK = "<lock><target><{target}/></target></lock>"
     UNLOCK = "<unlock><target><{target}/></target></unlock>"
@@ -768,12 +772,21 @@ class NetconfBaseDriver(BaseDriver):
         )
         return response
 
-    def _pre_commit(self) -> NetconfResponse:
+    def _pre_commit(
+        self,
+        confirmed: bool = False,
+        timeout: int = None,
+        persist: int = None,
+        persist_id: int = None,
+    ) -> NetconfResponse:
         """
         Handle pre "commit" tasks for consistency between sync/async versions
 
         Args:
-            N/A
+            confirmed: whether this is a confirmed commit
+            timeout: specifies the confirm timeout in seconds
+            persist: make the confirmed commit survive a session termination, and set a token on the ongoing confirmed commit
+            persist_id: value must be equal to the value given in the <persist> parameter to the original <commit> operation.
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object containing all the necessary
@@ -788,6 +801,64 @@ class NetconfBaseDriver(BaseDriver):
         xml_commit_element = etree.fromstring(
             NetconfBaseOperations.COMMIT.value, parser=self.xml_parser
         )
+
+        if persist and persist_id:
+            raise ScrapliValueError(
+                "Invalid combination - 'persist' cannot be present with 'persist-id'"
+            )
+        if confirmed and persist_id:
+            raise ScrapliValueError(
+                "Invalid combination - 'confirmed' cannot be present with 'persist-id'"
+            )
+
+        if confirmed:
+            if not any(
+                cap in self.server_capabilities
+                for cap in (
+                    "urn:ietf:params:netconf:capability:confirmed-commit:1.0",
+                    "urn:ietf:params:netconf:capability:confirmed-commit:1.1",
+                )
+            ):
+                msg = "confirmed-commit requested, but is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
+
+            xml_confirmed_element = etree.fromstring(
+                NetconfBaseOperations.COMMIT_CONFIRMED.value, parser=self.xml_parser
+            )
+            xml_commit_element.append(xml_confirmed_element)
+
+            if timeout is not None:
+                xml_timeout_element = etree.fromstring(
+                    NetconfBaseOperations.COMMIT_CONFIRMED_TIMEOUT.value.format(timeout=timeout),
+                    parser=self.xml_parser,
+                )
+                xml_commit_element.append(xml_timeout_element)
+
+            if persist is not None:
+                xml_persist_element = etree.fromstring(
+                    NetconfBaseOperations.COMMIT_CONFIRMED_PERSIST.value.format(persist=persist),
+                    parser=self.xml_parser,
+                )
+                xml_commit_element.append(xml_persist_element)
+
+        if persist_id is not None:
+            if not any(
+                cap in self.server_capabilities
+                for cap in (
+                    "urn:ietf:params:netconf:capability:confirmed-commit:1.0",
+                    "urn:ietf:params:netconf:capability:confirmed-commit:1.1",
+                )
+            ):
+                msg = "commit with 'persist-id' requested, but 'confirmed-commit' is not supported by the server"
+                self.logger.exception(msg)
+                raise CapabilityNotSupported(msg)
+            xml_persist_id_element = etree.fromstring(
+                NetconfBaseOperations.COMMIT_PERSIST_ID.value.format(persist_id=persist_id),
+                parser=self.xml_parser,
+            )
+            xml_commit_element.append(xml_persist_id_element)
+
         xml_request.insert(0, xml_commit_element)
 
         channel_input = self._finalize_channel_input(xml_request=xml_request)

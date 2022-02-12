@@ -216,12 +216,21 @@ class NetconfDriver(Driver, NetconfBaseDriver):
         response.record_response(raw_response)
         return response
 
-    def commit(self) -> NetconfResponse:
+    def commit(
+        self,
+        confirmed: bool = False,
+        timeout: int = None,
+        persist: int = None,
+        persist_id: int = None,
+    ) -> NetconfResponse:
         """
         Netconf commit config operation
 
         Args:
-            N/A
+            confirmed: whether this is a confirmed commit
+            timeout: specifies the confirm timeout in seconds
+            persist: make the confirmed commit survive a session termination, and set a token on the ongoing confirmed commit
+            persist_id: value must be equal to the value given in the <persist> parameter to the original <commit> operation.
 
         Returns:
             NetconfResponse: scrapli_netconf NetconfResponse object
@@ -230,7 +239,12 @@ class NetconfDriver(Driver, NetconfBaseDriver):
             N/A
 
         """
-        response = self._pre_commit()
+        response = self._pre_commit(
+            confirmed=confirmed,
+            timeout=timeout,
+            persist=persist,
+            persist_id=persist_id,
+        )
         raw_response = self.channel.send_input_netconf(response.channel_input)
         response.record_response(raw_response)
         return response

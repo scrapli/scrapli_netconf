@@ -395,6 +395,173 @@ def test_pre_commit(dummy_conn, capabilities):
 @pytest.mark.parametrize(
     "capabilities",
     [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_confirmed(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    response = dummy_conn._pre_commit(confirmed=True)
+    assert "<commit><confirmed/></commit>" in response.channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_confirmed_timeout(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    response = dummy_conn._pre_commit(confirmed=True, timeout=60)
+    assert "<confirmed/>" in response.channel_input
+    assert "<confirm-timeout>60</confirm-timeout>" in response.channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_confirmed_timeout_persist(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    response = dummy_conn._pre_commit(confirmed=True, timeout=60, persist="foobar1234")
+    assert "<confirmed/>" in response.channel_input
+    assert "<confirm-timeout>60</confirm-timeout>" in response.channel_input
+    assert "<persist>foobar1234</persist>" in response.channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_with_persist_id(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    response = dummy_conn._pre_commit(persist_id="foobar1234")
+    assert "<persist-id>foobar1234</persist-id>" in response.channel_input
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_fail_persist_id_with_confirmed(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    with pytest.raises(ScrapliValueError) as e:
+        _ = dummy_conn._pre_commit(confirmed=True, persist_id="foobar1234")
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (NetconfVersion.VERSION_1_0, ["urn:ietf:params:netconf:capability:confirmed-commit:1.0"]),
+        (NetconfVersion.VERSION_1_1, ["urn:ietf:params:netconf:capability:confirmed-commit:1.1"]),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_fail_persist_id_with_persist(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for expected XML payload
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    with pytest.raises(ScrapliValueError) as e:
+        _ = dummy_conn._pre_commit(persist="foobar1234", persist_id="foobar1234")
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (
+            NetconfVersion.VERSION_1_0,
+            ["urn:ietf:params:netconf:capability:confirmed-foo-commit:1.0"],
+        ),
+        (
+            NetconfVersion.VERSION_1_1,
+            ["urn:ietf:params:netconf:capability:confirmed-foo-commit:1.1"],
+        ),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_fail_confirmed_unsupported_capability(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for required capabilities
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    with pytest.raises(CapabilityNotSupported) as e:
+        _ = dummy_conn._pre_commit(confirmed=True)
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
+        (
+            NetconfVersion.VERSION_1_0,
+            ["urn:ietf:params:netconf:capability:confirmed-foo-commit:1.0"],
+        ),
+        (
+            NetconfVersion.VERSION_1_1,
+            ["urn:ietf:params:netconf:capability:confirmed-foo-commit:1.1"],
+        ),
+    ],
+    ids=["1.0", "1.1"],
+)
+def test_pre_commit_fail_persist_id_unsupported_capability(dummy_conn, capabilities):
+    """
+    Refer to https://datatracker.ietf.org/doc/html/rfc6241#section-8.4.5.1
+    for required capabilities
+    """
+    dummy_conn.netconf_version = capabilities[0]
+    dummy_conn.server_capabilities = capabilities[1]
+    with pytest.raises(CapabilityNotSupported) as e:
+        _ = dummy_conn._pre_commit(persist_id="foobar1234")
+
+
+@pytest.mark.parametrize(
+    "capabilities",
+    [
         (NetconfVersion.VERSION_1_0, DISCARD_CHANNEL_INPUT_1_0),
         (NetconfVersion.VERSION_1_1, DISCARD_CHANNEL_INPUT_1_1),
     ],

@@ -2,7 +2,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -309,18 +309,24 @@ class NetconfResponse(Response):
                 xml_elements[_tag] = child
         return xml_elements
 
-    def textfsm_parse_output(self, to_dict: bool = True) -> Union[Dict[str, Any], List[Any]]:
+    def textfsm_parse_output(
+        self, template: Union[str, TextIO, None] = None, to_dict: bool = True
+    ) -> Union[Dict[str, Any], List[Any]]:
         """
-        Override scrapli Response `textfsm_parse_output` method; not applicable for netconf
+        Parse results with textfsm, always return structured data
+
+        Returns an empty list if parsing fails!
 
         Args:
-            to_dict: ignore, only here to ensure compliance with supertype method
+            template: string path to textfsm template or opened textfsm template file
+            to_dict: convert textfsm output from list of lists to list of dicts -- basically create
+                dict from header and row data so it is easier to read/parse the output
 
         Returns:
-            N/A  # noqa: DAR202
+            structured_result: empty list or parsed data from textfsm
 
         Raises:
-            NotImplementedError: always
+            NotImplementedError: always!
 
         """
         raise NotImplementedError("No textfsm parsing for netconf output!")

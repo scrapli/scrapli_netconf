@@ -21,7 +21,7 @@ LOG = logging.getLogger("response")
 # dont care about them. Next we have the main capture group -- this starts with a negative lookahead
 # that says we want to stop matching as soon as we hit another "#123" *or* a "##" (end of message),
 # after that we match anything "." and that is the "body" of the response
-CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!#\d+\n+|##).)*)", flags=re.M | re.S)
+CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!^#\d+\n+|^##).)*)", flags=re.M | re.S)
 
 PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 

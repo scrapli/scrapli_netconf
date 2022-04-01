@@ -962,7 +962,7 @@ class NetconfBaseDriver(BaseDriver):
 
         xml_request = self._build_base_elem()
         xml_lock_element = etree.fromstring(
-            NetconfBaseOperations.UNLOCK.value.format(target=target, parser=self.xml_parser)
+            NetconfBaseOperations.UNLOCK.value.format(target=target), parser=self.xml_parser
         )
         xml_request.insert(0, xml_lock_element)
 

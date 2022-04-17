@@ -240,7 +240,9 @@ class NetconfResponse(Response):
         for chunk_match in chunk_sizes:
             chunk_size = int(chunk_match.groupdict().get("size", 0))
             chunk_end_pos = chunk_match.span()[1]
-            result_sections.append((chunk_size, self.raw_result[chunk_end_pos:chunk_end_pos + chunk_size]))
+            result_sections.append(
+                (chunk_size, self.raw_result[chunk_end_pos : chunk_end_pos + chunk_size])  # noqa
+            )
 
         # validate all received data
         for result in result_sections:

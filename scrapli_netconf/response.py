@@ -14,14 +14,9 @@ from scrapli_netconf.helper import remove_namespaces
 
 LOG = logging.getLogger("response")
 
-# "chunk match" matches two groups per section returned from the netconf server, first the length of
-# the response, and second the response itself. we use the length of the response to validate the
-# response is in fact X length. this regex is basically "start at line feed, and match "#123" where
-# "123" is obviously any length of digits... then we don't capture zero or more newlines because we
-# dont care about them. Next we have the main capture group -- this starts with a negative lookahead
-# that says we want to stop matching as soon as we hit another "#123" *or* a "##" (end of message),
-# after that we match anything "." and that is the "body" of the response
-CHUNK_MATCH_1_1 = re.compile(pattern=rb"^#(\d+)(?:\n*)(((?!^#\d+\n+|^##).)*)", flags=re.M | re.S)
+# "chunk match" matches the "#123" netconf1.1 chunk size delimiters. We then simply slice out the
+# actual chunk from the received byte stream.
+CHUNK_MATCH_1_1 = re.compile(rb"^#(?P<size>\d+)\s*$", flags=re.M | re.I)
 
 PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
@@ -94,7 +89,7 @@ class NetconfResponse(Response):
             result: bytes result of channel_input
 
         Returns:
-            N/A  # noqa: DAR202
+            N/A
 
         Raises:
             N/A
@@ -146,7 +141,7 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
-    def _validate_chunk_size_netconf_1_1(self, result: Tuple[str, bytes]) -> None:
+    def _validate_chunk_size_netconf_1_1(self, result: Tuple[int, bytes]) -> None:
         """
         Validate individual chunk size; handle parsing trailing new lines for chunk sizes
 
@@ -187,14 +182,13 @@ class NetconfResponse(Response):
             result: Tuple from re.findall parsing the full response object
 
         Returns:
-            N/A  # noqa: DAR202
+            N/A
 
         Raises:
             N/A
 
         """
-        expected_len = int(result[0])
-        result_value = result[1]
+        expected_len, result_value = result
 
         actual_len = len(result_value)
         rstripped_len = len(result_value.rstrip())
@@ -233,13 +227,20 @@ class NetconfResponse(Response):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            N/A
 
         Raises:
             N/A
 
         """
-        result_sections = re.findall(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
+        chunk_sizes = re.finditer(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
+
+        result_sections: List[Tuple[int, bytes]] = []
+
+        for chunk_match in chunk_sizes:
+            chunk_size = int(chunk_match.groupdict().get("size", 0))
+            chunk_end_pos = chunk_match.span()[1]
+            result_sections.append((chunk_size, self.raw_result[chunk_end_pos:chunk_end_pos + chunk_size]))
 
         # validate all received data
         for result in result_sections:
@@ -275,7 +276,7 @@ class NetconfResponse(Response):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            N/A
 
         Raises:
             N/A
@@ -339,7 +340,7 @@ class NetconfResponse(Response):
             N/A
 
         Returns:
-            N/A  # noqa: DAR202
+            N/A
 
         Raises:
             NotImplementedError: always

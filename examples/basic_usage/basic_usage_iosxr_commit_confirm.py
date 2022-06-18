@@ -182,6 +182,7 @@ IOS_XR_FILTER = """
 
 
 def test_iosxr_commit_confirmed_in_same_session():
+    """Test commit confirmed within same session"""
     print(
         """
 # --------------------------------------------------
@@ -220,6 +221,7 @@ def test_iosxr_commit_confirmed_in_same_session():
 
 
 def test_iosxr_commit_confirmed_in_another_session():
+    """Test commit confirmed within another session using persist-id"""
     print(
         """
 # --------------------------------------------------
@@ -260,6 +262,7 @@ def test_iosxr_commit_confirmed_in_another_session():
 
 
 def test_iosxr_commit_confirmed_timeout():
+    """Test commit confirmed with timeout"""
     print(
         """
 # --------------------------------------------------

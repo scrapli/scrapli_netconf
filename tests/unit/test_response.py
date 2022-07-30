@@ -141,7 +141,7 @@ SINGLE_ERROR = """#567
 </rpc-reply>
 ##
 """
-MULTIPLE_ERRORS = """#567
+MULTIPLE_ERRORS = """#777
 <rpc-reply message-id="101" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
     <rpc-error>
         <error-type>application</error-type>
@@ -164,7 +164,7 @@ MULTIPLE_ERRORS = """#567
         <error-info>
             <err-element>edit-config</err-element>
         </error-info>
-    </rpc-error>    
+    </rpc-error>
 </rpc-reply>
 ##
 """
@@ -307,12 +307,12 @@ def test_response_not_implemented_exceptions(method_to_test):
 @pytest.mark.parametrize(
     "response_data",
     [
-        (("2", b"aa"), True),
-        (("2", b"aa    "), True),
-        (("3", b"aa    "), True),
-        (("2", b"a"), False),
-        (("2", b"aaa   "), False),
-        (("3", b"a        "), False),
+        ((2, b"aa"), True),
+        ((2, b"aa    "), True),
+        ((3, b"aa    "), True),
+        ((2, b"a"), False),
+        ((2, b"aaa   "), False),
+        ((3, b"a        "), False),
     ],
     ids=[
         "exact_size_match",

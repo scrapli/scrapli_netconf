@@ -61,11 +61,11 @@ REQUIREMENTS: Dict[str, str] = parse_requirements(dev=False)
 DEV_REQUIREMENTS: Dict[str, str] = parse_requirements(dev=True)
 PLATFORM: str = sys.platform
 SKIP_LIST: List[str] = [
-    "integration_tests-darwin-3.10",
+    "integration_tests-darwin-3.11",
 ]
 
 
-@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
+@nox.session(python=["3.7", "3.8", "3.9", "3.10", "3.11"])
 def unit_tests(session):
     """
     Nox run unit tests

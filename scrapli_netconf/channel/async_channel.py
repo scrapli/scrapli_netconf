@@ -1,7 +1,7 @@
 """scrapli_netconf.channel.async_channel"""
 from scrapli.channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannelArgs
-from scrapli.decorators import ChannelTimeout
+from scrapli.decorators import timeout_wrapper
 from scrapli.transport.base.async_transport import AsyncTransport
 from scrapli_netconf.channel.base_channel import BaseNetconfChannel, NetconfBaseChannelArgs
 from scrapli_netconf.constants import NetconfVersion
@@ -44,9 +44,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         self._process_capabilities_exchange(raw_server_capabilities=raw_server_capabilities)
         await self._send_client_capabilities()
 
-    @ChannelTimeout(
-        "timed out determining if session is authenticated/getting server capabilities",
-    )
+    @timeout_wrapper
     async def _get_server_capabilities(self) -> bytes:
         """
         Read until all server capabilities have been sent by server
@@ -72,7 +70,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
         return capabilities_buf
 
-    @ChannelTimeout("timed out sending client capabilities")
+    @timeout_wrapper
     async def _send_client_capabilities(
         self,
     ) -> None:

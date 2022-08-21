@@ -83,6 +83,7 @@ def unit_tests(session):
     if f"unit_tests-{PLATFORM}-{session.python}" in SKIP_LIST:
         return
 
+    session.install("-U", "setuptools", "wheel", "pip")
     session.install("-r", "requirements-dev.txt")
     session.install(".")
     session.run(

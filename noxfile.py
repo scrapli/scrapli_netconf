@@ -42,7 +42,7 @@ def parse_requirements(dev: bool = True) -> Dict[str, str]:
 
     for requirement in requirements_lines:
         parsed_requirement = re.match(
-            pattern=r"^([a-z0-9\-\_\.]+)([><=]{1,2}\S*)(?:.*)$",
+            pattern=r"^([a-z0-9\-\_\.\[\]]+)([><=]{1,2}\S*)(?:.*)$",
             string=requirement,
             flags=re.I | re.M,
         )
@@ -115,6 +115,7 @@ def isort(session):
         N/A
 
     """
+    session.install(f"toml{DEV_REQUIREMENTS['toml']}")
     session.install(f"isort{DEV_REQUIREMENTS['isort']}")
     session.run("python", "-m", "isort", "-c", ".")
 
@@ -134,6 +135,7 @@ def black(session):
         N/A
 
     """
+    session.install(f"toml{DEV_REQUIREMENTS['toml']}")
     session.install(f"black{DEV_REQUIREMENTS['black']}")
     session.run("python", "-m", "black", "--check", ".")
 
@@ -172,6 +174,7 @@ def pydocstyle(session):
         N/A
 
     """
+    session.install(f"toml{DEV_REQUIREMENTS['toml']}")
     session.install(f"pydocstyle{DEV_REQUIREMENTS['pydocstyle']}")
     session.run("python", "-m", "pydocstyle", ".")
 
@@ -192,6 +195,7 @@ def mypy(session):
 
     """
     session.install(".")
+    session.install(f"toml{DEV_REQUIREMENTS['toml']}")
     session.install(f"mypy{DEV_REQUIREMENTS['mypy']}")
     session.run("python", "-m", "mypy", "--strict", "scrapli_netconf/")
 

@@ -155,6 +155,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         with self._channel_lock():
             while b"]]>]]>" not in capabilities_buf:
                 capabilities_buf += self.read()
+            capabilities_buf, _, self._read_tail = capabilities_buf.partition(b"]]>]]>")
             self.logger.debug(f"received raw server capabilities: {repr(capabilities_buf)}")
         return capabilities_buf
 
@@ -181,40 +182,6 @@ class NetconfChannel(Channel, BaseNetconfChannel):
             )
             self._read_until_input(channel_input=bytes_client_capabilities)
             self.send_return()
-
-    def _read_until_input(self, channel_input: bytes) -> bytes:
-        """
-        Async read until all input has been entered.
-
-        Args:
-            channel_input: string to write to channel
-
-        Returns:
-            bytes: output read from channel
-
-        Raises:
-            N/A
-
-        """
-        output = b""
-
-        if self._server_echo is None or self._server_echo is False:
-            # if server_echo is `None` we dont know if the server echoes yet, so just return nothing
-            # if its False we know it doesnt echo and we can return empty byte string anyway
-            return output
-
-        if not channel_input:
-            self.logger.info(f"Read: {repr(output)}")
-            return output
-
-        while True:
-            output += self.read()
-            # if we have all the input *or* we see the closing rpc tag we know we are done here
-            if channel_input in output or b"rpc>" in output:
-                break
-
-        self.logger.info(f"Read: {repr(output)}")
-        return output
 
     def send_input_netconf(self, channel_input: str) -> bytes:
         """
@@ -272,7 +239,12 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 
             self.logger.debug("server echo is unset, determining if server echoes inputs now")
 
-            if bytes_final_channel_input in buf:
+            normalized_buf = re.sub(rb"\s+", b" ", buf)
+            normalized_buf = re.sub(rb"\'", b'"', normalized_buf)
+            if (
+                re.sub(rb"\s+", b" ", bytes_final_channel_input).replace(b"'", b'"')
+                in normalized_buf
+            ):
                 self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
                 self._server_echo = True
 

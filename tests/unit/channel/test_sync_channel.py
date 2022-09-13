@@ -89,7 +89,7 @@ def test_get_server_capabilities(monkeypatch, dummy_conn):
 
     monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
 
-    assert dummy_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf]]>]]>"
+    assert dummy_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf"
 
 
 def test_send_client_capabilities():
@@ -98,8 +98,8 @@ def test_send_client_capabilities():
 
 @pytest.mark.parametrize(
     "test_data",
-    ((b"blah", b"blah"), (b"", b""), (b"blah", b"rpc>")),
-    ids=("some_input", "no_input", "rpc_in_output"),
+    ((b"blah", b"blah"), (b"", b"")),
+    ids=("some_input", "no_input"),
 )
 def test_read_until_input(monkeypatch, dummy_conn, test_data):
     channel_input, expected_read_input = test_data
@@ -124,7 +124,7 @@ def test_send_input_netconf(monkeypatch, dummy_conn):
     _read_counter = 0
 
     channel_input = "show version"
-    expected_buf = b"output from show version!\n]]>]]>"
+    expected_buf = b" ##output from show version!\n]]>]]>"
 
     def _read(cls):
         nonlocal _read_counter

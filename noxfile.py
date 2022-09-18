@@ -84,8 +84,7 @@ def unit_tests(session):
         return
 
     session.install("-U", "setuptools", "wheel", "pip")
-    session.install("-r", "requirements-dev.txt")
-    session.install(".")
+    session.install(".[dev]")
     session.run(
         "python",
         "-m",
@@ -155,7 +154,7 @@ def pylama(session):
         N/A
 
     """
-    session.install("-r", "requirements-dev.txt")
+    session.install(".[dev]")
     session.run("python", "-m", "pylama", ".")
 
 

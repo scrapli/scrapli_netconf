@@ -1,6 +1,6 @@
 ---
 site_name: Scrapli Netconf
-site_description: Fast, flexible, sync/async, Python 3.6+ NETCONF client built on scrapli
+site_description: Fast, flexible, sync/async, Python 3.7+ NETCONF client built on scrapli
 site_author: Carl Montanari
 site_url: https://scrapli.github.io/
 
@@ -26,25 +26,7 @@ nav:
       - Basic Usage: user_guide/basic_usage.md
       - Advanced Usage: user_guide/advanced_usage.md
       - FAQ: user_guide/faq.md
-  - API Docs:
-    - Driver:
-      - Base Driver: api_docs/driver/base_driver.md
-      - Sync Driver: api_docs/driver/sync_driver.md
-      - Async Driver: api_docs/driver/async_driver.md
-    - Channel:
-      - Base Channel: api_docs/channel/base_channel.md
-      - Sync Channel: api_docs/channel/sync_channel.md
-      - Async Channel: api_docs/channel/async_channel.md
-    - Transports:
-      - Plugins:
-        - Asyncssh: api_docs/transport/plugins/asyncssh.md
-        - Paramiko: api_docs/transport/plugins/paramiko.md
-        - SSH2: api_docs/transport/plugins/ssh2.md
-        - System: api_docs/transport/plugins/system.md
-    - Constants: api_docs/constants.md
-    - Exceptions: api_docs/exceptions.md
-    - Helper: api_docs/helper.md
-    - Response: api_docs/response.md
+  - API Reference: reference/
   - Changelog: changelog.md
   - More Scrapli:
     - Scrapli: more_scrapli/scrapli.md
@@ -83,3 +65,17 @@ extra:
 
 plugins:
     - search
+    - gen-files:
+        scripts:
+        - docs/generate.py
+    - mkdocstrings:
+        handlers:
+          python:
+            paths: [ scrapli_netconf ]
+            options:
+              show_signature_annotations: true
+        watch:
+        - scrapli_netconf
+    - section-index
+    - literate-nav:
+        nav_file: SUMMARY.md

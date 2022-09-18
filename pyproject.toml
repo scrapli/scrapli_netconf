@@ -1,13 +1,91 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scrapli_netconf"
+dynamic = [
+    "version",
+    "dependencies",
+    "optional-dependencies",
+]
+description = "Fast, flexible, sync/async, Python 3.7+ NETCONF client built on scrapli"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.7"
+authors = [
+    { name = "Carl Montanari", email = "carl.r.montanari@gmail.com" },
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = [
+    "ssh",
+    "telnet",
+    "netconf",
+    "automation",
+    "network",
+    "cisco",
+    "iosxr",
+    "iosxe",
+    "nxos",
+    "arista",
+    "eos",
+    "juniper",
+    "junos",
+]
+
+[project.urls]
+Homepage = "https://github.com/scrapli/scrapli_netconf"
+Changelog = "https://scrapli.github.io/scrapli_netconf/changelog/"
+Docs = "https://scrapli.github.io/scrapli_netconf/"
+
+[tool.setuptools]
+packages = [
+    "scrapli_netconf"
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "scrapli_netconf.__version__" }
+dependencies = { file = "requirements.txt" }
+optional-dependencies.dev = { file = [
+    "requirements-dev.txt",
+    "requirements-paramiko.txt",
+    "requirements-ssh2.txt",
+    "requirements-asyncssh.txt",
+] }
+optional-dependencies.docs = { file = "requirements-docs.txt" }
+optional-dependencies.paramiko = { file = "requirements-paramiko.txt" }
+optional-dependencies.ssh2 = { file = "requirements-ssh2.txt" }
+optional-dependencies.asyncssh = { file = "requirements-asyncssh.txt" }
+
+[tool.setuptools.package-data]
+scrapli_netconf = [
+    "py.typed"
+]
+
 [tool.coverage.run]
-source = ["scrapli_netconf/"]
+source = [
+    "scrapli_netconf/"
+]
 
 [tool.coverage.report]
 sort = "cover"
 
 [tool.black]
 line-length = 100
-target-version = ["py311"]
-
+target-version = [
+    "py311",
+]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 

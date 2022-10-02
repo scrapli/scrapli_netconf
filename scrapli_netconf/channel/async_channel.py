@@ -22,6 +22,7 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
         self._base_channel_args.comms_prompt_pattern = "]]>]]>"
         self._server_echo = False
         self._capabilities_buf = b""
+        self._read_buf = b""
 
     async def open_netconf(self) -> None:
         """
@@ -92,6 +93,30 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
                 client_capabilities=self._netconf_base_channel_args.client_capabilities
             )
             self.send_return()
+
+    async def read(self) -> bytes:
+        """
+        Read chunks of output from the channel
+
+        Prior to super-ing "normal" scrapli read, check if there is anything on our read_buf, if
+        there is, return that first
+
+        Args:
+            N/A
+
+        Returns:
+            bytes: output read from channel
+
+        Raises:
+            N/A
+
+        """
+        if self._read_buf:
+            read_buf = self._read_buf
+            self._read_buf = b""
+            return read_buf
+
+        return await super().read()
 
     async def _read_until_input(self, channel_input: bytes) -> bytes:
         """
@@ -171,21 +196,37 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
             self.logger.debug("server echo is unset, determining if server echoes inputs now")
 
-            if bytes_final_channel_input in buf:
+            # we may be reading the remainder of the echo from our capabilities message -- if we see
+            # that we know the server echoes, but we still need to read until our latest input.
+            if b"</hello>]]>]]>" in buf:
                 self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
                 self._server_echo = True
 
+                _, _, buf = buf.partition(b"</hello>]]>]]>")
+                if buf:
+                    # if we read past the end of the
+                    self._read_buf += buf
+
+                # read up till our new input now to consume it from the channel
+                await self._read_until_input(bytes_final_channel_input)
+            elif bytes_final_channel_input in buf:
+                self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
+                self._server_echo = True
+            else:
+                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
+                self._server_echo = False
+
+            if self._server_echo:
                 # since echo is True and we only read until our input (because our inputs always end
                 # with a "prompt" that we read until) we need to once again read until prompt, this
                 # read will read all the way up through the *reply* to the prompt at end of the
                 # reply message
                 buf = await self._read_until_prompt(buf=b"")
-            else:
-                self.logger.debug("server does *not* echo inputs, setting _server_echo to 'false'")
-                self._server_echo = False
 
         if self._netconf_base_channel_args.netconf_version == NetconfVersion.VERSION_1_1:
             # netconf 1.1 with "chunking" style message format needs an extra return char here
             self.send_return()
+
+        # we should be able to simply partition here and put any "over reads" back into the read buf
 
         return buf

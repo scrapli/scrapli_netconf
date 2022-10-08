@@ -148,7 +148,7 @@ def cisco_iosxe_replace_config_data(config):
 
 def cisco_iosxr_replace_config_data(config):
     config = re.sub(
-        pattern=r"<password>.*</password>",
+        pattern=r"<(?:(password)|(secret))>(.*)</(?:(password)|(secret))>",
         repl="PASSWORD",
         string=config,
         flags=re.M | re.I,

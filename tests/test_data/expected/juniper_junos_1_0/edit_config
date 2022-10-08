@@ -1,25 +1,25 @@
-<rpc-reply xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
-<data>
-<configuration xmlns="http://xml.juniper.net/xnm/1.1/xnm" timestamp="TIMESTAMP">
-    <interfaces>
+<nc:rpc-reply xmlns:nc="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/17.3R2/junos" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" message-id="101">
+  <nc:data>
+    <configuration xmlns="http://yang.juniper.net/yang/1.1/jc/configuration/junos-es/17.3R2.10" timestamp="TIMESTAMP">
+      <interfaces>
         <interface>
-            <name>ge-0/0/0</name>
-            <description>scrapli was here</description>
+          <name>ge-0/0/0</name>
+          <description>scrapli was here</description>
         </interface>
         <interface>
-            <name>fxp0</name>
-            <unit>
-                <name>0</name>
-                <family>
-                    <inet>
-                        <address>
-                            <name>10.0.0.15/24</name>
-                        </address>
-                    </inet>
-                </family>
-            </unit>
+          <name>fxp0</name>
+          <unit>
+            <name>0</name>
+            <family>
+              <inet>
+                <address>
+                  <name>10.0.0.15/24</name>
+                </address>
+              </inet>
+            </family>
+          </unit>
         </interface>
-    </interfaces>
-</configuration>
-</data>
-</rpc-reply>
+      </interfaces>
+    </configuration>
+  </nc:data>
+</nc:rpc-reply>

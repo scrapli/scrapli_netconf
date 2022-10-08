@@ -27,6 +27,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
         # always use `]]>]]>` as the initial prompt to match
         self._base_channel_args.comms_prompt_pattern = "]]>]]>"
         self._server_echo: Optional[bool] = None
+        self._establishing_server_echo = False
         self._capabilities_buf = b""
         self._read_buf = b""
 
@@ -239,6 +240,13 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 
         while True:
             output += self.read()
+
+            if self._establishing_server_echo:
+                output, partition, new_buf = output.partition(b"]]>]]>")
+                self._read_buf += new_buf
+                output += partition
+                break
+
             # if we have all the input *or* we see the closing rpc tag we know we are done here
             if channel_input in output or b"rpc>" in output:
                 break
@@ -314,6 +322,7 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                     self._read_buf += buf
 
                 # read up till our new input now to consume it from the channel
+                self._establishing_server_echo = True
                 self._read_until_input(bytes_final_channel_input)
             elif bytes_final_channel_input in buf:
                 self.logger.debug("server echoes inputs, setting _server_echo to 'true'")
@@ -323,6 +332,9 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                 self._server_echo = False
 
             if self._server_echo:
+                # done with the establishment process
+                self._establishing_server_echo = False
+
                 # since echo is True and we only read until our input (because our inputs always end
                 # with a "prompt" that we read until) we need to once again read until prompt, this
                 # read will read all the way up through the *reply* to the prompt at end of the

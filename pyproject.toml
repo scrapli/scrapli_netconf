@@ -50,11 +50,6 @@ Homepage = "https://github.com/scrapli/scrapli_netconf"
 Changelog = "https://scrapli.github.io/scrapli_netconf/changelog/"
 Docs = "https://scrapli.github.io/scrapli_netconf/"
 
-[tool.setuptools]
-packages = [
-    "scrapli_netconf"
-]
-
 [tool.setuptools.dynamic]
 version = { attr = "scrapli_netconf.__version__" }
 dependencies = { file = "requirements.txt" }

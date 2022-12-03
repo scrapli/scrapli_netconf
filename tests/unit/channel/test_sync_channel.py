@@ -89,7 +89,7 @@ def test_get_server_capabilities(monkeypatch, dummy_conn):
 
     monkeypatch.setattr("scrapli.transport.plugins.system.transport.SystemTransport.read", _read)
 
-    assert dummy_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf]]>]]>"
+    assert dummy_conn.channel._get_server_capabilities() == b"lasjdfkldsjaflkdjf"
 
 
 def test_send_client_capabilities():

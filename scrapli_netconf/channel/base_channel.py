@@ -106,7 +106,12 @@ class BaseNetconfChannel(BaseChannel):
         if filtered_raw_server_capabilities is None:
             msg = "failed to parse server capabilities"
             raise CouldNotExchangeCapabilities(msg)
-        server_capabilities_xml = etree.fromstring(filtered_raw_server_capabilities.groups()[0])
+
+        # IOSXR/XR7 7.3.1 returns corrupt '<capabil\n\nity>' property on call-home line, so replace
+        # newlines to have a parsable read
+        server_capabilities_xml = etree.fromstring(
+            filtered_raw_server_capabilities.groups()[0].replace(b"\n", b"")
+        )
         for elem in server_capabilities_xml.iter():
             if "capability" not in elem.tag:
                 continue
@@ -149,7 +154,7 @@ class BaseNetconfChannel(BaseChannel):
 
         """
         self.logger.info("sending client capabilities")
-        bytes_client_capabilities: bytes = client_capabilities.value.encode().strip()
+        bytes_client_capabilities: bytes = client_capabilities.value.encode()
         self.logger.debug(f"attempting to send capabilities: {client_capabilities}")
         self.write(client_capabilities.value)
         return bytes_client_capabilities

@@ -70,17 +70,41 @@ DEVICES = {
             "open_cmd": [
                 "-o",
                 "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+                "-o",
+                "PubkeyAcceptedKeyTypes=+ssh-rsa",
+                "-o",
+                "HostKeyAlgorithms=+ssh-dss,ssh-rsa,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-ed25519",
             ]
         },
     },
     "cisco_iosxe_1_1": {
         "auth_strict_key": False,
         "strip_namespaces": False,
+        "transport_options": {
+            "open_cmd": [
+                "-o",
+                "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+                "-o",
+                "PubkeyAcceptedKeyTypes=+ssh-rsa",
+                "-o",
+                "HostKeyAlgorithms=+ssh-dss,ssh-rsa,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-ed25519",
+            ]
+        },
     },
     "cisco_iosxr_1_1": {
         "auth_strict_key": False,
         "strip_namespaces": False,
         "timeout_transport": 30,
+        "transport_options": {
+            "open_cmd": [
+                "-o",
+                "KexAlgorithms=+diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha1",
+                "-o",
+                "PubkeyAcceptedKeyTypes=+ssh-rsa",
+                "-o",
+                "HostKeyAlgorithms=+ssh-dss,ssh-rsa,rsa-sha2-512,rsa-sha2-256,ssh-rsa,ssh-ed25519",
+            ]
+        },
     },
     "juniper_junos_1_0": {
         "auth_strict_key": False,

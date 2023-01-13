@@ -521,10 +521,8 @@ class NetconfBaseDriver(BaseDriver):
         """
 
         if default_type in ["report-all", "trim", "explicit", "report-all-tagged"]:
-            if (
-                "urn:ietf:params:netconf:capability:with-defaults:1.0"
-                not in self.server_capabilities
-            ):
+            if not any("urn:ietf:params:netconf:capability:with-defaults:1.0" in sc
+                       for sc in self.server_capabilities):
                 msg = "with-defaults requested, but is not supported by the server"
                 self.logger.exception(msg)
                 raise CapabilityNotSupported(msg)

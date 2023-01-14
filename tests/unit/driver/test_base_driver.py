@@ -205,8 +205,10 @@ def test_build_subtree_filters(dummy_conn, test_data):
 
 
 def test_build_with_defaults(dummy_conn):
-    for sc in ["urn:ietf:params:netconf:capability:with-defaults:1.0",
-               "urn:ietf:params:netconf:capability:with-defaults:1.0?basic-mode=report-all"]:
+    for sc in [
+        "urn:ietf:params:netconf:capability:with-defaults:1.0",
+        "urn:ietf:params:netconf:capability:with-defaults:1.0?basic-mode=report-all",
+    ]:
         dummy_conn.server_capabilities = [sc]
         report_all_elem = dummy_conn._build_with_defaults("report-all")
         trim_elem = dummy_conn._build_with_defaults("trim")

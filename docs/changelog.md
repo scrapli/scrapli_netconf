@@ -1,6 +1,23 @@
 CHANGELOG
 =========
 
+## 2023.01.30
+
+- Handle parsing out control characters that seem to pop up on some JunOS boxes with at least ssh2 transport, see #127.
+- Hopefully improved some handling with possible "over reading" during initial session establishment. See #122 for a 
+  lot of history on this one, and #126 for at least a partial fix (if not full fix?!)
+- Thanks to [sanjmonkey](https://github.com/sanjmonkey) for expanding support for "with-defaults" parsing from 
+  capabilities in #129
+
+
+## 2022.07.30
+
+- Thank you to the very awesome  [dmulyalin](https://github.com/dmulyalin) for adding support for commit-confirmed 
+  in #97!
+- Some other things, I'm sure of it... if nothing else just housekeeping things... if we've missed something you 
+  added in  here, let us know and it will get added!
+
+
 ## 2022.01.30
 
 - Removed deprecated `filters` argument

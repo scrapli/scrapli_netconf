@@ -18,6 +18,10 @@ LOG = logging.getLogger("response")
 # actual chunk from the received byte stream.
 CHUNK_MATCH_1_1 = re.compile(rb"^#(?P<size>\d+)\s*$", flags=re.M | re.I)
 
+# CONTROL_CHARS matches control chars we do not want to see in text output, such as \x07 (terminal
+# bell). See #127 for more details.
+CONTROL_CHARS = re.compile(rb"[\x00-\x1f\x7f-\x9f]")
+
 PARSER = etree.XMLParser(remove_blank_text=True, recover=True)
 
 
@@ -112,6 +116,29 @@ class NetconfResponse(Response):
         if self.failed:
             self._fetch_error_messages()
 
+    @classmethod
+    def _parse_raw_result(cls, raw_result: bytes) -> bytes:
+        # remove the message end characters and xml document header see:
+        # https://github.com/scrapli/scrapli_netconf/issues/1
+        _raw_result = raw_result.replace(b"]]>]]>", b"").replace(
+            b'<?xml version="1.0" encoding="UTF-8"?>', b""
+        )
+
+        parsed_result: Union[bytes, None] = etree.fromstring(
+            _raw_result,
+            parser=PARSER,
+        )
+
+        if parsed_result is None:
+            # if we failed to parse, try again after stripping out control chars, if we still
+            # end up with None, oh well, raise an exception later on down the road
+            parsed_result = etree.fromstring(
+                CONTROL_CHARS.sub(b"", _raw_result),
+                parser=PARSER,
+            )
+
+        return parsed_result
+
     def _record_response_netconf_1_0(self) -> None:
         """
         Record response for netconf version 1.0
@@ -126,14 +153,7 @@ class NetconfResponse(Response):
             N/A
 
         """
-        # remove the message end characters and xml document header see:
-        # https://github.com/scrapli/scrapli_netconf/issues/1
-        self.xml_result = etree.fromstring(
-            self.raw_result.replace(b"]]>]]>", b"").replace(
-                b'<?xml version="1.0" encoding="UTF-8"?>', b""
-            ),
-            parser=PARSER,
-        )
+        self.xml_result = self._parse_raw_result(self.raw_result)
 
         if self.strip_namespaces:
             self.xml_result = remove_namespaces(self.xml_result)

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -87,7 +87,7 @@ asyncio_mode = "auto"
 
 [tool.pylama]
 linters = "mccabe,pycodestyle,pylint"
-skip = ".nox/*,build/*,docs/*,private/*,site/*,tests/*,venv/*"
+skip = ".nox/*,.private/*,build/*,docs/*,private/*,site/*,tests/*,venv/*"
 
 [tool.pylama.pycodestyle]
 max_line_length = 100

@@ -47,7 +47,6 @@ dynamic = [
   "optional-dependencies",
   "version",
 ]
-
 [project.urls]
 Changelog = "https://scrapli.github.io/scrapli_netconf/changelog/"
 Docs = "https://scrapli.github.io/scrapli_netconf/"

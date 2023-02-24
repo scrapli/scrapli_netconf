@@ -2,7 +2,7 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
+from typing import Any, Dict, List, Optional, TextIO, Union
 
 from lxml import etree
 from lxml.etree import Element
@@ -16,7 +16,7 @@ LOG = logging.getLogger("response")
 
 # "chunk match" matches the "#123" netconf1.1 chunk size delimiters. We then simply slice out the
 # actual chunk from the received byte stream.
-CHUNK_MATCH_1_1 = re.compile(rb"^#(?P<size>\d+)\s*$", flags=re.M | re.I)
+CHUNK_MATCH_1_1 = re.compile(rb"(?P<size>\d+)\n(?P<content>.*?)^#", flags=re.M | re.S)
 
 # CONTROL_CHARS matches control chars we do not want to see in text output, such as \x07 (terminal
 # bell). See #127 for more details.
@@ -161,7 +161,7 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
-    def _validate_chunk_size_netconf_1_1(self, result: Tuple[int, bytes]) -> None:
+    def _validate_chunk_size_netconf_1_1(self, size: int, chunk: bytes) -> None:
         """
         Validate individual chunk size; handle parsing trailing new lines for chunk sizes
 
@@ -199,7 +199,8 @@ class NetconfResponse(Response):
         FIN
 
         Args:
-            result: Tuple from re.findall parsing the full response object
+            size: the expected size of the chunk contents
+            chunk: the chunk contents
 
         Returns:
             N/A
@@ -208,34 +209,32 @@ class NetconfResponse(Response):
             N/A
 
         """
-        expected_len, result_value = result
+        actual_size = len(chunk)
+        rstripped_size = len(chunk.rstrip())
 
-        actual_len = len(result_value)
-        rstripped_len = len(result_value.rstrip())
-
-        trailing_newline_count = actual_len - rstripped_len
+        trailing_newline_count = actual_size - rstripped_size
         if trailing_newline_count > 1:
             extraneous_trailing_newline_count = trailing_newline_count - 1
         else:
             extraneous_trailing_newline_count = 1
-        trimmed_newline_len = actual_len - extraneous_trailing_newline_count
+        trimmed_newline_len = actual_size - extraneous_trailing_newline_count
 
-        if rstripped_len == 0:
+        if rstripped_size == 0:
             # at least nokia tends to have itty bitty chunks of one element, and/or chunks that have
             # *only* whitespace and our regex ignores this, so if there was/is nothing in the result
             # section we can assume it was just whitespace and move on w/our lives
-            actual_len = expected_len
+            actual_size = size
 
-        if expected_len == actual_len:
+        if size == actual_size:
             return
-        if expected_len == rstripped_len:
+        if size == rstripped_size:
             return
-        if expected_len == trimmed_newline_len:
+        if size == trimmed_newline_len:
             return
 
         LOG.critical(
-            f"Return element length invalid, expected {expected_len} got {actual_len} for "
-            f"element: {repr(result_value)}"
+            f"Return element length invalid, expected {size} got {actual_size} for "
+            f"element: {repr(chunk)}"
         )
         self.failed = True
 
@@ -253,28 +252,25 @@ class NetconfResponse(Response):
             N/A
 
         """
-        chunk_sizes = re.finditer(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
+        chunk_matches = re.finditer(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
 
-        result_sections: List[Tuple[int, bytes]] = []
+        chunks: List[bytes] = []
 
-        for chunk_match in chunk_sizes:
-            chunk_size = int(chunk_match.groupdict().get("size", 0))
-            chunk_end_pos = chunk_match.span()[1]
-            result_sections.append(
-                (chunk_size, self.raw_result[chunk_end_pos : chunk_end_pos + chunk_size])  # noqa
-            )
+        for chunk_match in chunk_matches:
+            size = int(chunk_match.groupdict().get("size", 0))
+            chunk = chunk_match.groupdict().get("content", "")
 
-        # validate all received data
-        for result in result_sections:
-            self._validate_chunk_size_netconf_1_1(result=result)
+            self._validate_chunk_size_netconf_1_1(size=size, chunk=chunk)
+
+            chunks.append(chunk[:-1])
 
         self.xml_result = etree.fromstring(
             b"\n".join(
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1
-                    result[1].replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"")
-                    for result in result_sections
+                    chunk.replace(b'<?xml version="1.0" encoding="UTF-8"?>', b"")
+                    for chunk in chunks
                 ]
             ),
             parser=PARSER,

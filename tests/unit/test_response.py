@@ -324,7 +324,7 @@ def test_response_not_implemented_exceptions(method_to_test):
     ],
 )
 def test__validate_chunk_size_netconf_1_1(response_data):
-    chunk_input = response_data[0]
+    chunk_size, chunk_content = response_data[0]
     response_success = response_data[1]
 
     channel_input = "<something/>"
@@ -338,7 +338,7 @@ def test__validate_chunk_size_netconf_1_1(response_data):
     )
     # set response.failed because we are skipping "record_response"
     response.failed = False
-    response._validate_chunk_size_netconf_1_1(result=chunk_input)
+    response._validate_chunk_size_netconf_1_1(size=chunk_size, chunk=chunk_content)
     assert response.failed is not response_success
 
 

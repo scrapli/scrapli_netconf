@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+## 2023.07.30 (future)
+
+- Convert netconf 1.1 chunk handling over to the scrapligo style/way -- fixes #131 with thanks to 
+  [Matt Takacs](https://github.com/matthewtakacs) for the help!
+
+
 ## 2023.01.30
 
 - Handle parsing out control characters that seem to pop up on some JunOS boxes with at least ssh2 transport, see #127.

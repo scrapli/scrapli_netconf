@@ -106,7 +106,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
 
                 self._ssh_message_handler(output=authenticate_buf)
 
-                if b"password" in authenticate_buf:
+                if re.search(
+                    pattern=self.auth_password_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the password prompt
                     authenticate_buf = b""
                     password_count += 1
@@ -117,7 +120,10 @@ class NetconfChannel(Channel, BaseNetconfChannel):
                     self.write(channel_input=auth_password, redacted=True)
                     self.send_return()
 
-                if b"enter passphrase for key" in authenticate_buf:
+                if re.search(
+                    pattern=self.auth_passphrase_pattern,
+                    string=authenticate_buf,
+                ):
                     # clear the authentication buffer so we don't re-read the passphrase prompt
                     authenticate_buf = b""
                     passphrase_count += 1

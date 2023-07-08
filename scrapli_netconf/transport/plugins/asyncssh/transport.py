@@ -74,10 +74,7 @@ class NetconfAsyncsshTransport(AsyncsshTransport):
 
         try:
             self.session: SSHClientConnection = await asyncio.wait_for(
-                connect(
-                    connect(**conn_args),
-                    timeout=self._base_transport_args.timeout_socket,
-                ),
+                connect(**conn_args),
                 timeout=self._base_transport_args.timeout_socket,
             )
         except PermissionDenied as exc:

@@ -1,7 +1,5 @@
 import pytest
 
-from scrapli_netconf.constants import NetconfClientCapabilities
-
 
 def test_open_netconf():
     pass

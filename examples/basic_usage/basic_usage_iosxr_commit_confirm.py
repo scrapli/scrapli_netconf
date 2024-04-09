@@ -143,6 +143,7 @@ IOSXR INTERFACE CONFIG after timeout:
 
 IOSXR CLOSED
 """
+
 import random
 import time
 

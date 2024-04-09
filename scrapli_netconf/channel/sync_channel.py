@@ -1,4 +1,5 @@
 """scrapli_netconf.channel.sync_channel"""
+
 import re
 from typing import Optional
 

@@ -1,4 +1,5 @@
 """scrapli_netconf.transport.plugins.system.transport"""
+
 from io import BytesIO
 
 from scrapli.exceptions import ScrapliConnectionNotOpened

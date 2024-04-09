@@ -1,4 +1,5 @@
 """scrapli_netconf.channel.async_channel"""
+
 from scrapli.channel import AsyncChannel
 from scrapli.channel.base_channel import BaseChannelArgs
 from scrapli.decorators import timeout_wrapper

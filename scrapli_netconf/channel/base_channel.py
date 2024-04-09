@@ -1,4 +1,5 @@
 """scrapli_netconf.channel.base_channel"""
+
 import re
 from dataclasses import dataclass
 from typing import List, Optional
@@ -10,12 +11,12 @@ from scrapli.decorators import FUNC_TIMEOUT_MESSAGE_MAP
 from scrapli_netconf.constants import NetconfClientCapabilities, NetconfVersion, XmlParserVersion
 from scrapli_netconf.exceptions import CapabilityNotSupported, CouldNotExchangeCapabilities
 
-FUNC_TIMEOUT_MESSAGE_MAP[
-    "_get_server_capabilities"
-] = "timed out determining if session is authenticated/getting server capabilities"
-FUNC_TIMEOUT_MESSAGE_MAP[
-    "channel_authenticate_netconf"
-] = "timed out during in channel netconf authentication"
+FUNC_TIMEOUT_MESSAGE_MAP["_get_server_capabilities"] = (
+    "timed out determining if session is authenticated/getting server capabilities"
+)
+FUNC_TIMEOUT_MESSAGE_MAP["channel_authenticate_netconf"] = (
+    "timed out during in channel netconf authentication"
+)
 
 
 @dataclass()

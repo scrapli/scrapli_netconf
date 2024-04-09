@@ -1,4 +1,5 @@
 """scrapli_netconf.constants"""
+
 from enum import Enum
 
 

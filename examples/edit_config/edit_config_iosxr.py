@@ -1,4 +1,5 @@
 """async_edit_config_iosxr"""
+
 from scrapli_netconf import NetconfDriver
 
 IOSXR_DEVICE = {

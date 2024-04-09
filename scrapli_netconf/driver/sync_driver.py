@@ -1,4 +1,5 @@
 """scrapli_netconf.driver.sync_driver"""
+
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from lxml.etree import _Element

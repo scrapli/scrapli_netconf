@@ -1,4 +1,5 @@
 """basic_usage_junos"""
+
 from scrapli_netconf import NetconfDriver
 
 JUNOS_DEVICE = {

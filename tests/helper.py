@@ -8,6 +8,7 @@ License: BSD, see LICENSE for more details.
 Original source: https://github.com/joh/xmldiffs
 Thank you Johannes!
 """
+
 import re
 import subprocess
 import xml.etree.ElementTree as ET

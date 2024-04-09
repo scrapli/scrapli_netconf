@@ -1,4 +1,5 @@
 """scrapli_netconf.response"""
+
 import logging
 import re
 from datetime import datetime

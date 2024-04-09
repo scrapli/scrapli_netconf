@@ -1,4 +1,5 @@
 """scrapli_netconf.transport.plugins.paramiko.transport"""
+
 from scrapli.exceptions import ScrapliConnectionNotOpened
 from scrapli.transport.plugins.paramiko.transport import ParamikoTransport, PluginTransportArgs
 

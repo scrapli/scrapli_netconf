@@ -1,4 +1,5 @@
 """basic_usage_iosxr"""
+
 from scrapli_netconf import NetconfDriver
 
 IOSXR_DEVICE = {

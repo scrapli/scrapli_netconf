@@ -1,4 +1,5 @@
 """scrapli_netconf.transport.plugins.ssh2.transport"""
+
 from scrapli.exceptions import ScrapliConnectionNotOpened
 from scrapli.transport.plugins.ssh2.transport import PluginTransportArgs, Ssh2Transport
 

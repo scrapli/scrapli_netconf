@@ -15,9 +15,8 @@ from scrapli_netconf.helper import remove_namespaces
 
 LOG = logging.getLogger("response")
 
-# "chunk match" matches the "#123" netconf1.1 chunk size delimiters. We then simply slice out the
-# actual chunk from the received byte stream.
-CHUNK_MATCH_1_1 = re.compile(rb"(?P<size>\d+)\n(?P<content>.*?)^#", flags=re.M | re.S)
+NEW_LINE_BYTE = 10
+CHUNK_1_1_DELIMITER_BYTE = 35
 
 # CONTROL_CHARS matches control chars we do not want to see in text output, such as \x07 (terminal
 # bell). See #127 for more details.
@@ -162,83 +161,6 @@ class NetconfResponse(Response):
         else:
             self.result = etree.tostring(self.xml_result, pretty_print=True).decode()
 
-    def _validate_chunk_size_netconf_1_1(self, size: int, chunk: bytes) -> None:
-        """
-        Validate individual chunk size; handle parsing trailing new lines for chunk sizes
-
-        It seems that some platforms behave slightly differently than others (looking at you IOSXE)
-        in the way they count chunk sizes with respect to trailing whitespace. Per my reading of the
-        RFC, the response for a netconf 1.1 response should look like this:
-
-        ```
-        ##XYZ
-        <somexml>
-        ##
-        ```
-
-        Where "XYZ" is an integer number of the count of chars in the following chunk (the chars up
-        to the next "##" symbols), then the actual XML response, then a new line(!!!!) and a pair of
-        hash symbols to indicate the chunk is complete.
-
-        IOSXE seems to *not* want to see the newline between the XML payload and the double hash
-        symbols... instead when it sees that newline it immediately returns the response. This
-        breaks the core behavior of scrapli in that scrapli always writes the input, then reads the
-        written inputs off the channel *before* sending a return character. This ensures that we
-        never have to deal with stripping out the inputs and such because it has already been read.
-        With IOSXE Behaving this way, we have to instead use `send_input` with the `eager` flag set
-        -- this means that we do *not* read the inputs, we simply send a return. We then have to do
-        a little extra parsing to strip out the inputs, but thats no big deal...
-
-        Where this finally gets to "spacing" -- IOSXE seems to include trailing newlines *sometimes*
-        but not other times, whereas IOSXR (for example) *always* counts a single trailing newline
-        (after the XML). SO.... long story long... (the above chunk stuff doesn't necessarily matter
-        for this, but felt like as good a place to document it as any...) this method deals w/
-        newline counts -- we check the expected chunk length against the actual char count, the char
-        count with all trailing whitespace stripped, and the count of the chunk + a *single*
-        trailing newline character...
-
-        FIN
-
-        Args:
-            size: the expected size of the chunk contents
-            chunk: the chunk contents
-
-        Returns:
-            N/A
-
-        Raises:
-            N/A
-
-        """
-        actual_size = len(chunk)
-        rstripped_size = len(chunk.rstrip())
-
-        trailing_newline_count = actual_size - rstripped_size
-        if trailing_newline_count > 1:
-            extraneous_trailing_newline_count = trailing_newline_count - 1
-        else:
-            extraneous_trailing_newline_count = 1
-        trimmed_newline_len = actual_size - extraneous_trailing_newline_count
-
-        if rstripped_size == 0:
-            # at least nokia tends to have itty bitty chunks of one element, and/or chunks that have
-            # *only* whitespace and our regex ignores this, so if there was/is nothing in the result
-            # section we can assume it was just whitespace and move on w/our lives
-            actual_size = size
-
-        if size == actual_size:
-            return
-        if size == rstripped_size:
-            return
-        if size == trimmed_newline_len:
-            return
-
-        LOG.critical(
-            f"Return element length invalid, expected {size} got {actual_size} for "
-            f"element: {repr(chunk)}"
-        )
-        self.failed = True
-
     def _record_response_netconf_1_1(self) -> None:
         """
         Record response for netconf version 1.1
@@ -253,17 +175,59 @@ class NetconfResponse(Response):
             N/A
 
         """
-        chunk_matches = re.finditer(pattern=CHUNK_MATCH_1_1, string=self.raw_result)
+        _raw_result = self.raw_result.strip()
+
+        if not _raw_result or not _raw_result.startswith(b"#"):
+            LOG.critical("unable to parse netconf response: no chunk marker at start of data")
+            self.failed = True
+
+            return
 
         chunks: List[bytes] = []
 
-        for chunk_match in chunk_matches:
-            size = int(chunk_match.groupdict().get("size", 0))
-            chunk = chunk_match.groupdict().get("content", "")
+        cursor = 0
 
-            self._validate_chunk_size_netconf_1_1(size=size, chunk=chunk)
+        while cursor < len(_raw_result):
+            if _raw_result[cursor] == NEW_LINE_BYTE:
+                cursor += 1
 
-            chunks.append(chunk[:-1])
+                continue
+
+            if _raw_result[cursor] != CHUNK_1_1_DELIMITER_BYTE:
+                LOG.critical(
+                    "unable to parse netconf response: chunk marker missing, got "
+                    f"{_raw_result[cursor]}",
+                )
+                self.failed = True
+
+                return
+
+            cursor += 1
+
+            if _raw_result[cursor] == CHUNK_1_1_DELIMITER_BYTE:
+                break
+
+            chunk_size: int = 0
+
+            for chunk_size_cursor in range(cursor, cursor + 10):
+                if _raw_result[chunk_size_cursor] == NEW_LINE_BYTE:
+                    chunk_size = int(_raw_result[cursor:chunk_size_cursor])
+
+                    cursor = chunk_size_cursor + 1
+
+                    break
+
+            if not chunk_size:
+                LOG.critical(
+                    "unable to parse netconf response: failed parsing chunk size",
+                )
+                self.failed = True
+
+                return
+
+            chunks.append(_raw_result[cursor : cursor + chunk_size])  # noqa: E203
+
+            cursor += chunk_size
 
         self.xml_result = etree.fromstring(
             b"\n".join(

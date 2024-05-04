@@ -98,10 +98,17 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
 
     async def read(self) -> bytes:
         """
-        Read chunks of output from the channel
+        Read chunks of output from the channels
 
-        Prior to super-ing "normal" scrapli read, check if there is anything on our read_buf, if
-        there is, return that first
+        Prior to doing "normal" scrapli read things (*), check if there is anything on our read_buf,
+        if there is, return that first. Historically this actually did do "normal" scrapli read
+        things by super-ing read, but, "normal" scrapli replaces \r it finds in output which can
+        cause nc1.1 chunk parsing to fail since we've removed some chars that were counted as part
+        of the chunk. so, now we just copypasta the normal read things here without that .replace,
+        and no longer super.
+
+        Note that to *not* have the \r in output from system transport you will need >=2024.07.30
+        scrapli version, but replacing the super-ing with this sorts out other transports!
 
         Args:
             N/A
@@ -118,7 +125,17 @@ class AsyncNetconfChannel(AsyncChannel, BaseNetconfChannel):
             self._read_buf = b""
             return read_buf
 
-        return await super().read()
+        buf = await self.transport.read()
+
+        self.logger.debug(f"read: {buf!r}")
+
+        if self.channel_log:
+            self.channel_log.write(buf)
+
+        if b"\x1b" in buf.lower():
+            buf = self._strip_ansi(buf=buf)
+
+        return buf
 
     async def _read_until_input(self, channel_input: bytes) -> bytes:
         """

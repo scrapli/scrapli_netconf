@@ -72,6 +72,9 @@ SKIP_LIST: List[str] = [
 def _get_install_test_args() -> List[str]:
     args = [".[dev]"]
 
+    if sys.platform == "darwin":
+        args = [".[dev-darwin]"]
+
     if PRE:
         args.append("--pre")
 

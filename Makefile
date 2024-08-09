@@ -1,7 +1,7 @@
 lint:
 	python -m isort .
 	python -m black .
-	python -m pylama .
+	python -m pylint scrapli_netconf/
 	python -m pydocstyle .
 	python -m mypy --strict scrapli_netconf/
 

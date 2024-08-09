@@ -114,16 +114,6 @@ warn_unused_configs = true
 strict_optional = true
 
 
-[tool.pylama]
-linters = "mccabe,pycodestyle,pylint"
-skip = ".nox/*,.private/*,build/*,docs/*,private/*,site/*,tests/*,venv/*"
-
-[tool.pylama.pycodestyle]
-max_line_length = 100
-
-[tool.pylama.pylint]
-rcfile = ".pylintrc"
-
 [tool.pydocstyle]
 match-dir = "^scrapli_netconf/*"
 ignore = "D101,D202,D203,D212,D400,D406,D407,D408,D409,D415"

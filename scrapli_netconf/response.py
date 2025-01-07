@@ -294,7 +294,10 @@ class NetconfResponse(Response):
         return xml_elements
 
     def textfsm_parse_output(
-        self, template: Union[str, TextIO, None] = None, to_dict: bool = True
+        self,
+        template: Union[str, TextIO, None] = None,
+        to_dict: bool = True,
+        raise_err: bool = False,
     ) -> Union[Dict[str, Any], List[Any]]:
         """
         Parse results with textfsm, always return structured data
@@ -305,6 +308,7 @@ class NetconfResponse(Response):
             template: string path to textfsm template or opened textfsm template file
             to_dict: convert textfsm output from list of lists to list of dicts -- basically create
                 dict from header and row data so it is easier to read/parse the output
+            raise_err: exceptions in the textfsm parser will be raised for the caller to handle
 
         Returns:
             structured_result: empty list or parsed data from textfsm

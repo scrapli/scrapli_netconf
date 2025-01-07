@@ -16,7 +16,7 @@ class NetconfDriver(Driver, NetconfBaseDriver):
     # type `NetconfChannel`
     channel: NetconfChannel
 
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         port: int = 830,

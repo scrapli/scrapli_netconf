@@ -16,7 +16,7 @@ class AsyncNetconfDriver(AsyncDriver, NetconfBaseDriver):
     # type `NetconfChannel`
     channel: AsyncNetconfChannel
 
-    def __init__(
+    def __init__(  # pylint: disable=R0917
         self,
         host: str,
         port: int = 830,

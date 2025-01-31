@@ -155,7 +155,6 @@ disable=C0103,C0115,R0401,R0801,R0901,R0902,R0903,R0913,R0914,W1202,W1203
 # R0914 = too-many-local-variables
 # R0801 = similar-lines
 # R0401 = cyclic-import (too many false positives, seems like this is a common complaint :p)
-
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where

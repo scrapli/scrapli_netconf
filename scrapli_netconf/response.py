@@ -230,7 +230,7 @@ class NetconfResponse(Response):
             cursor += chunk_size
 
         self.xml_result = etree.fromstring(
-            b"\n".join(
+            b"".join(
                 [
                     # remove the message end characters and xml document header see:
                     # https://github.com/scrapli/scrapli_netconf/issues/1

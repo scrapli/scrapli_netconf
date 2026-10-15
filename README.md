@@ -7,6 +7,10 @@
 scrapli_netconf
 ===============
 
+
+netconf functionality moved to scrapli 2026.10.3 / scrapli2
+
+
 ---
 
 **Documentation**: <a href="https://scrapli.github.io/scrapli_netconf" target="_blank">https://scrapli.github.io/scrapli_netconf</a>
